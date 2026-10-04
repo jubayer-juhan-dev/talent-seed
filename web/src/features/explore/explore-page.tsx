@@ -1,10 +1,14 @@
+import { useRouter } from "@tanstack/react-router";
 import { ChevronsDown, LayoutGrid, Loader2, SearchX, ServerCrash, Table2, TriangleAlert } from "lucide-react";
 import { $api, errorText } from "@/api/client";
 import { EmptyState } from "@/components/app/empty-state";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
+import { PersonProfile } from "@/features/profile/person-profile";
+import { markProfilePushed, takeProfilePushed } from "@/features/profile/profile-nav";
 import { fmt } from "@/lib/format";
+import { useShortlist } from "@/lib/shortlist";
 import { cn } from "@/lib/utils";
 import { CohortSwitcher } from "./cohort-switcher";
 import { FilterChips } from "./filter-chips";
@@ -31,7 +35,16 @@ export function ExplorePage() {
   );
   const rows = query.data?.pages.flatMap((p) => p.rows) ?? [];
   const total = query.data?.pages[0]?.total ?? 0;
-  const open = (id: string) => update({ p: id }, { push: true });
+  const router = useRouter();
+  const list = useShortlist();
+  const open = (id: string) => {
+    markProfilePushed();
+    update({ p: id }, { push: true });
+  };
+  // ←/→ step through the loaded results, or through the shortlist when the profile was opened from there.
+  const ids = rows.map((r) => r.person_id);
+  const shortlistIds = list.map((e) => e.person_id);
+  const navIds = search.p && !ids.includes(search.p) && shortlistIds.includes(search.p) ? shortlistIds : ids;
 
   return (
     <div className="animate-in fade-in slide-in-from-bottom-1 duration-300">
@@ -145,6 +158,13 @@ export function ExplorePage() {
           </Button>
         </div>
       )}
+
+      <PersonProfile
+        id={search.p}
+        ids={navIds}
+        onNavigate={(id) => update({ p: id })}
+        onClose={() => (takeProfilePushed() ? router.history.back() : update({ p: undefined }))}
+      />
     </div>
   );
 }

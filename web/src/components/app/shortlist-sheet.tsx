@@ -1,15 +1,27 @@
+import { useNavigate, useRouterState } from "@tanstack/react-router";
 import { Star, Trash2 } from "lucide-react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { markProfilePushed } from "@/features/profile/profile-nav";
 import { shortlist, useShortlist } from "@/lib/shortlist";
 import { CohortBadge } from "./cohort-badge";
 import { PersonAvatar } from "./person-avatar";
 
-/** Top-bar shortlist button and drawer. Opening profiles and CSV export arrive in plan steps 4 and 6. */
+/** Top-bar shortlist button and drawer. Rows open the profile; CSV export arrives in plan step 6. */
 export function ShortlistSheet() {
   const list = useShortlist();
+  const [open, setOpen] = useState(false);
+  const navigate = useNavigate();
+  const onExplore = useRouterState({ select: (s) => s.location.pathname.endsWith("/explore") });
+  const openPerson = (id: string) => {
+    setOpen(false);
+    markProfilePushed();
+    // On Explore keep the current filters; elsewhere open Explore with just the profile.
+    navigate({ to: "/explore", search: (prev) => (onExplore ? { ...prev, p: id } : { p: id }) });
+  };
   return (
-    <Sheet>
+    <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
         <Button
           variant="outline"
@@ -42,7 +54,15 @@ export function ShortlistSheet() {
             </div>
           ) : (
             list.map((p) => (
-              <div key={p.person_id} className="flex items-center gap-3 rounded-lg p-2.5 hover:bg-muted">
+              // biome-ignore lint/a11y/useSemanticElements: the row holds its own remove button
+              <div
+                key={p.person_id}
+                role="button"
+                tabIndex={0}
+                onClick={() => openPerson(p.person_id)}
+                onKeyDown={(e) => e.key === "Enter" && openPerson(p.person_id)}
+                className="flex cursor-pointer items-center gap-3 rounded-lg p-2.5 animate-in fade-in hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring"
+              >
                 <PersonAvatar person={p} />
                 <div className="min-w-0 flex-1">
                   <div className="truncate font-semibold">{p.display_name || "(no name)"}</div>
@@ -56,7 +76,10 @@ export function ShortlistSheet() {
                   variant="ghost"
                   size="icon"
                   aria-label="Remove from shortlist"
-                  onClick={() => shortlist.remove(p.person_id)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    shortlist.remove(p.person_id);
+                  }}
                 >
                   <Star className="size-4 fill-amber-500 text-amber-500" />
                 </Button>

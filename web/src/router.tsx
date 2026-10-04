@@ -11,6 +11,9 @@ const rootRoute = createRootRoute({
   component: AppShell,
 });
 
+/** First-viewer profile links ended in #p=<id>; the new app uses ?p=<id>. */
+const profileFromHash = (hash: string) => (hash.startsWith("p=") ? decodeURIComponent(hash.slice(2)) : undefined);
+
 const overviewRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/",
@@ -18,7 +21,9 @@ const overviewRoute = createRoute({
   validateSearch: (s: Record<string, unknown>): { view?: string } => (s.view === "explore" ? { view: "explore" } : {}),
   beforeLoad: ({ location }) => {
     const { view, ...rest } = location.search as Record<string, unknown>;
-    if (view === "explore") throw redirect({ to: "/explore", search: validateExploreSearch(rest), replace: true });
+    const p = profileFromHash(location.hash);
+    if (view === "explore" || p)
+      throw redirect({ to: "/explore", search: { ...validateExploreSearch(rest), ...(p && { p }) }, replace: true });
   },
   component: OverviewPage,
 });
@@ -27,6 +32,10 @@ const exploreRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/explore",
   validateSearch: validateExploreSearch,
+  beforeLoad: ({ location, search }) => {
+    const p = profileFromHash(location.hash);
+    if (p) throw redirect({ to: "/explore", search: { ...search, p }, hash: "", replace: true });
+  },
   component: ExplorePage,
 });
 

@@ -11,7 +11,14 @@ import { router } from "@/router";
 initTheme();
 
 const queryClient = new QueryClient({
-  defaultOptions: { queries: { staleTime: 60_000, retry: 1, refetchOnWindowFocus: false } },
+  defaultOptions: {
+    queries: {
+      staleTime: 60_000,
+      refetchOnWindowFocus: false,
+      // Retry once on network failures only; a server answer such as 404 won't change on retry.
+      retry: (count, error) => count < 1 && error instanceof TypeError,
+    },
+  },
 });
 
 const root = document.getElementById("root");
