@@ -1,14 +1,15 @@
 import { useNavigate, useRouterState } from "@tanstack/react-router";
-import { Star, Trash2 } from "lucide-react";
+import { Download, Star, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { exportDialog } from "@/features/export/export-store";
 import { markProfilePushed } from "@/features/profile/profile-nav";
 import { shortlist, useShortlist } from "@/lib/shortlist";
 import { CohortBadge } from "./cohort-badge";
 import { PersonAvatar } from "./person-avatar";
 
-/** Top-bar shortlist button and drawer. Rows open the profile; CSV export arrives in plan step 6. */
+/** Top-bar shortlist button and drawer. Rows open the profile; Export CSV opens the export dialog. */
 export function ShortlistSheet() {
   const list = useShortlist();
   const [open, setOpen] = useState(false);
@@ -24,6 +25,7 @@ export function ShortlistSheet() {
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
         <Button
+          data-tour="shortlist"
           variant="outline"
           size="sm"
           className="gap-2"
@@ -88,13 +90,22 @@ export function ShortlistSheet() {
           )}
         </div>
         {list.length > 0 && (
-          <div className="border-t p-4">
+          <div className="flex gap-2 border-t p-4">
             <Button
               variant="outline"
               className="gap-2"
               onClick={() => window.confirm(`Remove all ${list.length} people?`) && shortlist.clear()}
             >
               <Trash2 className="size-4" /> Clear
+            </Button>
+            <Button
+              className="flex-1 gap-2"
+              onClick={() => {
+                setOpen(false);
+                exportDialog.open("shortlist");
+              }}
+            >
+              <Download className="size-4" /> Export CSV
             </Button>
           </div>
         )}

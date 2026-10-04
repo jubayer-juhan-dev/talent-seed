@@ -24,15 +24,17 @@ function Panel({
   title,
   aside,
   children,
+  tour,
 }: {
   icon: ReactNode;
   title: string;
   aside?: ReactNode;
   children: ReactNode;
+  tour?: string;
 }) {
   return (
-    <section className="rounded-xl border bg-card shadow-xs">
-      <div className="flex items-center justify-between gap-2.5 px-[18px] pt-4">
+    <section data-tour={tour} className="rounded-xl border bg-card shadow-xs">
+      <div data-tour={tour && `${tour}-head`} className="flex items-center justify-between gap-2.5 px-[18px] pt-4">
         <h2 className="flex items-center gap-2 text-[14.5px] font-semibold [&_svg]:size-4 [&_svg]:text-muted-foreground">
           {icon}
           {title}
@@ -89,6 +91,7 @@ export function OverviewPage() {
             <Panel
               icon={<Blocks />}
               title="Active developers per chain"
+              tour="chains"
               aside={
                 <div className="flex gap-3.5 text-xs text-muted-foreground">
                   <span className="flex items-center gap-1.5">
@@ -132,6 +135,7 @@ export function OverviewPage() {
               <Panel
                 icon={<Grid3x3 />}
                 title="Tenure × activity"
+                tour="heatmap"
                 aside={<span className="text-xs text-faint">P1–P3 people</span>}
               >
                 {data ? <TenureHeatmap mix={data.mix} /> : <Skeleton className="h-[220px]" />}

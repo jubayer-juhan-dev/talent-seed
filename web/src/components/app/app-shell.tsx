@@ -2,6 +2,8 @@ import { Outlet, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { $api } from "@/api/client";
 import { SEARCH_INPUT_ID } from "@/features/explore/search-input";
+import { ExportDialog } from "@/features/export/export-dialog";
+import { GuidedTour } from "@/features/tour/guided-tour";
 import { day } from "@/lib/format";
 import { TopBar } from "./top-bar";
 
@@ -51,6 +53,8 @@ export function AppShell() {
           </span>
         )}
       </footer>
+      <ExportDialog />
+      <GuidedTour />
     </div>
   );
 }

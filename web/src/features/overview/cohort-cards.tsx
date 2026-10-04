@@ -31,7 +31,7 @@ function CohortCard({ k, n }: { k: Cohort; n: number }) {
 
 export function CohortCards({ counts }: { counts?: Record<string, number> }) {
   return (
-    <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+    <div data-tour="cohort-cards" className="grid grid-cols-2 gap-3 lg:grid-cols-4">
       {COHORTS.map((k) =>
         counts ? (
           <CohortCard key={k} k={k} n={counts[k] ?? 0} />

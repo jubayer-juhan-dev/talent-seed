@@ -1,10 +1,12 @@
 import { useRouter } from "@tanstack/react-router";
-import { ChevronsDown, LayoutGrid, Loader2, SearchX, ServerCrash, Table2, TriangleAlert } from "lucide-react";
+import { ChevronsDown, Download, LayoutGrid, Loader2, SearchX, ServerCrash, Table2, TriangleAlert } from "lucide-react";
+import { useEffect } from "react";
 import { $api, errorText } from "@/api/client";
 import { EmptyState } from "@/components/app/empty-state";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
+import { exportDialog } from "@/features/export/export-store";
 import { PersonProfile } from "@/features/profile/person-profile";
 import { markProfilePushed, takeProfilePushed } from "@/features/profile/profile-nav";
 import { fmt } from "@/lib/format";
@@ -36,6 +38,13 @@ export function ExplorePage() {
   const rows = query.data?.pages.flatMap((p) => p.rows) ?? [];
   const total = query.data?.pages[0]?.total ?? 0;
   const router = useRouter();
+
+  // Keep the export dialog's "current filter" in step with what's on screen.
+  const exportQuery = JSON.stringify(apiQuery(search));
+  useEffect(() => {
+    exportDialog.setFilter({ query: JSON.parse(exportQuery), total });
+  }, [exportQuery, total]);
+  useEffect(() => () => exportDialog.setFilter(null), []);
   const list = useShortlist();
   const open = (id: string) => {
     markProfilePushed();
@@ -49,11 +58,17 @@ export function ExplorePage() {
   return (
     <div className="animate-in fade-in slide-in-from-bottom-1 duration-300">
       <div className="mb-3.5 flex flex-col gap-3">
-        <CohortSwitcher />
+        <div data-tour="cohorts">
+          <CohortSwitcher />
+        </div>
         <div className="flex flex-wrap items-center gap-2">
           <SearchInput />
-          <FilterMenu />
-          <SortMenu />
+          <div data-tour="filter">
+            <FilterMenu />
+          </div>
+          <div data-tour="sort">
+            <SortMenu />
+          </div>
           <fieldset className="flex gap-0.5 rounded-[10px] border bg-muted p-[3px]">
             <legend className="sr-only">Layout</legend>
             {(
@@ -77,6 +92,10 @@ export function ExplorePage() {
               </button>
             ))}
           </fieldset>
+          <Button data-tour="export" onClick={() => exportDialog.open("filter")} className="gap-2">
+            <Download className="size-4" />
+            Export
+          </Button>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <FilterChips />
@@ -131,7 +150,7 @@ export function ExplorePage() {
           </EmptyState>
         </div>
       ) : layout === "cards" ? (
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-[repeat(auto-fill,minmax(310px,1fr))]">
+        <div data-tour="results" className="grid grid-cols-1 gap-3 sm:grid-cols-[repeat(auto-fill,minmax(310px,1fr))]">
           {rows.map((p, i) => (
             <PersonCard key={p.person_id} p={p} index={i} onOpen={() => open(p.person_id)} />
           ))}

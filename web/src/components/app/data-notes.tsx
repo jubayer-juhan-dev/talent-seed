@@ -11,7 +11,7 @@ export function DataNotes() {
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground">
+        <Button data-tour="notes" variant="ghost" size="sm" className="gap-2 text-muted-foreground">
           <span className="inline-flex items-center gap-1 rounded-full bg-warn-soft px-2 py-0.5 text-[11.5px] font-semibold text-warn">
             <FlaskConical className="size-3.5" />
             Draft

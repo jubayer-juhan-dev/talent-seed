@@ -22,7 +22,10 @@ export function SearchInput() {
   };
 
   return (
-    <label className="flex h-9 min-w-0 flex-[1_1_280px] items-center gap-2 rounded-lg border bg-card px-3 shadow-xs transition-[border-color,box-shadow] focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/25">
+    <label
+      data-tour="search"
+      className="flex h-9 min-w-0 flex-[1_1_280px] items-center gap-2 rounded-lg border bg-card px-3 shadow-xs transition-[border-color,box-shadow] focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/25"
+    >
       <Search className="size-4 shrink-0 text-faint" />
       <input
         id={SEARCH_INPUT_ID}

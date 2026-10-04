@@ -1,7 +1,8 @@
 import { Link } from "@tanstack/react-router";
-import { LayoutDashboard, Moon, Sprout, Sun, Users } from "lucide-react";
+import { CircleHelp, LayoutDashboard, Moon, Sprout, Sun, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { tour } from "@/features/tour/tour-store";
 import { useTheme } from "@/hooks/use-theme";
 import { DataNotes } from "./data-notes";
 import { ShortlistSheet } from "./shortlist-sheet";
@@ -43,6 +44,14 @@ export function TopBar() {
         </nav>
         <div className="flex-1" />
         <DataNotes />
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button variant="ghost" size="icon" onClick={tour.start} aria-label="Take the tour">
+              <CircleHelp className="size-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Take the tour</TooltipContent>
+        </Tooltip>
         <Tooltip>
           <TooltipTrigger asChild>
             <Button

@@ -113,8 +113,9 @@ def ecosystems(con: Con, q: str = ""):
 @app.get("/api/export.csv", response_class=Response, responses={**ERRORS, 200: {"content": {"text/csv": {}}}})
 def export(con: Con, f: Annotated[Filters, Depends()]):
     """Up to 5,000 people as CSV, with the unverified-email, draft-cohort and attribution columns."""
+    name = "talent_seed_shortlist.csv" if f.values["ids"] else "talent_seed_export.csv"
     return Response(queries.export_csv(con, f.q()).encode("utf-8-sig"), media_type="text/csv; charset=utf-8",
-                    headers={"Content-Disposition": 'attachment; filename="talent_seed_shortlist.csv"'})
+                    headers={"Content-Disposition": f'attachment; filename="{name}"'})
 
 
 @app.get("/", include_in_schema=False)
