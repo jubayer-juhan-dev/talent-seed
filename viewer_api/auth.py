@@ -16,6 +16,10 @@ LOCKED_PAGE = """<!doctype html><meta charset="utf-8"><meta name="viewport" cont
 <title>Talent Seed</title><body style="font:15px system-ui;display:grid;place-items:center;min-height:90vh;color:#555">
 <p>This page needs its access link. Ask the owner for the full URL.</p></body>"""
 HEADERS = {"Cache-Control": "no-store", "X-Robots-Tag": "noindex, nofollow", "Referrer-Policy": "no-referrer"}
+# Built JS/CSS/fonts hold no data, and browsers fetch them without the key when cookies are blocked, so they
+# are public. Their file names carry a content hash, so they can be cached forever.
+PUBLIC_ASSETS = ("/next/assets/",)
+PUBLIC_FILES = ("/next/favicon.svg",)
 
 
 def _ok(value: str) -> bool:
@@ -23,6 +27,12 @@ def _ok(value: str) -> bool:
 
 
 async def access_gate(request: Request, call_next):
+    path = request.url.path
+    if (path.startswith(PUBLIC_ASSETS) and ".." not in path) or path in PUBLIC_FILES:
+        resp = await call_next(request)
+        if path.startswith(PUBLIC_ASSETS) and resp.status_code == 200:
+            resp.headers["Cache-Control"] = "public, max-age=31536000, immutable"
+        return resp
     if ACCESS_KEY and not any(_ok(v) for v in (request.query_params.get("key", ""), request.headers.get("x-access-key", ""),
                                               request.cookies.get(KEY_COOKIE, ""))):
         resp = (JSONResponse({"error": "Access link required"}, 401) if request.url.path.startswith("/api/")

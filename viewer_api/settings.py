@@ -8,6 +8,8 @@ DB = ROOT / "data" / "talent_seed.duckdb"
 LOGINS = ROOT / "data" / "github_logins.sqlite"
 # The page served at "/". Until the React app replaces it (plan step 7), this is the current hand-written page.
 INDEX = ROOT / "scripts" / "seed_viewer" / "index.html"
+# The React app (web/, `pnpm build`), previewed at /next/ until the switch-over.
+WEB_DIST = ROOT / "web" / "dist"
 ACCESS_KEY = os.environ.get("TALENT_SEED_KEY", "")
 KEY_COOKIE = "ts_key"
 PAGE_SIZE = 50

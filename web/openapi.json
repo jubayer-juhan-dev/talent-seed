@@ -1,0 +1,2244 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Talent Seed viewer API",
+    "version": "1.0"
+  },
+  "paths": {
+    "/api/meta": {
+      "get": {
+        "summary": "Meta",
+        "operationId": "meta_api_meta_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Meta"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/overview": {
+      "get": {
+        "summary": "Overview",
+        "operationId": "overview_api_overview_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Overview"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/people": {
+      "get": {
+        "summary": "People",
+        "operationId": "people_api_people_get",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "title": "Page"
+            }
+          },
+          {
+            "name": "cohort",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "P1,P2,P3,HOLD; comma-separated",
+              "default": "",
+              "title": "Cohort"
+            },
+            "description": "P1,P2,P3,HOLD; comma-separated"
+          },
+          {
+            "name": "activity",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "FULL_TIME,PART_TIME,ONE_TIME,UNKNOWN",
+              "default": "",
+              "title": "Activity"
+            },
+            "description": "FULL_TIME,PART_TIME,ONE_TIME,UNKNOWN"
+          },
+          {
+            "name": "tenure",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "ESTABLISHED,EMERGING,NEWCOMER,UNKNOWN",
+              "default": "",
+              "title": "Tenure"
+            },
+            "description": "ESTABLISHED,EMERGING,NEWCOMER,UNKNOWN"
+          },
+          {
+            "name": "exclusivity",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "EXCLUSIVE,MULTICHAIN,UNKNOWN",
+              "default": "",
+              "title": "Exclusivity"
+            },
+            "description": "EXCLUSIVE,MULTICHAIN,UNKNOWN"
+          },
+          {
+            "name": "country",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "comma-separated",
+              "default": "",
+              "title": "Country"
+            },
+            "description": "comma-separated"
+          },
+          {
+            "name": "chain",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "one top-level chain",
+              "default": "",
+              "title": "Chain"
+            },
+            "description": "one top-level chain"
+          },
+          {
+            "name": "eco",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "chains or projects, separated by |",
+              "default": "",
+              "title": "Eco"
+            },
+            "description": "chains or projects, separated by |"
+          },
+          {
+            "name": "ids",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "person ids (gh:\u2026 / odd:\u2026), comma-separated",
+              "default": "",
+              "title": "Ids"
+            },
+            "description": "person ids (gh:\u2026 / odd:\u2026), comma-separated"
+          },
+          {
+            "name": "hide_flagged",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "1 hides probable bots and GitHub conflicts",
+              "default": "",
+              "title": "Hide Flagged"
+            },
+            "description": "1 hides probable bots and GitHub conflicts"
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "name or login substring, exact email, or person id",
+              "default": "",
+              "title": "Q"
+            },
+            "description": "name or login substring, exact email, or person id"
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "commits, last_activity, first_commit, repos, ecosystems, active_days, name",
+              "default": "",
+              "title": "Sort"
+            },
+            "description": "commits, last_activity, first_commit, repos, ecosystems, active_days, name"
+          },
+          {
+            "name": "dir",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "asc | desc",
+              "default": "",
+              "title": "Dir"
+            },
+            "description": "asc | desc"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/People"
+                }
+              }
+            }
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/person": {
+      "get": {
+        "summary": "Person",
+        "operationId": "person_api_person_get",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "gh:\u2026 or odd:\u2026",
+              "title": "Id"
+            },
+            "description": "gh:\u2026 or odd:\u2026"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PersonDetail"
+                }
+              }
+            }
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/ecosystems": {
+      "get": {
+        "summary": "Ecosystems",
+        "operationId": "ecosystems_api_ecosystems_get",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "Q"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ecosystems"
+                }
+              }
+            }
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/export.csv": {
+      "get": {
+        "summary": "Export",
+        "description": "Up to 5,000 people as CSV, with the unverified-email, draft-cohort and attribution columns.",
+        "operationId": "export_api_export_csv_get",
+        "parameters": [
+          {
+            "name": "cohort",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "P1,P2,P3,HOLD; comma-separated",
+              "default": "",
+              "title": "Cohort"
+            },
+            "description": "P1,P2,P3,HOLD; comma-separated"
+          },
+          {
+            "name": "activity",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "FULL_TIME,PART_TIME,ONE_TIME,UNKNOWN",
+              "default": "",
+              "title": "Activity"
+            },
+            "description": "FULL_TIME,PART_TIME,ONE_TIME,UNKNOWN"
+          },
+          {
+            "name": "tenure",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "ESTABLISHED,EMERGING,NEWCOMER,UNKNOWN",
+              "default": "",
+              "title": "Tenure"
+            },
+            "description": "ESTABLISHED,EMERGING,NEWCOMER,UNKNOWN"
+          },
+          {
+            "name": "exclusivity",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "EXCLUSIVE,MULTICHAIN,UNKNOWN",
+              "default": "",
+              "title": "Exclusivity"
+            },
+            "description": "EXCLUSIVE,MULTICHAIN,UNKNOWN"
+          },
+          {
+            "name": "country",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "comma-separated",
+              "default": "",
+              "title": "Country"
+            },
+            "description": "comma-separated"
+          },
+          {
+            "name": "chain",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "one top-level chain",
+              "default": "",
+              "title": "Chain"
+            },
+            "description": "one top-level chain"
+          },
+          {
+            "name": "eco",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "chains or projects, separated by |",
+              "default": "",
+              "title": "Eco"
+            },
+            "description": "chains or projects, separated by |"
+          },
+          {
+            "name": "ids",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "person ids (gh:\u2026 / odd:\u2026), comma-separated",
+              "default": "",
+              "title": "Ids"
+            },
+            "description": "person ids (gh:\u2026 / odd:\u2026), comma-separated"
+          },
+          {
+            "name": "hide_flagged",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "1 hides probable bots and GitHub conflicts",
+              "default": "",
+              "title": "Hide Flagged"
+            },
+            "description": "1 hides probable bots and GitHub conflicts"
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "name or login substring, exact email, or person id",
+              "default": "",
+              "title": "Q"
+            },
+            "description": "name or login substring, exact email, or person id"
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "commits, last_activity, first_commit, repos, ecosystems, active_days, name",
+              "default": "",
+              "title": "Sort"
+            },
+            "description": "commits, last_activity, first_commit, repos, ecosystems, active_days, name"
+          },
+          {
+            "name": "dir",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "asc | desc",
+              "default": "",
+              "title": "Dir"
+            },
+            "description": "asc | desc"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "text/csv": {}
+            }
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ChainCount": {
+        "properties": {
+          "k": {
+            "type": "string",
+            "title": "K"
+          },
+          "n": {
+            "type": "integer",
+            "title": "N"
+          },
+          "p1": {
+            "type": "integer",
+            "title": "P1"
+          }
+        },
+        "type": "object",
+        "required": [
+          "k",
+          "n",
+          "p1"
+        ],
+        "title": "ChainCount"
+      },
+      "Contact": {
+        "properties": {
+          "value": {
+            "type": "string",
+            "title": "Value"
+          },
+          "email_status": {
+            "type": "string",
+            "title": "Email Status"
+          },
+          "is_github_noreply": {
+            "type": "boolean",
+            "title": "Is Github Noreply"
+          },
+          "is_placeholder": {
+            "type": "boolean",
+            "title": "Is Placeholder"
+          },
+          "shared_by_n_developers": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Shared By N Developers"
+          },
+          "author_names": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Author Names"
+          },
+          "first_seen_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "First Seen At"
+          },
+          "last_seen_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Seen At"
+          },
+          "n_commits": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "N Commits"
+          }
+        },
+        "type": "object",
+        "required": [
+          "value",
+          "email_status",
+          "is_github_noreply",
+          "is_placeholder"
+        ],
+        "title": "Contact"
+      },
+      "Count": {
+        "properties": {
+          "k": {
+            "type": "string",
+            "title": "K"
+          },
+          "n": {
+            "type": "integer",
+            "title": "N"
+          }
+        },
+        "type": "object",
+        "required": [
+          "k",
+          "n"
+        ],
+        "title": "Count"
+      },
+      "EcosystemHit": {
+        "properties": {
+          "k": {
+            "type": "string",
+            "title": "K"
+          },
+          "level": {
+            "type": "string",
+            "title": "Level"
+          },
+          "n": {
+            "type": "integer",
+            "title": "N"
+          }
+        },
+        "type": "object",
+        "required": [
+          "k",
+          "level",
+          "n"
+        ],
+        "title": "EcosystemHit"
+      },
+      "Ecosystems": {
+        "properties": {
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/EcosystemHit"
+            },
+            "type": "array",
+            "title": "Rows"
+          }
+        },
+        "type": "object",
+        "required": [
+          "rows"
+        ],
+        "title": "Ecosystems"
+      },
+      "Error": {
+        "properties": {
+          "error": {
+            "type": "string",
+            "title": "Error"
+          }
+        },
+        "type": "object",
+        "required": [
+          "error"
+        ],
+        "title": "Error"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "Member": {
+        "properties": {
+          "canonical_developer_id": {
+            "type": "integer",
+            "title": "Canonical Developer Id"
+          },
+          "link_method": {
+            "type": "string",
+            "title": "Link Method"
+          },
+          "n_commits": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "N Commits"
+          }
+        },
+        "type": "object",
+        "required": [
+          "canonical_developer_id",
+          "link_method"
+        ],
+        "title": "Member"
+      },
+      "Meta": {
+        "properties": {
+          "run": {
+            "$ref": "#/components/schemas/Run"
+          },
+          "cohorts": {
+            "items": {
+              "$ref": "#/components/schemas/Count"
+            },
+            "type": "array",
+            "title": "Cohorts"
+          },
+          "chains": {
+            "items": {
+              "$ref": "#/components/schemas/Count"
+            },
+            "type": "array",
+            "title": "Chains"
+          },
+          "countries": {
+            "items": {
+              "$ref": "#/components/schemas/Count"
+            },
+            "type": "array",
+            "title": "Countries"
+          }
+        },
+        "type": "object",
+        "required": [
+          "run",
+          "cohorts",
+          "chains",
+          "countries"
+        ],
+        "title": "Meta"
+      },
+      "MixCell": {
+        "properties": {
+          "tenure": {
+            "type": "string",
+            "title": "Tenure"
+          },
+          "activity": {
+            "type": "string",
+            "title": "Activity"
+          },
+          "n": {
+            "type": "integer",
+            "title": "N"
+          }
+        },
+        "type": "object",
+        "required": [
+          "tenure",
+          "activity",
+          "n"
+        ],
+        "title": "MixCell"
+      },
+      "Overview": {
+        "properties": {
+          "cohorts": {
+            "items": {
+              "$ref": "#/components/schemas/Count"
+            },
+            "type": "array",
+            "title": "Cohorts"
+          },
+          "chains": {
+            "items": {
+              "$ref": "#/components/schemas/ChainCount"
+            },
+            "type": "array",
+            "title": "Chains"
+          },
+          "mix": {
+            "items": {
+              "$ref": "#/components/schemas/MixCell"
+            },
+            "type": "array",
+            "title": "Mix"
+          },
+          "countries": {
+            "items": {
+              "$ref": "#/components/schemas/Count"
+            },
+            "type": "array",
+            "title": "Countries"
+          },
+          "no_country": {
+            "prefixItems": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "integer"
+              }
+            ],
+            "type": "array",
+            "maxItems": 2,
+            "minItems": 2,
+            "title": "No Country"
+          }
+        },
+        "type": "object",
+        "required": [
+          "cohorts",
+          "chains",
+          "mix",
+          "countries",
+          "no_country"
+        ],
+        "title": "Overview"
+      },
+      "People": {
+        "properties": {
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "page": {
+            "type": "integer",
+            "title": "Page"
+          },
+          "page_size": {
+            "type": "integer",
+            "title": "Page Size"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/PersonRow"
+            },
+            "type": "array",
+            "title": "Rows"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total",
+          "page",
+          "page_size",
+          "rows"
+        ],
+        "title": "People"
+      },
+      "Person": {
+        "properties": {
+          "github_login_source": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Github Login Source"
+          },
+          "github_login_looked_up_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Github Login Looked Up At"
+          },
+          "person_id": {
+            "type": "string",
+            "title": "Person Id"
+          },
+          "primary_canonical_developer_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Primary Canonical Developer Id"
+          },
+          "canonical_developer_ids": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "integer"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Canonical Developer Ids"
+          },
+          "n_canonical_ids": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "N Canonical Ids"
+          },
+          "display_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Display Name"
+          },
+          "n_names": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "N Names"
+          },
+          "github_user_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Github User Id"
+          },
+          "github_login": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Github Login"
+          },
+          "github_resolution_method": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Github Resolution Method"
+          },
+          "github_corroborated_by_odd_id": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Github Corroborated By Odd Id"
+          },
+          "github_candidate_commit_sha": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Github Candidate Commit Sha"
+          },
+          "github_candidate_repo": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Github Candidate Repo"
+          },
+          "location": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Location"
+          },
+          "country": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Country"
+          },
+          "first_commit_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "First Commit Date"
+          },
+          "first_crypto_commit_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "First Crypto Commit Date"
+          },
+          "last_crypto_activity_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Crypto Activity Date"
+          },
+          "last_activity_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Activity Date"
+          },
+          "repository_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Repository Count"
+          },
+          "repository_count_excluding_inherited": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Repository Count Excluding Inherited"
+          },
+          "ecosystem_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ecosystem Count"
+          },
+          "ecosystem_count_excluding_inherited": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ecosystem Count Excluding Inherited"
+          },
+          "sub_ecosystem_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sub Ecosystem Count"
+          },
+          "top_level_ecosystems": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Top Level Ecosystems"
+          },
+          "commit_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Commit Count"
+          },
+          "commit_count_bot": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Commit Count Bot"
+          },
+          "commit_count_ai_agent": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Commit Count Ai Agent"
+          },
+          "commit_count_excluding_inherited": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Commit Count Excluding Inherited"
+          },
+          "tenure_days": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tenure Days"
+          },
+          "active_days_in_window": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Active Days In Window"
+          },
+          "max_active_days_in_28d": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Active Days In 28D"
+          },
+          "exclusivity_eco_days": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Exclusivity Eco Days"
+          },
+          "exclusivity_exclusive_days": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Exclusivity Exclusive Days"
+          },
+          "top_level_ecosystems_in_window": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Top Level Ecosystems In Window"
+          },
+          "odd_contribution_rank_asof": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Odd Contribution Rank Asof"
+          },
+          "flag_probable_bot": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Flag Probable Bot"
+          },
+          "flag_github_conflict": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Flag Github Conflict"
+          },
+          "flag_linked_ids": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Flag Linked Ids"
+          },
+          "flag_activity_table_gap": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Flag Activity Table Gap"
+          },
+          "flag_bad_commit_dates": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Flag Bad Commit Dates"
+          },
+          "github_confidence": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Github Confidence"
+          },
+          "tenure_segment": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tenure Segment"
+          },
+          "activity_segment": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Activity Segment"
+          },
+          "exclusivity": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Exclusivity"
+          },
+          "exclusivity_method": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Exclusivity Method"
+          },
+          "distinct_top_level_ecosystems_in_window": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Distinct Top Level Ecosystems In Window"
+          },
+          "priority_cohort": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Priority Cohort"
+          },
+          "priority_cohort_rule": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Priority Cohort Rule"
+          },
+          "priority_cohort_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Priority Cohort Reason"
+          },
+          "priority_cohort_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Priority Cohort Status"
+          },
+          "as_of_activity_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "As Of Activity Date"
+          },
+          "activity_window_start": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Activity Window Start"
+          },
+          "source_snapshot_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Snapshot Id"
+          },
+          "source_snapshot_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Snapshot Date"
+          },
+          "source_tables": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Tables"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "person_id"
+        ],
+        "title": "Person",
+        "description": "Every column of talent_seed for one person (see docs/talent_seed_tables.md)."
+      },
+      "PersonDetail": {
+        "properties": {
+          "person": {
+            "$ref": "#/components/schemas/Person"
+          },
+          "members": {
+            "items": {
+              "$ref": "#/components/schemas/Member"
+            },
+            "type": "array",
+            "title": "Members"
+          },
+          "contacts": {
+            "items": {
+              "$ref": "#/components/schemas/Contact"
+            },
+            "type": "array",
+            "title": "Contacts"
+          },
+          "ecosystems": {
+            "items": {
+              "$ref": "#/components/schemas/PersonEcosystem"
+            },
+            "type": "array",
+            "title": "Ecosystems"
+          },
+          "repos": {
+            "items": {
+              "$ref": "#/components/schemas/Repo"
+            },
+            "type": "array",
+            "title": "Repos"
+          },
+          "top_repos": {
+            "items": {
+              "$ref": "#/components/schemas/TopRepo"
+            },
+            "type": "array",
+            "title": "Top Repos"
+          },
+          "repo_total": {
+            "type": "integer",
+            "title": "Repo Total"
+          }
+        },
+        "type": "object",
+        "required": [
+          "person",
+          "members",
+          "contacts",
+          "ecosystems",
+          "repos",
+          "top_repos",
+          "repo_total"
+        ],
+        "title": "PersonDetail"
+      },
+      "PersonEcosystem": {
+        "properties": {
+          "level": {
+            "type": "string",
+            "title": "Level"
+          },
+          "ecosystem_name": {
+            "type": "string",
+            "title": "Ecosystem Name"
+          },
+          "repo_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Repo Count"
+          },
+          "repo_count_excluding_inherited": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Repo Count Excluding Inherited"
+          },
+          "commits": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Commits"
+          },
+          "last_active_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Active Date"
+          }
+        },
+        "type": "object",
+        "required": [
+          "level",
+          "ecosystem_name"
+        ],
+        "title": "PersonEcosystem"
+      },
+      "PersonRow": {
+        "properties": {
+          "github_login_source": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Github Login Source"
+          },
+          "github_login_looked_up_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Github Login Looked Up At"
+          },
+          "person_id": {
+            "type": "string",
+            "title": "Person Id"
+          },
+          "display_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Display Name"
+          },
+          "github_login": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Github Login"
+          },
+          "github_user_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Github User Id"
+          },
+          "github_confidence": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Github Confidence"
+          },
+          "country": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Country"
+          },
+          "priority_cohort": {
+            "type": "string",
+            "title": "Priority Cohort"
+          },
+          "priority_cohort_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Priority Cohort Reason"
+          },
+          "tenure_segment": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tenure Segment"
+          },
+          "activity_segment": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Activity Segment"
+          },
+          "exclusivity": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Exclusivity"
+          },
+          "active_days_in_window": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Active Days In Window"
+          },
+          "commit_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Commit Count"
+          },
+          "repository_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Repository Count"
+          },
+          "ecosystem_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ecosystem Count"
+          },
+          "top_level_ecosystems": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Top Level Ecosystems"
+          },
+          "first_commit_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "First Commit Date"
+          },
+          "last_activity_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Activity Date"
+          },
+          "flag_probable_bot": {
+            "type": "boolean",
+            "title": "Flag Probable Bot",
+            "default": false
+          },
+          "flag_linked_ids": {
+            "type": "boolean",
+            "title": "Flag Linked Ids",
+            "default": false
+          },
+          "flag_activity_table_gap": {
+            "type": "boolean",
+            "title": "Flag Activity Table Gap",
+            "default": false
+          },
+          "flag_github_conflict": {
+            "type": "boolean",
+            "title": "Flag Github Conflict",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "person_id",
+          "priority_cohort"
+        ],
+        "title": "PersonRow",
+        "description": "One row of /api/people."
+      },
+      "Repo": {
+        "properties": {
+          "repo_name": {
+            "type": "string",
+            "title": "Repo Name"
+          },
+          "repo_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Repo Url"
+          },
+          "commits": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Commits"
+          },
+          "active_days": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Active Days"
+          },
+          "first_active_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "First Active Date"
+          },
+          "last_active_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Active Date"
+          },
+          "inherited_history": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Inherited History"
+          },
+          "num_stars": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Num Stars"
+          }
+        },
+        "type": "object",
+        "required": [
+          "repo_name"
+        ],
+        "title": "Repo"
+      },
+      "Run": {
+        "properties": {
+          "run_at": {
+            "type": "string",
+            "title": "Run At"
+          },
+          "source_snapshot_id": {
+            "type": "string",
+            "title": "Source Snapshot Id"
+          },
+          "source_snapshot_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Snapshot Date"
+          },
+          "as_of_activity_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "As Of Activity Date"
+          },
+          "row_counts": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Row Counts"
+          }
+        },
+        "type": "object",
+        "required": [
+          "run_at",
+          "source_snapshot_id"
+        ],
+        "title": "Run"
+      },
+      "TopRepo": {
+        "properties": {
+          "repo_name": {
+            "type": "string",
+            "title": "Repo Name"
+          },
+          "repo_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Repo Url"
+          },
+          "commits": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Commits"
+          },
+          "active_days": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Active Days"
+          },
+          "first_original_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "First Original Date"
+          },
+          "last_original_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Original Date"
+          },
+          "num_stars": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Num Stars"
+          }
+        },
+        "type": "object",
+        "required": [
+          "repo_name"
+        ],
+        "title": "TopRepo"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    }
+  }
+}

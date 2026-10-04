@@ -1,0 +1,200 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+@import "@fontsource-variable/inter";
+@import "@fontsource-variable/jetbrains-mono";
+
+@custom-variant dark (&:is(.dark *));
+
+/* Design tokens, carried over from the first viewer (scripts/seed_viewer/index.html).
+   shadcn's variable names are kept so its components pick them up; app-specific tokens follow.
+   Chart and heatmap blues are the validated sequential ramp from the dataviz palette. */
+:root {
+  --background: #f7f7f8;
+  --foreground: #18181b;
+  --card: #ffffff;
+  --card-foreground: #18181b;
+  --popover: #ffffff;
+  --popover-foreground: #18181b;
+  --primary: #4f46e5;
+  --primary-foreground: #ffffff;
+  --secondary: #f3f3f5;
+  --secondary-foreground: #18181b;
+  --muted: #f3f3f5;
+  --muted-foreground: #5f5f69;
+  --faint: #8a8a94;
+  --accent: #f3f3f5;
+  --accent-foreground: #18181b;
+  --accent-soft: #eef0ff;
+  --destructive: #b91c1c;
+  --border: #e7e7eb;
+  --border-strong: #d5d5dc;
+  --input: #e7e7eb;
+  --ring: #4f46e5;
+  --radius: 0.75rem;
+
+  /* cohorts: text colour and soft background */
+  --p1: #15803d;
+  --p1-soft: #e6f6ec;
+  --p2: #1d4ed8;
+  --p2-soft: #e8effe;
+  --p3: #b45309;
+  --p3-soft: #fdf2e2;
+  --hold: #62626b;
+  --hold-soft: #efeff2;
+  --warn: #a15c07;
+  --warn-soft: #fdf3e1;
+  --good: #15803d;
+
+  /* charts */
+  --bar-strong: #1c5cab;
+  --bar-light: #86b6ef;
+  --bar-track: #eef1f6;
+  --heat-0: #cde2fb;
+  --heat-1: #9ec5f4;
+  --heat-2: #6da7ec;
+  --heat-3: #3987e5;
+  --heat-4: #256abf;
+  --heat-5: #184f95;
+  --heat-text-lo: #0d366b;
+  --heat-text-hi: #ffffff;
+  --chart-1: var(--bar-strong);
+  --chart-2: var(--bar-light);
+  --chart-3: #3987e5;
+  --chart-4: #184f95;
+  --chart-5: #b7d3f6;
+}
+
+.dark {
+  --background: #0f0f12;
+  --foreground: #ececf1;
+  --card: #17171c;
+  --card-foreground: #ececf1;
+  --popover: #17171c;
+  --popover-foreground: #ececf1;
+  --primary: #818cf8;
+  --primary-foreground: #0f0f12;
+  --secondary: #1e1e24;
+  --secondary-foreground: #ececf1;
+  --muted: #1e1e24;
+  --muted-foreground: #a3a3ad;
+  --faint: #7a7a85;
+  --accent: #1e1e24;
+  --accent-foreground: #ececf1;
+  --accent-soft: #23234a;
+  --destructive: #f87171;
+  --border: #2a2a32;
+  --border-strong: #3a3a44;
+  --input: #2a2a32;
+  --ring: #818cf8;
+
+  --p1: #4ade80;
+  --p1-soft: #14301f;
+  --p2: #7aa2ff;
+  --p2-soft: #1a2547;
+  --p3: #f5b453;
+  --p3-soft: #3a2a12;
+  --hold: #a3a3ad;
+  --hold-soft: #26262d;
+  --warn: #f5b453;
+  --warn-soft: #3a2a12;
+  --good: #4ade80;
+
+  /* dark mode: its own steps of the same ramp, lighter = more */
+  --bar-strong: #86b6ef;
+  --bar-light: #256abf;
+  --bar-track: #22232b;
+  --heat-0: #184f95;
+  --heat-1: #1c5cab;
+  --heat-2: #2a78d6;
+  --heat-3: #5598e7;
+  --heat-4: #86b6ef;
+  --heat-5: #b7d3f6;
+  --heat-text-lo: #ffffff;
+  --heat-text-hi: #0d366b;
+}
+
+@theme inline {
+  --font-sans: "Inter Variable", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-heading: var(--font-sans);
+  --font-mono: "JetBrains Mono Variable", ui-monospace, Menlo, monospace;
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-faint: var(--faint);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent-soft: var(--accent-soft);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-p1: var(--p1);
+  --color-p1-soft: var(--p1-soft);
+  --color-p2: var(--p2);
+  --color-p2-soft: var(--p2-soft);
+  --color-p3: var(--p3);
+  --color-p3-soft: var(--p3-soft);
+  --color-hold: var(--hold);
+  --color-hold-soft: var(--hold-soft);
+  --color-warn: var(--warn);
+  --color-warn-soft: var(--warn-soft);
+  --color-good: var(--good);
+
+  --color-bar-strong: var(--bar-strong);
+  --color-bar-light: var(--bar-light);
+  --color-bar-track: var(--bar-track);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    @apply font-sans antialiased;
+    color-scheme: light;
+  }
+  html.dark {
+    color-scheme: dark;
+  }
+  body {
+    @apply bg-background text-foreground text-sm;
+  }
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
