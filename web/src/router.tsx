@@ -2,7 +2,7 @@ import { createRootRoute, createRoute, createRouter, redirect, retainSearchParam
 import { AppShell } from "@/components/app/app-shell";
 import { ExplorePage } from "@/features/explore/explore-page";
 import { validateExploreSearch } from "@/features/explore/search";
-import { OverviewPage } from "@/routes/overview";
+import { OverviewPage } from "@/features/overview/overview-page";
 
 /** `key` (the access key) is kept on every navigation, so reloads work even when cookies are blocked. */
 const rootRoute = createRootRoute({
