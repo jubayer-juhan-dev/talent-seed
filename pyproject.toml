@@ -5,7 +5,9 @@ requires-python = ">=3.12"
 dependencies = [
     "blake3>=1.0.10",
     "duckdb>=1.5.6",
+    "fastapi>=0.142.2",
     "numpy>=2.5.3",
     "pytz>=2026.4",
     "requests>=2.34.2",
+    "uvicorn[standard]>=0.54.0",
 ]
