@@ -1,0 +1,15 @@
+# Data: large, rebuildable, and contains personal data (emails). Never commit.
+raw_open_dev_data/
+data/
+exports/
+out/
+
+# Local working files: logs (incl. the tunnel link), test CSVs with emails, backups
+scratch/
+
+# Python / editor
+.venv/
+__pycache__/
+*.pyc
+*.swp
+.DS_Store

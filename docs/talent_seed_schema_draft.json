@@ -1,0 +1,126 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "talent_seed/0.1-draft",
+  "title": "ProspectMind Talent Seed record (DRAFT)",
+  "description": "DRAFT written without the client spec (spec_v0_2.md unavailable). Field set follows the Milestone 3 brief plus the Core principles in docs/prospectmind_architecture.png (evidence & provenance, confidence, staleness, conflict handling, shared IDs). Replace with the client's talent_seed schema when available.",
+  "type": "object",
+  "required": ["schema_version", "talent_seed", "repo_relations", "ecosystem_relations"],
+  "properties": {
+    "schema_version": {"const": "talent_seed/0.1-draft"},
+    "talent_seed": {
+      "type": "object",
+      "required": ["talent_seed_id", "canonical_developer_id", "display_name", "github", "contact_points",
+                   "name_variants", "metrics", "segments", "priority_cohort", "data_quality_flags", "provenance"],
+      "properties": {
+        "talent_seed_id": {"type": "string", "description": "odd-dev-<canonical_developer_id>; stable across snapshots as long as ODD keeps the ID"},
+        "canonical_developer_id": {"type": "integer"},
+        "display_name": {"type": ["string", "null"], "description": "author name with the most non-bot commits"},
+        "github": {
+          "type": "object",
+          "required": ["login", "user_id", "resolution_method", "confidence", "evidence"],
+          "properties": {
+            "login": {"type": ["string", "null"]},
+            "user_id": {"type": ["integer", "null"]},
+            "node_id": {"type": ["string", "null"]},
+            "account_type": {"type": ["string", "null"]},
+            "resolution_method": {"enum": ["NOREPLY", "ODD_GITHUB_ID", "COMMIT_API", "UNRESOLVED"]},
+            "resolution_commit_sha": {"type": ["string", "null"]},
+            "resolution_repo": {"type": ["string", "null"]},
+            "confidence": {"enum": ["HIGH", "MEDIUM", "LOW", "NONE"]},
+            "conflict": {"type": "boolean"},
+            "evidence": {"type": "array", "items": {"type": "object",
+              "required": ["method", "source"],
+              "properties": {
+                "method": {"type": "string"}, "source": {"type": "string"},
+                "login": {"type": ["string", "null"]}, "user_id": {"type": ["integer", "null"]},
+                "detail": {"type": ["string", "null"]}}}}
+          }
+        },
+        "contact_points": {"type": "array", "items": {"type": "object",
+          "required": ["type", "value", "email_status", "source_table"],
+          "properties": {
+            "type": {"const": "email"},
+            "value": {"type": "string"},
+            "email_status": {"const": "UNVERIFIED"},
+            "is_github_noreply": {"type": "boolean"},
+            "is_placeholder": {"type": "boolean"},
+            "first_seen": {"type": ["string", "null"], "format": "date"},
+            "last_seen": {"type": ["string", "null"], "format": "date"},
+            "n_commits": {"type": "integer"},
+            "source_table": {"type": "string"}}}},
+        "name_variants": {"type": "array", "items": {"type": "object",
+          "required": ["name", "email", "first_seen", "last_seen", "n_commits"],
+          "properties": {
+            "name": {"type": ["string", "null"]}, "email": {"type": ["string", "null"]},
+            "first_seen": {"type": ["string", "null"]}, "last_seen": {"type": ["string", "null"]},
+            "n_commits": {"type": "integer"}, "n_bot_commits": {"type": "integer"}}}},
+        "location": {"type": ["object", "null"]},
+        "metrics": {
+          "type": "object",
+          "required": ["first_commit_date", "last_activity_date", "repository_count", "ecosystem_count", "commit_count"],
+          "properties": {
+            "first_commit_date": {"type": ["string", "null"], "format": "date"},
+            "last_activity_date": {"type": ["string", "null"], "format": "date"},
+            "repository_count": {"type": "integer"},
+            "ecosystem_count": {"type": "integer", "description": "distinct top-level (is_chain=1) ecosystems"},
+            "sub_ecosystem_count": {"type": "integer"},
+            "commit_count": {"type": "integer"},
+            "active_days_total": {"type": "integer"},
+            "active_days_84d": {"type": "integer"}
+          }
+        },
+        "segments": {
+          "type": "object",
+          "required": ["tenure_segment", "activity_segment", "exclusivity"],
+          "properties": {
+            "tenure_segment": {"enum": ["ESTABLISHED", "EMERGING", "NEWCOMER", "UNKNOWN"]},
+            "tenure_days": {"type": ["integer", "null"]},
+            "activity_segment": {"enum": ["FULL_TIME", "PART_TIME", "ONE_TIME", "UNKNOWN"]},
+            "activity_window_days": {"type": "array"},
+            "activity_window_points": {"type": "array"},
+            "exclusivity": {"type": "object", "required": ["value", "method"],
+              "properties": {
+                "value": {"enum": ["EXCLUSIVE", "MULTICHAIN", "UNKNOWN"]},
+                "method": {"enum": ["ODD_FIELD", "FALLBACK_DISTINCT_TOP_LEVEL", "NONE"]},
+                "chains_84d": {"type": "array"}}}
+          }
+        },
+        "priority_cohort": {"type": "object", "required": ["value", "rule"],
+          "properties": {"value": {"enum": ["P1", "P2", "P3", "HOLD"]}, "rule": {"type": "string"}, "basis": {"type": "string"}}},
+        "odd_signals": {"type": "object"},
+        "data_quality_flags": {"type": "array", "items": {"type": "object", "required": ["code"],
+          "properties": {"code": {"type": "string"}, "detail": {"type": ["string", "null"]}}}},
+        "provenance": {"type": "object",
+          "required": ["source_snapshot_id", "source_snapshot_date", "data_as_of", "source_tables", "generated_at"],
+          "properties": {
+            "source_snapshot_id": {"type": "string"},
+            "source_snapshot_date": {"type": "string", "format": "date"},
+            "data_as_of": {"type": "string", "format": "date"},
+            "source_tables": {"type": "array", "items": {"type": "string"}},
+            "generated_at": {"type": "string"},
+            "generator": {"type": "string"},
+            "thresholds_config": {"type": "string"},
+            "license": {"type": "string"}}}
+      }
+    },
+    "repo_relations": {"type": "array", "items": {"type": "object",
+      "required": ["repo_id", "repo_name", "commits", "active_days", "first_active_date", "last_active_date"],
+      "properties": {
+        "repo_id": {"type": "integer"}, "repo_name": {"type": ["string", "null"]}, "repo_url": {"type": ["string", "null"]},
+        "commits": {"type": "integer"}, "active_days": {"type": "integer"},
+        "first_active_date": {"type": "string"}, "last_active_date": {"type": "string"},
+        "top_level_ecosystems": {"type": "array"}, "sub_ecosystems": {"type": "array"},
+        "is_blacklist": {"type": ["boolean", "null"]},
+        "source_tables": {"type": "array"}}}},
+    "ecosystem_relations": {"type": "array", "items": {"type": "object",
+      "required": ["ecosystem_id", "ecosystem_name", "level", "repo_count", "commits", "active_days", "last_active_date"],
+      "properties": {
+        "ecosystem_id": {"type": "integer"}, "ecosystem_name": {"type": "string"},
+        "level": {"enum": ["TOP_LEVEL", "SUB_ECOSYSTEM"]},
+        "parent_top_level": {"type": "array"},
+        "repo_count": {"type": "integer"}, "commits": {"type": "integer"}, "active_days": {"type": "integer"},
+        "last_active_date": {"type": "string"},
+        "source_tables": {"type": "array"}}}},
+    "candidates": {"type": "array", "description": "present when the input matched more than one canonical developer"}
+  }
+}

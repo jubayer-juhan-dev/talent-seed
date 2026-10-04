@@ -1,0 +1,228 @@
+# Thresholds for scripts/inspect_developer.py (talent_seed Phase 1).
+#
+# Every threshold is tagged with its provenance:
+#   source = "EC"         -> Electric Capital's documented methodology or a value ODD itself encodes
+#   source = "ASSUMPTION" -> our own choice; not EC methodology. Review before production use.
+# EC references:
+#   [EC-about]    https://www.developerreport.com/about
+#   [ODD-manifest] https://data.opendevdata.org/manifest.json (file descriptions)
+#   [ODD-data]    value domains measured in snapshot 20261002T130207 (see docs/data_dictionary.md)
+
+[as_of]
+# Activity windows are anchored on the last day with ODD activity data (max(day) in
+# developer_activities), NOT the snapshot date: the 20261002 snapshot's activity ends 2026-09-24.
+# Anchoring on the snapshot date would make everyone look ~8 days less active.
+anchor = "max_activity_day"
+source = "ASSUMPTION"
+
+[tenure]
+# Tenure = days from the developer's first valid commit (any repo in ODD) to the as-of day.
+# Buckets match ODD's eco_developer_tenures.category 0/1/2 and eco_mads devs_0_1y / devs_1_2y /
+# devs_2y_plus [ODD-manifest, ODD-data: category 0 = 0-365 days, 1 = 366-730, 2 = >= 731].
+# The labels NEWCOMER / EMERGING / ESTABLISHED are the client's; the mapping to EC buckets is ours.
+newcomer_max_days = 365     # NEWCOMER   : 0..365      source = EC (bucket edge)
+emerging_max_days = 730     # EMERGING   : 366..730    source = EC (bucket edge)
+                            # ESTABLISHED: >= 731      source = EC (bucket edge)
+# Difference from EC: EC measures tenure per ecosystem from the "first blockchain commit" in that
+# ecosystem; we measure from the first commit anywhere in ODD (spec asks "from the first commit").
+# The record also carries ODD's own per-ecosystem tenure category for comparison.
+# UNKNOWN when no commit has a valid author date (dates before 2005-04-01 or after the snapshot
+# are discarded - source = ASSUMPTION, git was released 2005-04-07).
+min_valid_commit_date = "2005-04-01"
+
+[activity]
+window_days = 84            # source = EC: contribution ranks use an 84-day rolling window [EC-about, ODD-manifest]
+# FULL_TIME: >= 10 active days in some rolling 28-day window inside the 84-day window.
+# source = EC for "10+ days in a rolling 28-day period" [EC-about].
+# source = ASSUMPTION for "any 28-day window within the 84 days" - EC describes full-time as
+# "consistently active across multiple weeks" over 84 days but does not publish the exact rule.
+full_time_min_days_in_28d = 10
+full_time_subwindow_days = 28
+# PART_TIME: active on >= 2 distinct days in the 84-day window but not FULL_TIME.   source = ASSUMPTION
+part_time_min_active_days = 2
+# ONE_TIME: exactly 1 active day in the 84-day window.                             source = ASSUMPTION
+# (ODD data: every one_time contribution_rank row has points = 1, consistent with this.)
+# UNKNOWN: 0 active days in the window (inactive) or no activity data.            source = ASSUMPTION
+# "Active day" = a calendar day with >= 1 commit in developer_activities, any repo. source = ASSUMPTION
+# The record also carries ODD's contribution_rank (full_time/part_time/one_time) on the as-of day
+# per root ecosystem, so the two can be compared.
+
+[exclusivity]
+# ODD has a developer-level field: eco_developer_activities.is_exclusive (per ecosystem, per day)
+# [ODD-manifest]. EC: single-chain developers "commit exclusively to repositories connected to the
+# same single chain on a given day" [EC-about]. So the ODD field is used, not a fallback.
+# Developer-level summary over the activity window, on root-chain ecosystems only:
+#   EXCLUSIVE  : every active day in the window has is_exclusive = true      source = ASSUMPTION (aggregation rule)
+#   MULTICHAIN : at least one active day with is_exclusive = false           source = ASSUMPTION (aggregation rule)
+#   UNKNOWN    : no root-chain ecosystem activity in the window
+window_days = 84            # source = ASSUMPTION (reuses the activity window)
+# Also reported (the spec's fallback metric): distinct top-level ecosystems active in the window.
+
+[ecosystems]
+# Top-level ecosystem = a root chain: ecosystems.is_chain = 1 with no is_chain = 1 ancestor in
+# ecosystems_child_ecosystems_recursive (e.g. Base/Arbitrum/Optimism roll up to Ethereum).
+# Category/cohort parents ("Top 200 2021Q3", "Layer 1s", ...) are ignored.   source = ASSUMPTION
+# Sub-ecosystems = the ecosystems a repo is directly tagged to (ecosystems_repos) that are real
+# projects: is_chain = 0, is_category = 0, is_virtual = 0 (e.g. Anza, Uniswap). Category and
+# virtual tags ("[Candidates] All Crypto", "BigQuery Sample 2022", "AI (Category)") are internal
+# lists, not ecosystems, and are neither listed nor used to derive top-level chains; each repo
+# reports how many such tags were dropped.   source = ASSUMPTION
+# A repo tagged to more than this many ecosystems is flagged as a data-quality issue.
+many_ecosystems_flag = 10   # source = ASSUMPTION
+
+[identity]
+# An email shared by more than this many canonical developers is treated as a placeholder
+# (none@none, you@example.com, ...) and flagged; matches are still reported, never collapsed.
+placeholder_email_min_devs = 3   # source = ASSUMPTION
+# A developer is flagged as a probable bot when bot commits are >= this share of their commits,
+# or their ODD GitHub ID is a Bot node ID.
+bot_commit_share_flag = 0.5      # source = ASSUMPTION
+# AI coding agents commit under their own canonical ids with is_bot = 0 in ODD (snapshot
+# 20261002T130207: Copilot 763k, noreply@anthropic.com 425k, Cursor 290k, Codex 11k commits).
+# Any developer with at least ai_agent_commit_share of commits from these author emails (SQL LIKE
+# patterns on the lower-cased email) is flagged PROBABLE_BOT.   source = ASSUMPTION (list is not exhaustive)
+ai_agent_email_patterns = [
+    "%+copilot@users.noreply.github.com",
+    "%+copilot-swe-agent[bot]@users.noreply.github.com",
+    "noreply@anthropic.com",
+    "claude@anthropic.com",
+    "cursoragent@cursor.com",
+    "codex@openai.com",
+    "devin-ai-integration[bot]@users.noreply.github.com",
+]
+ai_agent_commit_share = 0.5
+# Bot-name rule (agreed 2026-10-04): a person whose display name or GitHub login matches any of these
+# case-insensitive regexes is flagged PROBABLE_BOT. Catches automation ODD leaves at is_bot = 0, e.g.
+# "robot-piglet", "Workers DevProd", "Gerrit Code Review", "Registrator".   source = ASSUMPTION
+bot_name_patterns = [
+    '(^|[^a-z])bot([^a-z]|$)', '\[bot\]', 'robot', 'devprod', 'gerrit code review', 'gerrit user [0-9]', 'registrator',
+    'dependabot', 'renovate', 'github-actions', 'jenkins', 'buildkite', 'automation', 'autobuild',
+    'release-bot', 'ci-bot', 'weblate', 'transifex', 'crowdin',
+]
+
+[activity_fallback]
+# 16% of developers with commits in the last 84 days (39,036 of 239,046) have NO rows in
+# developer_activities (cause unknown; not documented by EC). When a developer's commits reach into
+# the window but developer_activities has nothing, active days are recomputed from the commits
+# table (full 22 GB scan, ~1-2 min) and the record is flagged ACTIVITY_TABLE_GAP.  source = ASSUMPTION
+enabled = true
+
+[github]
+# Resolution order: NOREPLY -> ODD_GITHUB_ID -> COMMIT_API -> UNRESOLVED.
+max_commit_api_calls = 2         # per developer, per spec
+min_remaining_before_sleep = 2   # stop/sleep when X-RateLimit-Remaining drops to this
+max_sleep_seconds = 900          # never sleep longer than this for a rate-limit reset; fail instead
+
+[priority_cohort]
+# DRAFT (option B, agreed 2026-10-04): the client spec (docs/spec_v0_2.md) does not exist, so this
+# whole table is source = ASSUMPTION. Replace it with the client's cohort table when available.
+# Rules are evaluated top to bottom; the first rule whose conditions all hold wins.
+# Conditions: activity_segment / tenure_segment = allowed values; flags_any = data-quality flag
+# prefixes, any of which triggers the rule. Omitted condition = matches anything.
+# Reasoning: HOLD keeps out records we should not contact yet (bots, people not active in the last
+# 84 days, records whose GitHub identity conflicts or whose tenure is unknown). Among active
+# developers, sustained activity (FULL_TIME) and experience (>1 year) rank highest; a newcomer
+# working full-time or an experienced part-timer is P2; light or one-off activity is P3.
+# Exclusivity is deliberately NOT used: whether single-chain or multichain developers are more
+# valuable depends on the client's hiring need.
+status = "DRAFT_ASSUMPTION"
+default_cohort = "HOLD"
+
+[[priority_cohort.rules]]
+cohort = "HOLD"
+reason = "probable bot account"
+flags_any = ["PROBABLE_BOT"]
+
+[[priority_cohort.rules]]
+cohort = "HOLD"
+reason = "GitHub identity conflict needs manual review"
+flags_any = ["GITHUB_CONFLICT"]
+
+[[priority_cohort.rules]]
+cohort = "HOLD"
+reason = "no original crypto commits in the 84-day activity window"
+activity_segment = ["UNKNOWN"]
+
+[[priority_cohort.rules]]
+cohort = "HOLD"
+reason = "tenure unknown (no original crypto commits)"
+tenure_segment = ["UNKNOWN"]
+
+[[priority_cohort.rules]]
+cohort = "P1"
+reason = "full-time and more than 1 year of tenure"
+activity_segment = ["FULL_TIME"]
+tenure_segment = ["ESTABLISHED", "EMERGING"]
+
+[[priority_cohort.rules]]
+cohort = "P2"
+reason = "full-time newcomer"
+activity_segment = ["FULL_TIME"]
+tenure_segment = ["NEWCOMER"]
+
+[[priority_cohort.rules]]
+cohort = "P2"
+reason = "part-time with more than 1 year of tenure"
+activity_segment = ["PART_TIME"]
+tenure_segment = ["ESTABLISHED", "EMERGING"]
+
+[[priority_cohort.rules]]
+cohort = "P3"
+reason = "part-time newcomer"
+activity_segment = ["PART_TIME"]
+tenure_segment = ["NEWCOMER"]
+
+[[priority_cohort.rules]]
+cohort = "P3"
+reason = "one-time contributor in the window"
+activity_segment = ["ONE_TIME"]
+
+[github_confidence]
+# Confidence of the resolved GitHub account (architecture: Core > Confidence).  source = ASSUMPTION
+# HIGH   : ODD's own GitHub id, or a noreply email whose numeric id equals ODD's id (two sources agree)
+# MEDIUM : noreply email with a numeric id and nothing to compare it with, or the commit API
+# LOW    : login-only noreply email (logins can be renamed and later reused by someone else)
+# NONE   : unresolved
+# Any GITHUB_CONFLICT downgrades the result to LOW.
+conflict_downgrades_to = "LOW"
+
+[matching]
+# An input (e.g. a placeholder email like none@none) can match thousands of canonical developers.
+# Above this many matches, every candidate id is still listed, but full records are not built.
+# source = ASSUMPTION
+max_full_records_per_input = 25
+
+[repos]
+# A repo is "inherited history" (fork / mirror / import) for a developer when at least this share of
+# their commits in it were authored before the repo was created (repos.repo_created_at). Those
+# commits are kept in commit_count but excluded from commit_count_excluding_inherited and
+# repository_count_excluding_inherited.  source = ASSUMPTION
+# Why: ODD attributes copied history to each fork as distinct SHAs (karalabe: 27,540 distinct SHAs,
+# of which go-ethereum holds 4,331; CortexTheseus holds 3,304, 3,008 authored before it existed).
+inherited_history_share = 0.5
+
+[population]
+# Milestone 4 (full-population build, scripts/m4_build_talent_seed.py). Agreed 2026-10-04:
+# all developers, draft cohort OK, drop non-crypto ecosystems, link identities.
+# Non-crypto: keep only ecosystems with ecosystems.is_crypto = 1 (ODD's own flag; drops Rust, Linux,
+# NixOS, Deno, Bluesky, Cal.com, Gitcoin Grants, "test1-- mor").   source = ODD flag
+require_is_crypto = true
+
+# Original-work rule (agreed 2026-10-04): activity segment, exclusivity window, tenure and therefore
+# the cohort count only "original crypto work" = commits in repos tagged to at least one crypto
+# ecosystem (is_crypto = 1, not a category / virtual list) AND authored on or after the repo's
+# creation date (no copied history). Activity in non-crypto or untagged repos (e.g. torvalds/linux,
+# kernel mirrors) and vendored history no longer makes someone FULL_TIME or ESTABLISHED.
+# ODD de-duplicates commits by SHA (16.3M window commits = 16.3M distinct SHAs), so forks do not
+# double count.   source = ASSUMPTION
+original_crypto_work_only = true
+
+[linking]
+# One talent_seed row = one PERSON. Canonical developer ids are linked into one person only when
+# they resolve to the SAME numeric GitHub user id (from ODD's decoded node id and/or the numeric id
+# in a '<id>+<login>@users.noreply.github.com' commit email).   source = ASSUMPTION
+# Never linked: ids with 2+ different GitHub ids (GITHUB_CONFLICT), bot accounts, AI-agent ids.
+# Name or plain-email matching is NOT used: placeholder emails (none@none: 2,706 ids) would chain
+# unrelated people together.
+# A GitHub id shared by more ids than this is treated as suspicious and not linked.
+max_devs_per_github_id = 20

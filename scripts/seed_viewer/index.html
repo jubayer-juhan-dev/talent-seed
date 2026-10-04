@@ -1,0 +1,1286 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Talent Seed</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+<style>
+/* Layout: top bar (brand, Overview/Explore tabs, data notes, theme, shortlist) -> one of two views.
+   Overview = cohort cards + charts. Explore = filter toolbar + result cards/table.
+   Person profile opens as a modal (bottom sheet on phones); shortlist opens as a right-hand drawer. */
+:root{
+  --bg:#f7f7f8; --surface:#fff; --surface-2:#f3f3f5; --line:#e7e7eb; --line-strong:#d5d5dc;
+  --fg:#18181b; --muted:#5f5f69; --faint:#8a8a94;
+  --accent:#4f46e5; --accent-hover:#4338ca; --accent-fg:#fff; --accent-soft:#eef0ff; --ring:rgba(79,70,229,.35);
+  --p1:#15803d; --p1-soft:#e6f6ec; --p2:#1d4ed8; --p2-soft:#e8effe; --p3:#b45309; --p3-soft:#fdf2e2; --hold:#62626b; --hold-soft:#efeff2;
+  --warn:#a15c07; --warn-soft:#fdf3e1; --bad:#b91c1c; --bad-soft:#fdecec; --good:#15803d;
+  --bar-strong:#1c5cab; --bar-light:#86b6ef; --bar-track:#eef1f6;
+  --heat-0:#cde2fb; --heat-1:#9ec5f4; --heat-2:#6da7ec; --heat-3:#3987e5; --heat-4:#256abf; --heat-5:#184f95;
+  --shadow-sm:0 1px 2px rgba(16,16,24,.05); --shadow:0 1px 3px rgba(16,16,24,.06),0 4px 12px rgba(16,16,24,.05);
+  --shadow-lg:0 12px 40px rgba(16,16,24,.16),0 2px 8px rgba(16,16,24,.08);
+  --scrim:rgba(15,15,25,.42);
+  --body:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif; --mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+  --r:12px; --r-sm:8px;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0f0f12; --surface:#17171c; --surface-2:#1e1e24; --line:#2a2a32; --line-strong:#3a3a44;
+  --fg:#ececf1; --muted:#a3a3ad; --faint:#7a7a85;
+  --accent:#818cf8; --accent-hover:#a5b4fc; --accent-fg:#0f0f12; --accent-soft:#23234a; --ring:rgba(129,140,248,.4);
+  --p1:#4ade80; --p1-soft:#14301f; --p2:#7aa2ff; --p2-soft:#1a2547; --p3:#f5b453; --p3-soft:#3a2a12; --hold:#a3a3ad; --hold-soft:#26262d;
+  --warn:#f5b453; --warn-soft:#3a2a12; --bad:#f87171; --bad-soft:#3b1a1a; --good:#4ade80;
+  --bar-strong:#86b6ef; --bar-light:#256abf; --bar-track:#22232b;
+  --heat-0:#184f95; --heat-1:#1c5cab; --heat-2:#2a78d6; --heat-3:#5598e7; --heat-4:#86b6ef; --heat-5:#b7d3f6;
+  --shadow-sm:none; --shadow:0 1px 2px rgba(0,0,0,.4); --shadow-lg:0 16px 48px rgba(0,0,0,.6);
+  --scrim:rgba(0,0,0,.6); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f0f12; --surface:#17171c; --surface-2:#1e1e24; --line:#2a2a32; --line-strong:#3a3a44;
+  --fg:#ececf1; --muted:#a3a3ad; --faint:#7a7a85;
+  --accent:#818cf8; --accent-hover:#a5b4fc; --accent-fg:#0f0f12; --accent-soft:#23234a; --ring:rgba(129,140,248,.4);
+  --p1:#4ade80; --p1-soft:#14301f; --p2:#7aa2ff; --p2-soft:#1a2547; --p3:#f5b453; --p3-soft:#3a2a12; --hold:#a3a3ad; --hold-soft:#26262d;
+  --warn:#f5b453; --warn-soft:#3a2a12; --bad:#f87171; --bad-soft:#3b1a1a; --good:#4ade80;
+  --bar-strong:#86b6ef; --bar-light:#256abf; --bar-track:#22232b;
+  --heat-0:#184f95; --heat-1:#1c5cab; --heat-2:#2a78d6; --heat-3:#5598e7; --heat-4:#86b6ef; --heat-5:#b7d3f6;
+  --shadow-sm:none; --shadow:0 1px 2px rgba(0,0,0,.4); --shadow-lg:0 16px 48px rgba(0,0,0,.6);
+  --scrim:rgba(0,0,0,.6); color-scheme:dark}
+
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--fg);font:14px/1.5 var(--body);-webkit-font-smoothing:antialiased}
+a{color:var(--accent);text-decoration:none} a:hover{text-decoration:underline}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
+svg.lucide{width:16px;height:16px;stroke-width:2;flex:none;vertical-align:-3px}
+.mono{font-family:var(--mono)}
+.num{font-variant-numeric:tabular-nums}
+.muted{color:var(--muted)} .faint{color:var(--faint)}
+[hidden]{display:none!important}
+
+/* ---------- buttons, inputs ---------- */
+.btn{display:inline-flex;align-items:center;gap:7px;height:36px;padding:0 13px;border-radius:var(--r-sm);border:1px solid var(--line);
+  background:var(--surface);font-weight:500;font-size:13.5px;cursor:pointer;white-space:nowrap;box-shadow:var(--shadow-sm);
+  transition:background .15s,border-color .15s,transform .1s}
+.btn:hover{background:var(--surface-2);border-color:var(--line-strong)}
+.btn:active{transform:scale(.97)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
+.btn.primary:hover{background:var(--accent-hover);border-color:var(--accent-hover)}
+.btn.ghost{background:transparent;border-color:transparent;box-shadow:none}
+.btn.ghost:hover{background:var(--surface-2)}
+.btn.icon{width:36px;padding:0;justify-content:center}
+.btn.sm{height:30px;padding:0 10px;font-size:13px}
+.btn.sm.icon{width:30px;padding:0}
+.input{display:flex;align-items:center;gap:8px;height:38px;padding:0 12px;border:1px solid var(--line);border-radius:var(--r-sm);background:var(--surface);
+  box-shadow:var(--shadow-sm);transition:border-color .15s,box-shadow .15s}
+.input:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px var(--ring)}
+.input input{all:unset;flex:1;min-width:0;font-size:14px}
+.input svg{color:var(--faint)}
+kbd{font:500 11px var(--mono);padding:1px 6px;border:1px solid var(--line-strong);border-bottom-width:2px;border-radius:5px;color:var(--muted);background:var(--surface-2)}
+
+/* ---------- top bar ---------- */
+.topbar{position:sticky;top:0;z-index:30;background:color-mix(in srgb,var(--bg) 82%,transparent);backdrop-filter:saturate(1.4) blur(12px);
+  -webkit-backdrop-filter:saturate(1.4) blur(12px);border-bottom:1px solid var(--line)}
+.topbar .in{max-width:1320px;margin:0 auto;padding:10px 20px;display:flex;align-items:center;gap:16px}
+.brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:15.5px;letter-spacing:-.01em;white-space:nowrap}
+.logo{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;color:#fff;background:linear-gradient(135deg,#6366f1,#22c55e)}
+.logo svg{width:17px;height:17px}
+.tabs{display:flex;gap:2px;padding:3px;background:var(--surface-2);border:1px solid var(--line);border-radius:10px}
+.tabs button{all:unset;cursor:pointer;display:flex;align-items:center;gap:6px;padding:5px 12px;border-radius:7px;font-weight:500;font-size:13.5px;color:var(--muted);transition:background .15s,color .15s}
+.tabs button:hover{color:var(--fg)}
+.tabs button[aria-selected="true"]{background:var(--surface);color:var(--fg);box-shadow:var(--shadow)}
+.tabs button:focus-visible{outline:2px solid var(--accent)}
+.spacer{flex:1}
+.asof{font-size:12.5px;color:var(--muted);display:flex;align-items:center;gap:6px;white-space:nowrap}
+.pill{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;padding:2px 8px;border-radius:999px;white-space:nowrap}
+.pill.draft{background:var(--warn-soft);color:var(--warn)}
+.count-badge{min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:var(--accent);color:var(--accent-fg);font-size:11px;font-weight:700;display:inline-grid;place-items:center}
+.count-badge.bump{animation:bump .35s}
+@keyframes bump{40%{transform:scale(1.35)}}
+@media (max-width:860px){.asof .txt,.brand .name{display:none}}
+@media (max-width:560px){.hide-sm{display:none}.topbar .in{gap:8px;padding:8px 12px}.asof>svg{display:none}.tabs button span{display:none}}
+
+/* ---------- page ---------- */
+main{max-width:1320px;margin:0 auto;padding:24px 20px 40px}
+@media (max-width:560px){main{padding:16px 16px 32px}}
+.view{animation:fadeUp .3s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(6px)}}
+h1{font-size:24px;font-weight:700;letter-spacing:-.02em;margin:0 0 4px}
+.lede{color:var(--muted);margin:0 0 20px;max-width:760px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow-sm)}
+.card-h{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:16px 18px 0}
+.card-h h2{font-size:14.5px;font-weight:600;margin:0;display:flex;align-items:center;gap:8px}
+.card-h h2 svg{color:var(--muted)}
+.card-b{padding:14px 18px 18px}
+
+/* ---------- overview ---------- */
+.cohorts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:16px}
+@media (max-width:900px){.cohorts{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.cohort-card{all:unset;box-sizing:border-box;cursor:pointer;position:relative;overflow:hidden;padding:16px 18px;display:flex;flex-direction:column;gap:6px;
+  background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow-sm);transition:transform .18s,box-shadow .18s,border-color .18s}
+.cohort-card:hover{transform:translateY(-2px);box-shadow:var(--shadow);border-color:var(--line-strong)}
+.cohort-card:focus-visible{outline:2px solid var(--accent)}
+.cohort-card::before{content:"";position:absolute;inset:0 0 auto 0;height:3px;background:var(--c)}
+.cohort-card .top{display:flex;justify-content:space-between;align-items:center}
+.cohort-card .n{font-size:28px;font-weight:700;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.cohort-card .d{font-size:12.5px;color:var(--muted)}
+.cohort-card .go{color:var(--faint);transition:transform .18s,color .18s}
+.cohort-card:hover .go{transform:translateX(3px);color:var(--fg)}
+.grid2{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:16px}
+.grid2 > .stack{display:flex;flex-direction:column;gap:16px;min-width:0}
+@media (max-width:980px){.grid2{grid-template-columns:minmax(0,1fr)}}
+.legend{display:flex;gap:14px;font-size:12px;color:var(--muted);flex-wrap:wrap}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.bars{display:flex;flex-direction:column;gap:2px}
+.bar-row{all:unset;box-sizing:border-box;cursor:pointer;display:grid;grid-template-columns:132px minmax(0,1fr) 64px;align-items:center;gap:10px;padding:5px 8px;margin:0 -8px;border-radius:7px;transition:background .12s}
+.bar-row:hover,.bar-row:focus-visible{background:var(--surface-2)}
+.bar-row .lab{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar-row .val{font-size:12.5px;text-align:right;color:var(--muted);font-variant-numeric:tabular-nums}
+.track{height:12px;display:flex;gap:2px}
+.track span{height:100%;border-radius:0 4px 4px 0;transform-origin:left;animation:grow .7s cubic-bezier(.2,.8,.2,1) both}
+.track span:first-child{border-radius:4px 0 0 4px}
+.track span:only-child{border-radius:4px}
+@keyframes grow{from{transform:scaleX(0)}}
+.heat{display:grid;grid-template-columns:96px repeat(3,minmax(0,1fr));gap:4px;font-size:12.5px}
+.heat .hd{color:var(--muted);font-size:12px;display:flex;align-items:flex-end;justify-content:center;padding-bottom:2px;text-align:center}
+.heat .rh{color:var(--muted);font-size:12px;display:flex;align-items:center}
+.heat button{all:unset;box-sizing:border-box;cursor:pointer;border-radius:8px;height:62px;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  font-weight:600;font-variant-numeric:tabular-nums;transition:transform .15s,box-shadow .15s}
+.heat button:hover,.heat button:focus-visible{transform:scale(1.04);box-shadow:0 0 0 2px var(--surface),0 0 0 4px var(--accent)}
+.heat button small{font-weight:500;font-size:11px;opacity:.85}
+.notes{display:flex;flex-direction:column;gap:12px;font-size:13px}
+.notes div{display:flex;gap:10px;align-items:flex-start}
+.notes svg{margin-top:2px;color:var(--muted)}
+.notes b{font-weight:600}
+
+/* ---------- tooltip ---------- */
+.tip{position:fixed;z-index:80;pointer-events:none;background:var(--fg);color:var(--bg);font-size:12px;line-height:1.4;padding:7px 10px;border-radius:8px;
+  box-shadow:var(--shadow-lg);max-width:260px;opacity:0;transform:translateY(4px);transition:opacity .12s,transform .12s}
+.tip.on{opacity:1;transform:none}
+.tip b{font-weight:600}
+
+/* ---------- explore toolbar ---------- */
+.toolbar{display:flex;flex-direction:column;gap:12px;margin-bottom:14px}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.row .input{flex:1 1 280px}
+.seg{display:flex;padding:3px;gap:2px;background:var(--surface-2);border:1px solid var(--line);border-radius:10px;overflow-x:auto;max-width:100%}
+.seg button{all:unset;cursor:pointer;display:flex;align-items:center;gap:7px;padding:5px 12px;border-radius:7px;font-size:13px;font-weight:500;color:var(--muted);white-space:nowrap;transition:background .15s,color .15s}
+.seg button:hover{color:var(--fg)}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--fg);box-shadow:var(--shadow)}
+.seg button:focus-visible{outline:2px solid var(--accent)}
+.seg .n{font-size:11.5px;color:var(--faint);font-variant-numeric:tabular-nums}
+.chips{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.fchip{display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 4px 0 10px;border-radius:999px;background:var(--accent-soft);color:var(--accent);font-size:12.5px;font-weight:500;animation:pop .2s ease both}
+.fchip b{font-weight:600}
+.fchip button{all:unset;cursor:pointer;width:20px;height:20px;border-radius:999px;display:grid;place-items:center}
+.fchip button:hover{background:color-mix(in srgb,var(--accent) 18%,transparent)}
+.fchip button svg{width:13px;height:13px}
+@keyframes pop{from{opacity:0;transform:scale(.85)}}
+.switch{display:inline-flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);cursor:pointer;user-select:none}
+.switch input{appearance:none;width:32px;height:18px;border-radius:999px;background:var(--line-strong);position:relative;cursor:pointer;transition:background .2s;margin:0}
+.switch input::after{content:"";position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.25);transition:transform .2s}
+.switch input:checked{background:var(--accent)}
+.switch input:checked::after{transform:translateX(14px)}
+.summary{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;font-size:13px;color:var(--muted);margin-bottom:12px}
+.summary b{color:var(--fg);font-variant-numeric:tabular-nums}
+
+/* ---------- result cards ---------- */
+.results{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:12px}
+@media (max-width:560px){.results{grid-template-columns:minmax(0,1fr)}}
+.pcard{position:relative;cursor:pointer;padding:16px;display:flex;flex-direction:column;gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);
+  box-shadow:var(--shadow-sm);transition:transform .18s,box-shadow .18s,border-color .18s;animation:fadeUp .35s ease both;min-width:0}
+.pcard:hover{transform:translateY(-2px);box-shadow:var(--shadow);border-color:var(--line-strong)}
+.pcard:focus-visible{outline:2px solid var(--accent)}
+.phead{display:flex;gap:12px;align-items:flex-start;min-width:0}
+.pname{min-width:0;flex:1}
+.pname .nm{font-weight:600;font-size:14.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pname .sub{font-size:12.5px;color:var(--muted);display:flex;gap:6px;align-items:center;white-space:nowrap;overflow:hidden}
+.pname .sub svg{width:13px;height:13px}
+.avatar{position:relative;flex:none;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;font-weight:600;font-size:14px;
+  background:var(--accent-soft);color:var(--accent);overflow:hidden}
+.avatar img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.avatar.lg{width:60px;height:60px;font-size:20px}
+.reason{font-size:12.5px;color:var(--muted);display:flex;gap:6px;align-items:flex-start}
+.reason svg{width:14px;height:14px;margin-top:2px;flex:none;color:var(--faint)}
+.meter{display:flex;flex-direction:column;gap:5px}
+.meter .lbl{display:flex;justify-content:space-between;font-size:12px;color:var(--muted)}
+.meter .lbl b{color:var(--fg);font-weight:600;font-variant-numeric:tabular-nums}
+.meter .bar{height:6px;background:var(--bar-track);border-radius:999px;overflow:hidden}
+.meter .bar span{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,var(--bar-light),var(--bar-strong));transform-origin:left;animation:grow .8s cubic-bezier(.2,.8,.2,1) both}
+.tags{display:flex;gap:5px;flex-wrap:wrap}
+.tag{display:inline-flex;align-items:center;gap:5px;font-size:12px;padding:2px 8px;border-radius:6px;background:var(--surface-2);border:1px solid var(--line);color:var(--fg);white-space:nowrap}
+.tag svg{width:12px;height:12px;color:var(--muted)}
+.tag.warn{background:var(--warn-soft);border-color:transparent;color:var(--warn)} .tag.warn svg{color:var(--warn)}
+.tag.bad{background:var(--bad-soft);border-color:transparent;color:var(--bad)} .tag.bad svg{color:var(--bad)}
+.pfoot{display:flex;justify-content:space-between;gap:8px;font-size:12px;color:var(--muted);border-top:1px solid var(--line);padding-top:10px;margin-top:auto}
+.pfoot span{display:flex;align-items:center;gap:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pfoot svg{width:13px;height:13px}
+.badge{display:inline-flex;align-items:center;font:700 11.5px var(--mono);padding:2px 8px;border-radius:6px;letter-spacing:.02em;background:var(--cs);color:var(--c)}
+.c-P1{--c:var(--p1);--cs:var(--p1-soft)} .c-P2{--c:var(--p2);--cs:var(--p2-soft)} .c-P3{--c:var(--p3);--cs:var(--p3-soft)} .c-HOLD{--c:var(--hold);--cs:var(--hold-soft)}
+.star{all:unset;cursor:pointer;width:30px;height:30px;border-radius:8px;display:grid;place-items:center;color:var(--faint);transition:background .15s,color .15s,transform .15s;flex:none}
+.star:hover{background:var(--surface-2);color:var(--fg)}
+.star:focus-visible{outline:2px solid var(--accent)}
+.star.on{color:#f59e0b} .star.on svg{fill:#f59e0b}
+.star.pop{animation:bump .35s}
+
+/* ---------- table view ---------- */
+.tablewrap{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow-sm)}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{padding:10px 12px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap;vertical-align:middle}
+tr:last-child td{border-bottom:0}
+th{font-size:12px;font-weight:600;color:var(--muted);background:var(--surface-2)}
+th[data-sort]{cursor:pointer;user-select:none} th[data-sort]:hover{color:var(--fg)}
+th .arrow{color:var(--accent)}
+tbody tr.click{cursor:pointer;transition:background .12s} tbody tr.click:hover{background:var(--surface-2)}
+td.r,th.r{text-align:right}
+.mini{display:inline-block;width:64px;height:6px;background:var(--bar-track);border-radius:999px;overflow:hidden;vertical-align:middle;margin-right:8px}
+.mini span{display:block;height:100%;background:var(--bar-strong);border-radius:999px}
+
+.skel{background:linear-gradient(90deg,var(--surface-2) 25%,var(--line) 50%,var(--surface-2) 75%);background-size:200% 100%;animation:shimmer 1.2s infinite linear;border-radius:6px}
+@keyframes shimmer{to{background-position:-200% 0}}
+.empty{padding:56px 20px;text-align:center;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:10px}
+.empty .ic{width:48px;height:48px;border-radius:14px;display:grid;place-items:center;background:var(--surface-2);color:var(--faint)}
+.empty .ic svg{width:22px;height:22px}
+.empty h3{margin:0;color:var(--fg);font-size:15px}
+.empty.err .ic{background:var(--bad-soft);color:var(--bad)}
+.more{display:flex;justify-content:center;margin-top:18px}
+
+/* ---------- popover menu ---------- */
+.pop{position:fixed;z-index:60;min-width:240px;max-width:min(340px,calc(100vw - 24px));background:var(--surface);border:1px solid var(--line);border-radius:12px;
+  box-shadow:var(--shadow-lg);padding:6px;animation:popIn .14s ease-out both;transform-origin:top left}
+@keyframes popIn{from{opacity:0;transform:scale(.96) translateY(-4px)}}
+.menu-h{font-size:11.5px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--faint);padding:8px 10px 4px;display:flex;align-items:center;gap:6px}
+.mi{all:unset;box-sizing:border-box;width:100%;cursor:pointer;display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;font-size:13.5px}
+.mi:hover,.mi:focus-visible,.mi.active{background:var(--surface-2)}
+.mi svg{color:var(--muted)}
+.mi .r{margin-left:auto;color:var(--faint);font-size:12px;font-variant-numeric:tabular-nums;display:flex;align-items:center}
+.mi .chk{width:16px;height:16px;border-radius:5px;border:1.5px solid var(--line-strong);display:grid;place-items:center;flex:none;transition:background .12s,border-color .12s}
+.mi[aria-checked="true"] .chk{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
+.mi .chk svg{width:12px;height:12px;color:inherit;stroke-width:3}
+.mi[aria-checked="false"] .chk svg{visibility:hidden}
+.mi .hint{display:block;font-size:12px;color:var(--muted)}
+.pop .input{height:34px;margin:4px 4px 6px;box-shadow:none}
+.pop .list{max-height:300px;overflow-y:auto}
+.sep{height:1px;background:var(--line);margin:6px 4px}
+.pop .note{font-size:12px;color:var(--muted);padding:6px 10px}
+
+/* ---------- modal / sheet / drawer ---------- */
+.scrim{position:fixed;inset:0;z-index:50;background:var(--scrim);animation:fade .2s ease both}
+.scrim.out{animation:fade .18s ease reverse both}
+@keyframes fade{from{opacity:0}}
+.modal{position:fixed;z-index:51;left:50%;top:5vh;transform:translateX(-50%);width:min(880px,calc(100vw - 32px));max-height:90vh;display:flex;flex-direction:column;
+  background:var(--bg);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow-lg);overflow:hidden;animation:modalIn .24s cubic-bezier(.2,.9,.3,1.1) both}
+.modal.out{animation:modalOut .16s ease-in both}
+@keyframes modalIn{from{opacity:0;transform:translateX(-50%) translateY(14px) scale(.97)}}
+@keyframes modalOut{to{opacity:0;transform:translateX(-50%) translateY(10px) scale(.98)}}
+.modal.small{width:min(520px,calc(100vw - 32px));top:12vh}
+@media (max-width:640px){
+  .modal,.modal.small{left:0;right:0;top:auto;bottom:0;width:100%;max-height:92vh;transform:none;border-radius:18px 18px 0 0;animation:sheetIn .28s cubic-bezier(.2,.9,.3,1) both}
+  .modal.out{animation:sheetOut .2s ease-in both}
+  @keyframes sheetIn{from{transform:translateY(100%)}}
+  @keyframes sheetOut{to{transform:translateY(100%)}}
+  .modal::before{content:"";display:block;width:40px;height:4px;border-radius:4px;background:var(--line-strong);margin:8px auto 0;flex:none}
+  .m-head{flex-wrap:wrap;padding:12px 16px 14px}
+  .m-actions{order:-1;width:100%;justify-content:flex-end;margin-bottom:-6px}
+  .m-body{padding:16px}
+  .m-tabs{padding:0 16px}
+}
+.m-head{padding:20px 22px 16px;background:var(--surface);border-bottom:1px solid var(--line);display:flex;gap:14px;align-items:flex-start}
+.m-head .who{flex:1;min-width:0}
+.m-head h2{margin:0;font-size:20px;font-weight:700;letter-spacing:-.015em;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.m-head .sub{display:flex;gap:6px 14px;flex-wrap:wrap;font-size:13px;color:var(--muted);margin-top:4px}
+.m-head .sub span{display:inline-flex;align-items:center;gap:5px}
+.m-head .sub svg{width:14px;height:14px}
+.m-actions{display:flex;gap:4px;align-items:center}
+.m-body{overflow-y:auto;padding:18px 22px 24px;display:flex;flex-direction:column;gap:16px}
+.m-tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);padding:0 22px;background:var(--surface);overflow-x:auto}
+.m-tabs button{all:unset;cursor:pointer;padding:10px 4px;margin-right:16px;font-size:13.5px;font-weight:500;color:var(--muted);border-bottom:2px solid transparent;display:flex;gap:6px;align-items:center;white-space:nowrap;transition:color .15s,border-color .15s}
+.m-tabs button:hover{color:var(--fg)}
+.m-tabs button[aria-selected="true"]{color:var(--fg);border-bottom-color:var(--accent)}
+.m-tabs button:focus-visible{outline:2px solid var(--accent)}
+.m-tabs .n{font-size:11.5px;color:var(--faint)}
+.callout{display:flex;gap:12px;padding:14px 16px;border-radius:12px;border:1px solid var(--line);background:var(--surface)}
+.callout .ci{width:32px;height:32px;border-radius:9px;display:grid;place-items:center;flex:none;background:var(--cs);color:var(--c)}
+.callout h4{margin:0 0 2px;font-size:13.5px;font-weight:600}
+.callout p{margin:0;font-size:13px;color:var(--muted)}
+.callout.warn{background:var(--warn-soft);border-color:transparent} .callout.warn .ci{background:var(--surface);color:var(--warn)}
+.callout ul{margin:4px 0 0;padding-left:16px;font-size:13px;color:var(--muted)}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+@media (max-width:700px){.stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.stat{padding:12px 14px;border-radius:12px;background:var(--surface);border:1px solid var(--line);display:flex;flex-direction:column;gap:4px;min-width:0}
+.stat .k{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px}
+.stat .k svg{width:13px;height:13px}
+.stat .v{font-size:18px;font-weight:700;letter-spacing:-.01em;font-variant-numeric:tabular-nums}
+.stat .s{font-size:12px;color:var(--muted)}
+.sect h3{margin:0 0 8px;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--faint)}
+.repo{display:flex;gap:12px;align-items:center;padding:10px 14px;border-bottom:1px solid var(--line)}
+.repo:last-child{border-bottom:0}
+.repo .rn{flex:1;min-width:0;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.repo .rm{font-size:12px;color:var(--muted);display:flex;gap:12px;flex:none}
+.repo .rm span{display:inline-flex;align-items:center;gap:4px}
+.repo .rm svg{width:13px;height:13px}
+@media (max-width:560px){.repo{flex-wrap:wrap}.repo .rm{width:100%}}
+.dot{width:8px;height:8px;border-radius:50%;flex:none;background:var(--line-strong)}
+.dot.on{background:var(--good);box-shadow:0 0 0 3px color-mix(in srgb,var(--good) 22%,transparent)}
+.email{display:flex;gap:12px;align-items:center;padding:10px 14px;border-bottom:1px solid var(--line)}
+.email:last-child{border-bottom:0}
+.email .ev{flex:1;min-width:0;font:13px var(--mono);overflow-wrap:anywhere}
+.email .em{font-size:12px;color:var(--muted);white-space:nowrap}
+@media (max-width:560px){.email{flex-wrap:wrap}}
+.kv{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px 18px;padding:16px}
+.kv div{display:flex;flex-direction:column;min-width:0;gap:2px}
+.kv span{font-size:12px;color:var(--muted)}
+.kv b{font-weight:500;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
+.drawer{position:fixed;z-index:51;top:0;right:0;bottom:0;width:min(420px,100vw);background:var(--bg);border-left:1px solid var(--line);box-shadow:var(--shadow-lg);
+  display:flex;flex-direction:column;animation:drawerIn .26s cubic-bezier(.2,.9,.3,1) both}
+.drawer.out{animation:drawerOut .18s ease-in both}
+@keyframes drawerIn{from{transform:translateX(100%)}}
+@keyframes drawerOut{to{transform:translateX(100%)}}
+.d-head{display:flex;align-items:center;justify-content:space-between;padding:16px 18px;border-bottom:1px solid var(--line);background:var(--surface)}
+.d-head h2{margin:0;font-size:16px;display:flex;gap:8px;align-items:center}
+.d-body{flex:1;overflow-y:auto;padding:12px}
+.d-foot{padding:14px 18px;border-top:1px solid var(--line);display:flex;gap:8px;background:var(--surface)}
+.d-foot .btn.primary{flex:1;justify-content:center}
+.sl{display:flex;gap:10px;align-items:center;padding:10px;border-radius:10px;cursor:pointer;transition:background .12s;animation:fadeUp .25s ease both}
+.sl:hover{background:var(--surface-2)}
+.sl .pname{flex:1}
+.radio{display:flex;gap:12px;padding:12px 14px;border:1px solid var(--line);border-radius:12px;cursor:pointer;transition:border-color .15s,background .15s;background:var(--surface)}
+.radio:has(input:checked){border-color:var(--accent);background:var(--accent-soft)}
+.radio input{accent-color:var(--accent);margin-top:3px}
+.radio b{font-weight:600}
+.radio small{display:block;color:var(--muted);font-size:12.5px}
+.checklist{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:8px;font-size:13px;color:var(--muted)}
+.checklist li{display:flex;gap:8px}
+.checklist svg{color:var(--warn);margin-top:2px}
+
+/* ---------- toasts ---------- */
+.toasts{position:fixed;z-index:90;bottom:20px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none}
+.toast{display:flex;gap:9px;align-items:center;background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:10px;font-size:13.5px;font-weight:500;box-shadow:var(--shadow-lg);animation:toastIn .25s cubic-bezier(.2,.9,.3,1.2) both}
+.toast.out{animation:toastOut .2s ease-in both}
+@keyframes toastIn{from{opacity:0;transform:translateY(12px) scale(.96)}}
+@keyframes toastOut{to{opacity:0;transform:translateY(8px)}}
+
+footer{max-width:1320px;margin:0 auto;padding:0 20px 32px;font-size:12px;color:var(--faint);display:flex;gap:6px 18px;flex-wrap:wrap}
+footer a{color:var(--muted)}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="in">
+    <div class="brand"><div class="logo"><i data-lucide="sprout"></i></div><span class="name">Talent Seed</span></div>
+    <nav class="tabs" role="tablist" aria-label="Views">
+      <button role="tab" id="tab-overview" data-view="overview" aria-selected="true"><i data-lucide="layout-dashboard"></i><span>Overview</span></button>
+      <button role="tab" id="tab-explore" data-view="explore" aria-selected="false"><i data-lucide="users"></i><span>Explore</span></button>
+    </nav>
+    <div class="spacer"></div>
+    <button class="btn ghost sm asof" id="notesBtn" type="button" aria-haspopup="menu"><span class="pill draft"><i data-lucide="flask-conical"></i>Draft</span><span class="txt" id="asof">Loading…</span><i data-lucide="chevron-down"></i></button>
+    <button class="btn icon ghost" id="tourBtn" type="button" aria-label="Take the tour" data-tip="Take the tour" hidden><i data-lucide="circle-help"></i></button>
+    <button class="btn icon ghost" id="themeBtn" type="button" aria-label="Switch theme"><i data-lucide="moon"></i></button>
+    <button class="btn" id="shortlistBtn" type="button"><i data-lucide="star"></i><span class="hide-sm">Shortlist</span><span class="count-badge" id="slCount">0</span></button>
+  </div>
+</header>
+
+<main>
+  <section class="view" id="view-overview">
+    <h1>Crypto developer talent</h1>
+    <p class="lede">Who the most active open-source crypto developers are, by chain and cohort. Click a card, bar or cell to see the people behind it.</p>
+    <div class="cohorts" id="cohortCards"></div>
+    <div class="grid2">
+      <div class="card">
+        <div class="card-h" id="chainHead"><h2><i data-lucide="blocks"></i>Active developers per chain</h2>
+          <div class="legend"><span><i style="background:var(--bar-strong)"></i>P1</span><span><i style="background:var(--bar-light)"></i>P2–P3</span></div></div>
+        <div class="card-b"><div class="bars" id="chainBars"></div></div>
+      </div>
+      <div class="stack">
+        <div class="card">
+          <div class="card-h"><h2><i data-lucide="grid-3x3"></i>Tenure × activity</h2><span class="faint" style="font-size:12px">P1–P3 people</span></div>
+          <div class="card-b"><div class="heat" id="heat"></div></div>
+        </div>
+        <div class="card">
+          <div class="card-h"><h2><i data-lucide="globe"></i>Top countries</h2><span class="faint" style="font-size:12px" id="noCountry"></span></div>
+          <div class="card-b"><div class="bars" id="countryBars"></div></div>
+        </div>
+      </div>
+    </div>
+    <div class="card" style="margin-top:16px">
+      <div class="card-h"><h2><i data-lucide="info"></i>How to read this data</h2></div>
+      <div class="card-b notes">
+        <div><i data-lucide="flask-conical"></i><span><b>Cohorts are a draft.</b> P1–P3 follow draft rules that the client hasn't confirmed yet. Each person shows the reason for their cohort.</span></div>
+        <div><i data-lucide="mail-question"></i><span><b>Emails are unverified</b> commit-author addresses. Don't infer an employer from an email domain.</span></div>
+        <div><i data-lucide="git-fork"></i><span><b>Commit counts can mislead.</b> Forks and copied history inflate them, so results sort by days active in the last 84 days.</span></div>
+        <div><i data-lucide="bot"></i><span><b>Some automation accounts remain.</b> Known bots and GitHub conflicts are hidden by default, but a few (e.g. price updaters) slip through.</span></div>
+        <div><i data-lucide="copy"></i><span><b>One person can appear twice</b> when their developer ids share no GitHub account.</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="view" id="view-explore" hidden>
+    <div class="toolbar">
+      <div class="row">
+        <div class="seg" id="cohortSeg" role="group" aria-label="Cohort"></div>
+      </div>
+      <div class="row">
+        <label class="input"><i data-lucide="search"></i><input id="q" type="search" placeholder="Search name, GitHub login, exact email or gh:… id" autocomplete="off"><kbd>/</kbd></label>
+        <button class="btn" id="addFilter" type="button" aria-haspopup="menu"><i data-lucide="list-filter"></i>Filter</button>
+        <button class="btn" id="sortBtn" type="button" aria-haspopup="menu"><i data-lucide="arrow-down-wide-narrow"></i><span id="sortLabel">Most active</span></button>
+        <div class="seg" role="group" aria-label="Layout">
+          <button type="button" data-layout="cards" aria-label="Card view"><i data-lucide="layout-grid"></i></button>
+          <button type="button" data-layout="table" aria-label="Table view"><i data-lucide="table-2"></i></button>
+        </div>
+        <button class="btn primary" id="exportBtn" type="button"><i data-lucide="download"></i>Export</button>
+      </div>
+      <div class="row">
+        <div class="chips" id="chips"></div>
+        <div class="spacer"></div>
+        <label class="switch"><input type="checkbox" id="hideFlagged" checked>Hide bots &amp; conflicts</label>
+      </div>
+    </div>
+    <div class="summary"><span id="count">&nbsp;</span><span id="sortNote"></span></div>
+    <div id="results"></div>
+    <div class="more"><button class="btn" id="moreBtn" type="button" hidden><i data-lucide="chevrons-down"></i>Load more</button></div>
+  </section>
+</main>
+<footer>
+  <span>Data from Electric Capital <a href="https://opendevdata.org" target="_blank" rel="noopener">Open Dev Data</a>, licensed CC BY 4.0.</span>
+  <span>Emails are unverified commit-author addresses.</span>
+  <span>Cohorts are a draft (DRAFT_ASSUMPTION).</span>
+  <span id="footSnap"></span>
+</footer>
+<div class="tip" id="tip" role="tooltip"></div>
+<div class="toasts" id="toasts" aria-live="polite"></div>
+
+<script>
+/* ======================= helpers ======================= */
+const $ = id => document.getElementById(id);
+const fmt = n => n == null ? "–" : Number(n).toLocaleString("en-US");
+const esc = s => s == null ? "" : String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const day = s => s ? String(s).slice(0, 10) : "–";
+const icon = (n, cls="") => `<i data-lucide="${n}"${cls?` class="${cls}"`:""}></i>`;
+const icons = () => window.lucide && lucide.createIcons();
+const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const store = {get(k, d){ try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch { return d; } },
+               set(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }};
+const LABEL = {FULL_TIME:"Full-time", PART_TIME:"Part-time", ONE_TIME:"One-time", ESTABLISHED:"Established", EMERGING:"Emerging",
+               NEWCOMER:"Newcomer", EXCLUSIVE:"Exclusive", MULTICHAIN:"Multichain", UNKNOWN:"Unknown"};
+const lbl = v => LABEL[v] || v || "–";
+const COHORT_DESC = {P1:"Full-time, more than 1 year of tenure", P2:"Full-time newcomer or experienced part-timer",
+                     P3:"Part-time newcomer or one-time", HOLD:"Inactive in last 84 days, bot or unknown"};
+const FLAG_INFO = {probable_bot:["bot","Looks like an automation account"], github_conflict:["git-compare","Commits point at more than one GitHub account"],
+                   linked_ids:["link","Several developer ids merged into this person"], activity_table_gap:["triangle-alert","Activity data has a gap for this person"],
+                   bad_commit_dates:["calendar-x","Some commit dates are implausible"]};
+const initials = n => (n || "?").replace(/[^\p{L}\p{N} ]/gu, "").trim().split(/\s+/).slice(0, 2).map(w => w[0]).join("").toUpperCase() || "?";
+const avatar = (p, cls="") => `<div class="avatar ${cls}" aria-hidden="true">${esc(initials(p.display_name))}${p.github_user_id ?
+  `<img src="https://avatars.githubusercontent.com/u/${encodeURIComponent(p.github_user_id)}?s=120&v=4" alt="" loading="lazy" onerror="this.remove()">` : ""}</div>`;
+
+/* Access key: taken from ?key= in the link, remembered in this browser and sent on every API call. It stays
+   in the address bar so refreshes and bookmarks work even when the browser blocks the server's cookie. */
+const ACCESS_KEY = (() => {
+  const k = new URLSearchParams(location.search).get("key");
+  try { if (k) localStorage.setItem("ts.key", k); return k || localStorage.getItem("ts.key") || ""; } catch { return k || ""; }
+})();
+const withKey = url => ACCESS_KEY ? url + (url.includes("?") ? "&" : "?") + "key=" + encodeURIComponent(ACCESS_KEY) : url;
+async function api(path){
+  const r = await fetch(path, {headers: ACCESS_KEY ? {"X-Access-Key": ACCESS_KEY} : {}});
+  const j = await r.json().catch(() => ({error:`Server returned ${r.status}`}));
+  if (!r.ok || j.error) throw new Error(j.error || `Server returned ${r.status}`);
+  return j;
+}
+function toast(msg, ic="check"){
+  const t = document.createElement("div"); t.className = "toast"; t.innerHTML = icon(ic) + esc(msg);
+  $("toasts").append(t); icons();
+  setTimeout(() => { t.classList.add("out"); setTimeout(() => t.remove(), 220); }, 2400);
+}
+function countUp(el, to){
+  if (reduced) { el.textContent = fmt(to); return; }
+  const t0 = performance.now(), dur = 900;
+  const step = t => { const k = Math.min(1, (t - t0) / dur), e = 1 - Math.pow(1 - k, 3); el.textContent = fmt(Math.round(to * e)); if (k < 1) requestAnimationFrame(step); };
+  requestAnimationFrame(step);
+}
+/* tooltips: any element with data-tip */
+document.addEventListener("pointerover", e => {
+  const el = e.target.closest("[data-tip]"); const tip = $("tip");
+  if (!el) { tip.classList.remove("on"); return; }
+  tip.innerHTML = el.dataset.tip; tip.classList.add("on");
+  const r = el.getBoundingClientRect(), w = tip.offsetWidth, h = tip.offsetHeight;
+  tip.style.left = Math.max(8, Math.min(innerWidth - w - 8, r.left + r.width / 2 - w / 2)) + "px";
+  tip.style.top = (r.top - h - 8 < 8 ? r.bottom + 8 : r.top - h - 8) + "px";
+});
+addEventListener("scroll", () => $("tip").classList.remove("on"), {passive:true});
+
+/* ======================= theme ======================= */
+function applyTheme(t){
+  if (t) document.documentElement.dataset.theme = t; else delete document.documentElement.dataset.theme;
+  const dark = t ? t === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+  $("themeBtn").innerHTML = icon(dark ? "sun" : "moon"); $("themeBtn").setAttribute("aria-label", dark ? "Switch to light theme" : "Switch to dark theme"); icons();
+}
+$("themeBtn").addEventListener("click", () => {
+  const dark = document.documentElement.dataset.theme ? document.documentElement.dataset.theme === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+  const t = dark ? "light" : "dark"; store.set("ts.theme", t); applyTheme(t);
+});
+applyTheme(store.get("ts.theme", null));
+
+/* ======================= state & URL ======================= */
+const LIST_KEYS = ["eco", "activity", "tenure", "exclusivity", "country"];
+const SEP = {eco:"|", activity:",", tenure:",", exclusivity:",", country:","};
+const SORTS = [
+  {k:"active_days", dir:"desc", label:"Most active", hint:"Days with commits in the last 84 days", ic:"activity"},
+  {k:"last_activity", dir:"desc", label:"Recently active", hint:"Latest commit date", ic:"clock"},
+  {k:"first_commit", dir:"asc", label:"Longest history", hint:"Earliest first commit", ic:"history"},
+  {k:"ecosystems", dir:"desc", label:"Most ecosystems", hint:"Chains and projects worked on", ic:"blocks"},
+  {k:"repos", dir:"desc", label:"Most repos", hint:"Includes forks", ic:"folder-git-2"},
+  {k:"commits", dir:"desc", label:"Most commits", hint:"Inflated by forks and copied history", ic:"git-commit-horizontal"},
+  {k:"name", dir:"asc", label:"Name A–Z", hint:"", ic:"arrow-down-a-z"},
+];
+const DEFAULTS = {view:"overview", cohort:"P1", q:"", eco:[], activity:[], tenure:[], exclusivity:[], country:[], hide:true, sort:"active_days", dir:"desc", layout:"cards"};
+const S = structuredClone(DEFAULTS);
+let META = null, rows = [], total = 0, page = 1;
+
+function readURL(){
+  const p = new URLSearchParams(location.search);
+  Object.assign(S, structuredClone(DEFAULTS));
+  if (p.has("view")) S.view = p.get("view") === "explore" ? "explore" : "overview";
+  if (p.has("cohort")) S.cohort = p.get("cohort");
+  S.q = p.get("q") || "";
+  for (const k of LIST_KEYS) S[k] = (p.get(k) || "").split(SEP[k]).filter(Boolean);
+  if (p.get("flagged") === "show") S.hide = false;
+  if (p.has("sort")) S.sort = p.get("sort");
+  if (p.has("dir")) S.dir = p.get("dir") === "asc" ? "asc" : "desc";
+  if (p.get("layout") === "table") S.layout = "table";
+}
+function writeURL(push=false){
+  const p = new URLSearchParams();
+  if (new URLSearchParams(location.search).has("key")) p.set("key", ACCESS_KEY);
+  if (S.view !== "overview") p.set("view", S.view);
+  if (S.cohort !== DEFAULTS.cohort) p.set("cohort", S.cohort);
+  if (S.q) p.set("q", S.q);
+  for (const k of LIST_KEYS) if (S[k].length) p.set(k, S[k].join(SEP[k]));
+  if (!S.hide) p.set("flagged", "show");
+  if (S.sort !== DEFAULTS.sort) p.set("sort", S.sort);
+  if (S.dir !== DEFAULTS.dir) p.set("dir", S.dir);
+  if (S.layout !== "cards") p.set("layout", S.layout);
+  const url = location.pathname + (p.toString() ? "?" + p : "") + location.hash;
+  history[push ? "pushState" : "replaceState"](null, "", url);
+}
+function apiParams(extra={}){
+  const p = new URLSearchParams({sort:S.sort, dir:S.dir, ...extra});
+  if (S.cohort) p.set("cohort", S.cohort);
+  if (S.q) p.set("q", S.q);
+  for (const k of LIST_KEYS) if (S[k].length) p.set(k, S[k].join(SEP[k]));
+  if (S.hide) p.set("hide_flagged", "1");
+  return p;
+}
+/* Jump from the overview into Explore with a fresh filter set. */
+function explore(patch){
+  Object.assign(S, {cohort:"", q:"", eco:[], activity:[], tenure:[], exclusivity:[], country:[], hide:true, sort:"active_days", dir:"desc"}, patch, {view:"explore"});
+  writeURL(true); render();
+}
+
+/* ======================= views ======================= */
+function render(){
+  for (const v of ["overview", "explore"]) {
+    $("view-" + v).hidden = S.view !== v;
+    $("tab-" + v).setAttribute("aria-selected", S.view === v);
+  }
+  if (S.view === "explore") { syncToolbar(); load(true); }
+  else loadOverview();
+}
+function setView(v){
+  if (S.view === v) return;
+  S.view = v; writeURL(true); render(); scrollTo({top:0});
+}
+document.querySelectorAll(".tabs button").forEach(b => b.addEventListener("click", () => setView(b.dataset.view)));
+addEventListener("popstate", () => { readURL(); render(); syncHash(); });
+
+/* ---------- overview ---------- */
+let overviewLoaded = false;
+async function loadOverview(){
+  if (overviewLoaded) return;
+  $("cohortCards").innerHTML = ["P1","P2","P3","HOLD"].map(() => `<div class="card skel" style="height:112px"></div>`).join("");
+  $("chainBars").innerHTML = `<div class="skel" style="height:300px"></div>`;
+  $("heat").innerHTML = `<div class="skel" style="height:200px;grid-column:1/-1"></div>`;
+  $("countryBars").innerHTML = `<div class="skel" style="height:200px"></div>`;
+  try {
+    const d = await api("/api/overview");
+    overviewLoaded = true;
+    const by = Object.fromEntries(d.cohorts.map(c => [c.k, c.n]));
+    $("cohortCards").innerHTML = ["P1","P2","P3","HOLD"].map(k => `
+      <button class="cohort-card c-${k}" data-c="${k}" style="--c:var(--${k.toLowerCase()})">
+        <div class="top"><span class="badge c-${k}">${k}</span>${icon("arrow-right","go")}</div>
+        <div class="n" data-n="${by[k] || 0}">0</div><div class="d">${COHORT_DESC[k]}</div></button>`).join("");
+    $("cohortCards").querySelectorAll(".cohort-card").forEach(b => {
+      countUp(b.querySelector(".n"), +b.querySelector(".n").dataset.n);
+      b.addEventListener("click", () => explore({cohort:b.dataset.c}));
+    });
+
+    const max = Math.max(...d.chains.map(c => c.n));
+    $("chainBars").innerHTML = d.chains.map((c, i) => `
+      <button class="bar-row" data-eco="${esc(c.k)}" data-tip="<b>${esc(c.k)}</b><br>${fmt(c.n)} active developers<br>${fmt(c.p1)} in P1 · ${fmt(c.n - c.p1)} in P2–P3">
+        <span class="lab">${esc(c.k)}</span>
+        <span class="track"><span style="width:${c.p1 / max * 100}%;background:var(--bar-strong);animation-delay:${i * 30}ms"></span><span style="width:${(c.n - c.p1) / max * 100}%;background:var(--bar-light);animation-delay:${i * 30}ms"></span></span>
+        <span class="val">${fmt(c.n)}</span></button>`).join("");
+    $("chainBars").querySelectorAll(".bar-row").forEach(b => b.addEventListener("click", () => explore({eco:[b.dataset.eco]})));
+
+    const T = ["ESTABLISHED","EMERGING","NEWCOMER"], A = ["FULL_TIME","PART_TIME","ONE_TIME"];
+    const cell = (t, a) => (d.mix.find(m => m.tenure === t && m.activity === a) || {n:0}).n;
+    const vals = T.flatMap(t => A.map(a => cell(t, a))), hi = Math.max(...vals), lo = Math.min(...vals);
+    const step = n => Math.min(5, Math.floor((n - lo) / (hi - lo + 1) * 6));
+    const cohortOf = (t, a) => a === "FULL_TIME" ? (t === "NEWCOMER" ? "P2" : "P1") : a === "PART_TIME" ? (t === "NEWCOMER" ? "P3" : "P2") : "P3";
+    $("heat").innerHTML = `<span></span>${A.map(a => `<span class="hd">${lbl(a)}</span>`).join("")}` + T.map(t => `<span class="rh">${lbl(t)}</span>` + A.map(a => {
+      const n = cell(t, a), s = step(n);
+      return `<button data-t="${t}" data-a="${a}" style="background:var(--heat-${s});color:${s >= 3 ? "var(--heat-text-hi,#fff)" : "var(--heat-text-lo,#0d366b)"}"
+        data-tip="<b>${lbl(t)} · ${lbl(a)}</b><br>${fmt(n)} people · cohort ${cohortOf(t, a)}">${fmt(n)}<small>${cohortOf(t, a)}</small></button>`;
+    }).join("")).join("");
+    $("heat").querySelectorAll("button").forEach(b => b.addEventListener("click", () => explore({cohort:"P1,P2,P3", tenure:[b.dataset.t], activity:[b.dataset.a]})));
+
+    const cmax = Math.max(...d.countries.map(c => c.n));
+    $("countryBars").innerHTML = d.countries.map((c, i) => `
+      <button class="bar-row" data-country="${esc(c.k)}" data-tip="<b>${esc(c.k)}</b><br>${fmt(c.n)} active developers">
+        <span class="lab">${esc(c.k)}</span><span class="track"><span style="width:${c.n / cmax * 100}%;background:var(--bar-strong);animation-delay:${i * 30}ms"></span></span>
+        <span class="val">${fmt(c.n)}</span></button>`).join("");
+    $("countryBars").querySelectorAll(".bar-row").forEach(b => b.addEventListener("click", () => explore({country:[b.dataset.country], cohort:"P1,P2,P3"})));
+    const [nc, all] = d.no_country;
+    $("noCountry").textContent = `${Math.round(nc / all * 100)}% have no country`;
+    icons();
+  } catch (e) {
+    $("cohortCards").innerHTML = `<div class="card" style="grid-column:1/-1">${emptyState("server-crash", "Couldn't load the overview", e.message, true)}</div>`;
+    $("chainBars").innerHTML = $("heat").innerHTML = $("countryBars").innerHTML = "";
+    icons();
+  }
+}
+/* the heatmap's text colors must follow the theme's ramp direction */
+const heatText = document.createElement("style");
+heatText.textContent = `:root{--heat-text-hi:#fff;--heat-text-lo:#0d366b}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--heat-text-hi:#0d366b;--heat-text-lo:#fff}}
+:root[data-theme="dark"]{--heat-text-hi:#0d366b;--heat-text-lo:#fff}`;
+document.head.append(heatText);
+
+function emptyState(ic, title, text, err=false){
+  return `<div class="empty ${err ? "err" : ""}"><div class="ic">${icon(ic)}</div><h3>${esc(title)}</h3><div>${esc(text)}</div></div>`;
+}
+
+/* ---------- explore toolbar ---------- */
+const FILTERS = {
+  eco:{title:"Chain or project", ic:"blocks", hint:"Ethereum, Solana, Uniswap, Anza…"},
+  activity:{title:"Activity", ic:"activity", opts:["FULL_TIME","PART_TIME","ONE_TIME","UNKNOWN"], hint:"How often they commit (last 84 days)"},
+  tenure:{title:"Tenure", ic:"hourglass", opts:["ESTABLISHED","EMERGING","NEWCOMER","UNKNOWN"], hint:"Time since first original crypto commit"},
+  exclusivity:{title:"Exclusivity", ic:"git-merge", opts:["EXCLUSIVE","MULTICHAIN","UNKNOWN"], hint:"One chain or several. Unknown = not applicable"},
+  country:{title:"Country", ic:"map-pin", hint:"Where known"},
+};
+function syncToolbar(){
+  const counts = META ? Object.fromEntries(META.cohorts.map(c => [c.k, c.n])) : {};
+  const opts = [["", "All"], ["P1,P2,P3", "P1–P3"], ["P1"], ["P2"], ["P3"], ["HOLD"]];
+  $("cohortSeg").innerHTML = opts.map(([k, l]) => `<button type="button" data-c="${k}" aria-pressed="${S.cohort === k}">
+      ${k && !k.includes(",") ? `<span class="badge c-${k}">${k}</span>` : (l || k)}${counts[k] ? `<span class="n">${fmt(counts[k])}</span>` : ""}</button>`).join("");
+  $("cohortSeg").querySelectorAll("button").forEach(b => b.addEventListener("click", () => { S.cohort = b.dataset.c; changed(); }));
+  if (document.activeElement !== $("q")) $("q").value = S.q;
+  $("hideFlagged").checked = S.hide;
+  const so = SORTS.find(s => s.k === S.sort) || SORTS[0];
+  $("sortLabel").textContent = so.label + (S.dir !== so.dir ? (S.dir === "asc" ? " ↑" : " ↓") : "");
+  $("sortNote").innerHTML = S.sort === "commits" ? `${icon("triangle-alert")} Commit counts include forks and copied history` : "";
+  document.querySelectorAll("[data-layout]").forEach(b => b.setAttribute("aria-pressed", S.layout === b.dataset.layout));
+  const chips = [];
+  for (const k of LIST_KEYS) for (const v of S[k])
+    chips.push(`<span class="fchip">${FILTERS[k].title}: <b>${esc(k === "eco" || k === "country" ? v : lbl(v))}</b><button type="button" data-k="${k}" data-v="${esc(v)}" aria-label="Remove filter">${icon("x")}</button></span>`);
+  if (S.q) chips.push(`<span class="fchip">Search: <b>${esc(S.q)}</b><button type="button" data-k="q" aria-label="Clear search">${icon("x")}</button></span>`);
+  if (chips.length > 1) chips.push(`<button class="btn ghost sm" type="button" id="clearAll">Clear all</button>`);
+  $("chips").innerHTML = chips.join("") || `<span class="faint" style="font-size:13px">No filters. Use <b>Filter</b> to narrow by chain, project, activity or country.</span>`;
+  $("chips").querySelectorAll(".fchip button").forEach(b => b.addEventListener("click", () => {
+    if (b.dataset.k === "q") S.q = ""; else S[b.dataset.k] = S[b.dataset.k].filter(v => v !== b.dataset.v);
+    changed();
+  }));
+  $("clearAll")?.addEventListener("click", () => { for (const k of LIST_KEYS) S[k] = []; S.q = ""; changed(); });
+  icons();
+}
+function changed(){ writeURL(); syncToolbar(); load(true); }
+
+let qTimer;
+$("q").addEventListener("input", () => { clearTimeout(qTimer); qTimer = setTimeout(() => { S.q = $("q").value.trim(); changed(); }, 300); });
+$("hideFlagged").addEventListener("change", () => { S.hide = $("hideFlagged").checked; changed(); });
+document.querySelectorAll("[data-layout]").forEach(b => b.addEventListener("click", () => { S.layout = b.dataset.layout; writeURL(); syncToolbar(); renderRows(true); }));
+document.addEventListener("keydown", e => {
+  if (e.key === "/" && !/INPUT|TEXTAREA/.test(document.activeElement.tagName) && !document.querySelector(".modal")) {
+    e.preventDefault();
+    if (S.view !== "explore") { S.view = "explore"; writeURL(true); render(); }
+    $("q").focus();
+  }
+});
+
+/* ---------- popover menus ---------- */
+let popEl = null;
+function closePop(){ if (popEl) { popEl.remove(); popEl = null; } }
+function openPop(anchor, build){
+  closePop();
+  popEl = document.createElement("div"); popEl.className = "pop"; popEl.setAttribute("role", "menu");
+  document.body.append(popEl);
+  build(popEl);
+  const place = () => {
+    if (!popEl) return;
+    const r = anchor.getBoundingClientRect(), w = popEl.offsetWidth, h = popEl.offsetHeight;
+    let left = Math.max(12, Math.min(innerWidth - w - 12, r.left));
+    let top = r.bottom + 6; if (top + h > innerHeight - 12 && r.top - h - 6 > 12) top = r.top - h - 6;
+    popEl.style.left = left + "px"; popEl.style.top = top + "px";
+  };
+  place(); popEl._place = place;
+  setTimeout(() => popEl?.querySelector("input, .mi")?.focus(), 0);
+}
+document.addEventListener("pointerdown", e => { if (popEl && !popEl.contains(e.target) && !e.target.closest("[aria-haspopup]")) closePop(); });
+document.addEventListener("keydown", e => {
+  if (!popEl) return;
+  if (e.key === "Escape") { e.stopPropagation(); closePop(); return; }
+  if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+    const items = [...popEl.querySelectorAll(".mi")]; if (!items.length) return;
+    e.preventDefault();
+    const i = items.indexOf(document.activeElement);
+    items[(i + (e.key === "ArrowDown" ? 1 : -1) + items.length) % items.length].focus();
+  }
+}, true);
+
+$("sortBtn").addEventListener("click", e => openPop(e.currentTarget, p => {
+  p.innerHTML = `<div class="menu-h">Sort by</div>` + SORTS.map(s => `<button class="mi ${S.sort === s.k ? "active" : ""}" data-k="${s.k}" data-dir="${s.dir}">${icon(s.ic)}
+      <span>${s.label}${s.hint ? `<span class="hint">${s.hint}</span>` : ""}</span>${S.sort === s.k ? `<span class="r">${icon("check")}</span>` : ""}</button>`).join("");
+  p.querySelectorAll(".mi").forEach(b => b.addEventListener("click", () => { S.sort = b.dataset.k; S.dir = b.dataset.dir; closePop(); changed(); }));
+  icons();
+}));
+
+$("addFilter").addEventListener("click", e => {
+  const anchor = e.currentTarget;
+  const root = p => {
+    p.innerHTML = `<div class="menu-h">Add a filter</div>` + Object.entries(FILTERS).map(([k, f]) => `<button class="mi" data-k="${k}">${icon(f.ic)}
+        <span>${f.title}<span class="hint">${f.hint}</span></span><span class="r">${S[k].length ? `<span class="count-badge">${S[k].length}</span>` : icon("chevron-right")}</span></button>`).join("");
+    p.querySelectorAll(".mi").forEach(b => b.addEventListener("click", () => sub(p, b.dataset.k)));
+    icons(); p._place?.();
+  };
+  const sub = (p, k) => {
+    const f = FILTERS[k];
+    p.innerHTML = `<button class="mi" data-back>${icon("chevron-left")}<b>${f.title}</b></button><div class="sep"></div>
+      ${k === "eco" || k === "country" ? `<label class="input">${icon("search")}<input placeholder="${k === "eco" ? "Search 7,000 chains and projects" : "Search countries"}" aria-label="Search ${f.title}"></label>` : ""}
+      <div class="list"></div>${k === "exclusivity" ? `<div class="note">Unknown means no chain-mapped work in the window, so exclusivity doesn't apply.</div>` : ""}`;
+    p.querySelector("[data-back]").addEventListener("click", () => root(p));
+    const list = p.querySelector(".list");
+    const draw = items => {
+      list.innerHTML = items.length ? items.map(it => `<button class="mi" role="menuitemcheckbox" aria-checked="${S[k].includes(it.v)}" data-v="${esc(it.v)}">
+          <span class="chk">${icon("check")}</span><span>${esc(it.l)}${it.sub ? `<span class="hint">${esc(it.sub)}</span>` : ""}</span>${it.n != null ? `<span class="r">${fmt(it.n)}</span>` : ""}</button>`).join("")
+        : `<div class="note">No matches.</div>`;
+      list.querySelectorAll(".mi").forEach(b => b.addEventListener("click", () => {
+        const v = b.dataset.v, on = S[k].includes(v);
+        S[k] = on ? S[k].filter(x => x !== v) : [...S[k], v];
+        b.setAttribute("aria-checked", !on); changed();
+      }));
+      icons(); p._place?.();
+    };
+    if (f.opts) draw(f.opts.map(v => ({v, l:lbl(v)})));
+    else if (k === "country") {
+      const all = (META?.countries || []).map(c => ({v:c.k, l:c.k, n:c.n}));
+      draw(all);
+      p.querySelector("input").addEventListener("input", ev => { const t = ev.target.value.toLowerCase(); draw(all.filter(c => c.l.toLowerCase().includes(t))); });
+    } else {
+      let seqE = 0, timer;
+      const search = async t => {
+        const my = ++seqE;
+        try {
+          const d = await api("/api/ecosystems?q=" + encodeURIComponent(t));
+          if (my === seqE) draw(d.rows.map(r => ({v:r.k, l:r.k, n:r.n, sub:r.level === "TOP_LEVEL" ? "Chain" : "Project"})));
+        } catch (err) { list.innerHTML = `<div class="note">${esc(err.message)}</div>`; }
+      };
+      draw(S.eco.map(v => ({v, l:v, sub:"Selected"})));
+      search("");
+      p.querySelector("input").addEventListener("input", ev => { clearTimeout(timer); timer = setTimeout(() => search(ev.target.value.trim()), 200); });
+    }
+    setTimeout(() => (p.querySelector("input") || p.querySelector(".list .mi"))?.focus(), 0);
+  };
+  openPop(anchor, root);
+});
+
+$("notesBtn").addEventListener("click", e => openPop(e.currentTarget, p => {
+  const r = META?.run || {};
+  p.style.maxWidth = "340px";
+  p.innerHTML = `<div class="menu-h">${icon("database")}About this data</div>
+    <div class="note" style="display:flex;flex-direction:column;gap:8px;font-size:12.5px">
+      <div>Snapshot <b class="mono">${esc(r.source_snapshot_id)}</b><br>Activity through <b>${day(r.as_of_activity_date)}</b> · built ${esc(String(r.run_at || "").slice(0, 16).replace("T", " "))} UTC</div>
+      <div><span class="pill draft">${icon("flask-conical")}Draft cohorts</span><br>P1–P3 rules are a draft assumption until the client confirms them.</div>
+      <div><b>Emails</b> are unverified commit-author addresses.</div>
+      <div>Data from Electric Capital <a href="https://opendevdata.org" target="_blank" rel="noopener">Open Dev Data</a>, CC BY 4.0.</div>
+    </div>`;
+  icons();
+}));
+
+/* ---------- results ---------- */
+let loadSeq = 0;
+async function load(reset){
+  const my = ++loadSeq;
+  if (reset) {
+    page = 1; rows = [];
+    $("results").innerHTML = S.layout === "cards"
+      ? `<div class="results">${Array.from({length:9}, () => `<div class="pcard" style="cursor:default;animation:none"><div class="phead"><div class="avatar skel"></div><div class="pname"><div class="skel" style="height:14px;width:60%"></div><div class="skel" style="height:11px;width:40%;margin-top:6px"></div></div></div><div class="skel" style="height:10px"></div><div class="skel" style="height:22px;width:70%"></div></div>`).join("")}</div>`
+      : `<div class="tablewrap"><div class="skel" style="height:420px;border-radius:0"></div></div>`;
+    $("moreBtn").hidden = true;
+    $("count").innerHTML = "Searching…";
+  } else { $("moreBtn").disabled = true; $("moreBtn").innerHTML = icon("loader-circle") + "Loading…"; icons(); }
+  try {
+    const d = await api("/api/people?" + apiParams({page}));
+    if (my !== loadSeq) return;
+    total = d.total;
+    const start = rows.length;
+    rows = rows.concat(d.rows);
+    $("count").innerHTML = `<b>${fmt(total)}</b> ${total === 1 ? "person" : "people"} match${total === 1 ? "es" : ""}`;
+    renderRows(reset, start);
+    $("moreBtn").hidden = rows.length >= total;
+    $("moreBtn").disabled = false; $("moreBtn").innerHTML = icon("chevrons-down") + `Load more <span class="faint">(${fmt(Math.min(d.page_size, total - rows.length))})</span>`;
+    icons();
+  } catch (e) {
+    if (my !== loadSeq) return;
+    $("count").innerHTML = "";
+    $("results").innerHTML = `<div class="card">${emptyState("server-crash", "Something went wrong", e.message, true)}</div>`;
+    icons();
+  }
+}
+$("moreBtn").addEventListener("click", () => { page++; load(false); });
+
+function personTags(r){
+  const t = [];
+  t.push(`<span class="tag">${icon("activity")}${lbl(r.activity_segment)}</span>`, `<span class="tag">${icon("hourglass")}${lbl(r.tenure_segment)}</span>`);
+  if (r.exclusivity && r.exclusivity !== "UNKNOWN") t.push(`<span class="tag">${icon("git-merge")}${lbl(r.exclusivity)}</span>`);
+  if (r.flag_probable_bot) t.push(`<span class="tag bad" data-tip="${FLAG_INFO.probable_bot[1]}">${icon("bot")}Bot?</span>`);
+  if (r.flag_github_conflict) t.push(`<span class="tag warn" data-tip="${FLAG_INFO.github_conflict[1]}">${icon("git-compare")}Conflict</span>`);
+  if (r.flag_linked_ids) t.push(`<span class="tag" data-tip="${FLAG_INFO.linked_ids[1]}">${icon("link")}Linked</span>`);
+  if (r.flag_activity_table_gap) t.push(`<span class="tag warn" data-tip="${FLAG_INFO.activity_table_gap[1]}">${icon("triangle-alert")}Data gap</span>`);
+  return t.join("");
+}
+const ghLine = r => r.github_login ? `${icon("github")}@${esc(r.github_login)}` : r.github_user_id ? `${icon("github")}<span class="faint">login not looked up</span>` : `<span class="faint">No GitHub match</span>`;
+const chainsLine = r => { const c = r.top_level_ecosystems || []; return c.length ? esc(c.slice(0, 3).join(", ")) + (c.length > 3 ? ` <span class="faint">+${c.length - 3}</span>` : "") : `<span class="faint">No chain</span>`; };
+const starBtn = id => `<button class="star ${inShortlist(id) ? "on" : ""}" type="button" data-star="${esc(id)}" aria-pressed="${inShortlist(id)}" aria-label="Add to shortlist">${icon("star")}</button>`;
+
+function renderRows(reset, start=0){
+  if (!rows.length) {
+    $("results").innerHTML = `<div class="card">${emptyState("search-x", "No one matches these filters", "Remove a filter, switch cohort, or try a different name.")}</div>`;
+    icons(); return;
+  }
+  if (S.layout === "cards") {
+    if (reset || !$("results").querySelector(".results")) { $("results").innerHTML = `<div class="results"></div>`; start = 0; }
+    $("results").querySelector(".results").insertAdjacentHTML("beforeend", rows.slice(start).map((r, i) => `
+      <article class="pcard" tabindex="0" data-id="${esc(r.person_id)}" style="animation-delay:${Math.min(i, 20) * 25}ms">
+        <div class="phead">${avatar(r)}
+          <div class="pname"><div class="nm">${esc(r.display_name) || "(no name)"}</div><div class="sub">${ghLine(r)}</div></div>
+          <span class="badge c-${r.priority_cohort}">${r.priority_cohort}</span>${starBtn(r.person_id)}</div>
+        <div class="reason">${icon("lightbulb")}<span>${esc(r.priority_cohort_reason)}</span></div>
+        <div class="meter"><div class="lbl"><span>Active days, last 84</span><b>${fmt(r.active_days_in_window)}</b></div>
+          <div class="bar"><span style="width:${Math.min(100, (r.active_days_in_window || 0) / 84 * 100)}%"></span></div></div>
+        <div class="tags">${personTags(r)}</div>
+        <div class="pfoot"><span>${icon("blocks")}${chainsLine(r)}</span><span>${icon("map-pin")}${esc(r.country) || "–"}</span></div>
+      </article>`).join(""));
+  } else {
+    const so = k => S.sort === k ? ` <span class="arrow">${S.dir === "desc" ? "↓" : "↑"}</span>` : "";
+    $("results").innerHTML = `<div class="tablewrap"><table><thead><tr><th style="width:1%"></th>
+      <th data-sort="name">Person${so("name")}</th><th>Cohort</th><th data-sort="active_days">Active days (84)${so("active_days")}</th><th>Segments</th>
+      <th data-sort="ecosystems">Chains${so("ecosystems")}</th><th>Country</th><th data-sort="last_activity">Last active${so("last_activity")}</th>
+      <th class="r" data-sort="commits">Commits${so("commits")}</th></tr></thead><tbody>
+      ${rows.map(r => `<tr class="click" tabindex="0" data-id="${esc(r.person_id)}"><td>${starBtn(r.person_id)}</td>
+        <td><div style="display:flex;gap:10px;align-items:center">${avatar(r).replace('class="avatar ', 'style="width:30px;height:30px;font-size:12px" class="avatar ')}
+          <div class="pname"><div class="nm" style="font-size:13.5px">${esc(r.display_name) || "(no name)"}</div><div class="sub">${ghLine(r)}</div></div></div></td>
+        <td><span class="badge c-${r.priority_cohort}" data-tip="${esc(r.priority_cohort_reason)}">${r.priority_cohort}</span></td>
+        <td><span class="mini"><span style="width:${Math.min(100, (r.active_days_in_window || 0) / 84 * 100)}%"></span></span><span class="num">${fmt(r.active_days_in_window)}</span></td>
+        <td class="muted">${lbl(r.activity_segment)} · ${lbl(r.tenure_segment)}</td>
+        <td style="max-width:240px;overflow:hidden;text-overflow:ellipsis">${chainsLine(r)}</td><td>${esc(r.country) || "–"}</td>
+        <td class="num">${day(r.last_activity_date)}</td><td class="r num">${fmt(r.commit_count)}</td></tr>`).join("")}
+      </tbody></table></div>`;
+    $("results").querySelectorAll("th[data-sort]").forEach(th => th.addEventListener("click", () => {
+      if (S.sort === th.dataset.sort) S.dir = S.dir === "desc" ? "asc" : "desc";
+      else { S.sort = th.dataset.sort; S.dir = (SORTS.find(s => s.k === S.sort) || {}).dir || "desc"; }
+      changed();
+    }));
+  }
+  icons();
+}
+$("results").addEventListener("click", e => {
+  const st = e.target.closest("[data-star]");
+  if (st) { e.stopPropagation(); toggleShortlist(st.dataset.star); return; }
+  const card = e.target.closest("[data-id]");
+  if (card) openPerson(card.dataset.id);
+});
+$("results").addEventListener("keydown", e => {
+  if (e.key === "Enter" && e.target.matches("[data-id]")) openPerson(e.target.dataset.id);
+});
+
+/* ======================= shortlist ======================= */
+let SL = store.get("ts.shortlist", []);
+const inShortlist = id => SL.some(p => p.person_id === id);
+function saveSL(bump=true){
+  store.set("ts.shortlist", SL);
+  $("slCount").textContent = SL.length;
+  if (bump) { $("slCount").classList.remove("bump"); void $("slCount").offsetWidth; $("slCount").classList.add("bump"); }
+  document.querySelectorAll("[data-star]").forEach(b => { const on = inShortlist(b.dataset.star); b.classList.toggle("on", on); b.setAttribute("aria-pressed", on); });
+}
+function toggleShortlist(id, person){
+  const p = person || rows.find(r => r.person_id === id) || currentPerson;
+  if (inShortlist(id)) { SL = SL.filter(x => x.person_id !== id); toast("Removed from shortlist", "star-off"); }
+  else if (p) {
+    SL.push({person_id:p.person_id, display_name:p.display_name, github_login:p.github_login, github_user_id:p.github_user_id, priority_cohort:p.priority_cohort, country:p.country});
+    toast("Added to shortlist", "star");
+  }
+  saveSL();
+  document.querySelectorAll(`[data-star="${CSS.escape(id)}"]`).forEach(b => { b.classList.remove("pop"); void b.offsetWidth; b.classList.add("pop"); });
+  if ($("slList")) drawShortlist();
+}
+saveSL(false);
+
+let layer = null; // the open modal/drawer: {el, scrim, onClose}
+function openLayer(el, onClose){
+  closeLayer(true);
+  const scrim = document.createElement("div"); scrim.className = "scrim";
+  scrim.addEventListener("click", () => closeLayer());
+  document.body.append(scrim, el);
+  document.body.style.overflow = "hidden";
+  layer = {el, scrim, onClose, focus:document.activeElement};
+  icons();
+}
+function closeLayer(instant=false){
+  if (!layer) return;
+  const {el, scrim, onClose, focus} = layer; layer = null;
+  document.body.style.overflow = "";
+  onClose?.();
+  if (instant || reduced) { el.remove(); scrim.remove(); }
+  else { el.classList.add("out"); scrim.classList.add("out"); setTimeout(() => { el.remove(); scrim.remove(); }, 200); }
+  focus?.focus?.();
+}
+document.addEventListener("keydown", e => { if (e.key === "Escape" && layer && !popEl) closeLayer(); });
+
+$("shortlistBtn").addEventListener("click", () => {
+  const d = document.createElement("aside"); d.className = "drawer"; d.setAttribute("role", "dialog"); d.setAttribute("aria-label", "Shortlist");
+  d.innerHTML = `<div class="d-head"><h2>${icon("star")}Shortlist <span class="count-badge" id="slCount2">${SL.length}</span></h2>
+      <button class="btn icon ghost" type="button" data-close aria-label="Close">${icon("x")}</button></div>
+    <div class="d-body" id="slList"></div>
+    <div class="d-foot"><button class="btn" type="button" id="slClear">${icon("trash-2")}Clear</button>
+      <button class="btn primary" type="button" id="slExport">${icon("download")}Export CSV</button></div>`;
+  openLayer(d);
+  d.querySelector("[data-close]").addEventListener("click", () => closeLayer());
+  d.querySelector("#slClear").addEventListener("click", () => { if (SL.length && confirm(`Remove all ${SL.length} people from the shortlist?`)) { SL = []; saveSL(); drawShortlist(); } });
+  d.querySelector("#slExport").addEventListener("click", () => openExport("shortlist"));
+  drawShortlist();
+  d.querySelector("[data-close]").focus();
+});
+function drawShortlist(){
+  const el = $("slList"); if (!el) return;
+  if ($("slCount2")) $("slCount2").textContent = SL.length;
+  $("slExport") && ($("slExport").disabled = !SL.length);
+  el.innerHTML = SL.length ? SL.map(p => `<div class="sl" data-open="${esc(p.person_id)}" tabindex="0">${avatar(p)}
+      <div class="pname"><div class="nm">${esc(p.display_name) || "(no name)"}</div><div class="sub">${p.github_login ? "@" + esc(p.github_login) : esc(p.person_id)}${p.country ? " · " + esc(p.country) : ""}</div></div>
+      <span class="badge c-${p.priority_cohort}">${p.priority_cohort}</span>
+      <button class="star on" type="button" data-unstar="${esc(p.person_id)}" aria-label="Remove from shortlist">${icon("star")}</button></div>`).join("")
+    : emptyState("star", "Your shortlist is empty", "Star people in Explore to collect them here, then export them as CSV.");
+  el.querySelectorAll("[data-unstar]").forEach(b => b.addEventListener("click", e => { e.stopPropagation(); toggleShortlist(b.dataset.unstar); }));
+  el.querySelectorAll("[data-open]").forEach(r => {
+    r.addEventListener("click", () => openPerson(r.dataset.open, SL.map(p => p.person_id)));
+    r.addEventListener("keydown", e => { if (e.key === "Enter") openPerson(r.dataset.open, SL.map(p => p.person_id)); });
+  });
+  icons();
+}
+
+/* ======================= export ======================= */
+$("exportBtn").addEventListener("click", () => openExport("filter"));
+function openExport(mode){
+  const m = document.createElement("div"); m.className = "modal small"; m.setAttribute("role", "dialog"); m.setAttribute("aria-modal", "true"); m.setAttribute("aria-label", "Export CSV");
+  m.innerHTML = `<div class="m-head"><div class="who"><h2>${icon("download")}Export CSV</h2><div class="sub">For outreach tools. One row per person, with the best non-noreply email.</div></div>
+      <button class="btn icon ghost" type="button" data-close aria-label="Close">${icon("x")}</button></div>
+    <div class="m-body">
+      <label class="radio"><input type="radio" name="exp" value="filter" ${mode === "filter" ? "checked" : ""}><span><b>Current filter</b>
+        <small>${total ? `${fmt(Math.min(total, 5000))} people${total > 5000 ? ` (first 5,000 of ${fmt(total)})` : ""}, in the current sort order` : "Open Explore to set a filter first"}</small></span></label>
+      <label class="radio"><input type="radio" name="exp" value="shortlist" ${mode === "shortlist" ? "checked" : ""} ${SL.length ? "" : "disabled"}><span><b>Shortlist</b>
+        <small>${fmt(SL.length)} starred ${SL.length === 1 ? "person" : "people"}</small></span></label>
+      <div class="callout warn"><div class="ci">${icon("triangle-alert")}</div><div><h4>Before you send outreach</h4>
+        <ul class="checklist" style="margin-top:6px">
+          <li>${icon("mail-question")}<span>Emails are <b>unverified</b> commit-author addresses (column <span class="mono">email_status</span>).</span></li>
+          <li>${icon("flask-conical")}<span>Cohorts are a <b>draft</b> (column <span class="mono">cohort_status</span>).</span></li>
+          <li>${icon("building-2")}<span>Don't infer an employer from an email domain.</span></li>
+          <li>${icon("copyright")}<span>Keep the Electric Capital CC BY 4.0 attribution (included in every row).</span></li></ul></div></div>
+    </div>
+    <div class="d-foot"><button class="btn" type="button" data-close>Cancel</button><a class="btn primary" id="dl" href="#" download>${icon("download")}Download CSV</a></div>`;
+  openLayer(m);
+  const upd = () => {
+    const v = m.querySelector("input[name=exp]:checked")?.value;
+    const p = v === "shortlist" ? new URLSearchParams({ids:SL.map(x => x.person_id).join(","), sort:S.sort, dir:S.dir}) : apiParams();
+    const a = m.querySelector("#dl"); a.href = withKey("/api/export.csv?" + p);
+    a.setAttribute("download", v === "shortlist" ? "talent_seed_shortlist.csv" : "talent_seed_export.csv");
+    a.toggleAttribute("aria-disabled", !v || (v === "filter" && !total)); a.style.pointerEvents = (!v || (v === "filter" && !total)) ? "none" : ""; a.style.opacity = a.style.pointerEvents ? .5 : 1;
+  };
+  m.querySelectorAll("input[name=exp]").forEach(r => r.addEventListener("change", upd)); upd();
+  m.querySelectorAll("[data-close]").forEach(b => b.addEventListener("click", () => closeLayer()));
+  m.querySelector("#dl").addEventListener("click", () => { toast("Export started"); setTimeout(() => closeLayer(), 50); });
+  m.querySelector("#dl").focus();
+}
+
+/* ======================= person modal ======================= */
+let currentPerson = null, navList = null;
+function syncHash(){
+  const m = location.hash.match(/^#p=(.+)$/);
+  if (m && (!currentPerson || currentPerson.person_id !== decodeURIComponent(m[1]))) openPerson(decodeURIComponent(m[1]), null, false);
+  if (!m && currentPerson) closeLayer();
+}
+addEventListener("hashchange", syncHash);
+
+async function openPerson(id, list=null, setHash=true){
+  navList = list || rows.map(r => r.person_id);
+  if (setHash && location.hash !== "#p=" + encodeURIComponent(id)) history.pushState(null, "", location.pathname + location.search + "#p=" + encodeURIComponent(id));
+  let m = document.querySelector(".modal.person");
+  if (!m || !layer || layer.el !== m) {
+    m = document.createElement("div"); m.className = "modal person"; m.setAttribute("role", "dialog"); m.setAttribute("aria-modal", "true");
+    openLayer(m, () => {
+      currentPerson = null;
+      if (location.hash.startsWith("#p=")) history.pushState(null, "", location.pathname + location.search);
+    });
+  }
+  m.setAttribute("aria-label", "Person profile");
+  m.innerHTML = `<div class="m-head"><div class="avatar lg skel"></div><div class="who"><div class="skel" style="height:22px;width:50%"></div><div class="skel" style="height:13px;width:35%;margin-top:8px"></div></div>
+      <div class="m-actions"><button class="btn icon ghost" type="button" data-close aria-label="Close">${icon("x")}</button></div></div>
+    <div class="m-body"><div class="skel" style="height:72px"></div><div class="stats">${"<div class='skel' style='height:84px'></div>".repeat(4)}</div><div class="skel" style="height:180px"></div></div>`;
+  m.querySelector("[data-close]").addEventListener("click", () => closeLayer());
+  icons();
+  try {
+    const d = await api("/api/person?id=" + encodeURIComponent(id));
+    if (!layer || layer.el !== m) return;
+    currentPerson = d.person;
+    renderPerson(m, d);
+  } catch (e) {
+    if (!layer || layer.el !== m) return;
+    m.querySelector(".m-body").innerHTML = emptyState("user-x", "Couldn't load this person", e.message, true);
+    icons();
+  }
+}
+
+function renderPerson(m, d){
+  const p = d.person;
+  const flags = Object.entries(p).filter(([k, v]) => k.startsWith("flag_") && v).map(([k]) => k.slice(5));
+  const idx = navList.indexOf(p.person_id);
+  const years = p.tenure_days != null ? (p.tenure_days / 365.25).toFixed(1) : null;
+  const tops = d.ecosystems.filter(e => e.level === "TOP_LEVEL"), subs = d.ecosystems.filter(e => e.level !== "TOP_LEVEL");
+  const windowStart = p.activity_window_start;
+  const realEmails = d.contacts.filter(c => !c.is_github_noreply && !c.is_placeholder).length;
+  const gh = p.github_login ? `<a href="https://github.com/${encodeURIComponent(p.github_login)}" target="_blank" rel="noopener">${icon("github")}@${esc(p.github_login)}</a>`
+    : p.github_user_id ? `<span data-tip="GitHub account id ${esc(p.github_user_id)} is known, but the login needs an API lookup that hasn't run yet.">${icon("github")}Login not looked up yet</span>`
+    : `<span>${icon("github")}No GitHub match</span>`;
+
+  m.innerHTML = `
+    <div class="m-head">${avatar(p, "lg")}
+      <div class="who"><h2>${esc(p.display_name) || "(no name)"} <span class="badge c-${p.priority_cohort}">${p.priority_cohort}</span></h2>
+        <div class="sub">${gh}<span>${icon("map-pin")}${esc(p.location || p.country) || "Location unknown"}</span>
+          <span data-tip="How sure we are this is the right GitHub account">${icon("shield-check")}Match: ${lbl(p.github_confidence)}</span></div></div>
+      <div class="m-actions">
+        ${starBtn(p.person_id)}
+        <button class="btn icon ghost" type="button" data-nav="-1" aria-label="Previous person" ${idx > 0 ? "" : "disabled"} data-tip="Previous (←)">${icon("chevron-left")}</button>
+        <button class="btn icon ghost" type="button" data-nav="1" aria-label="Next person" ${idx >= 0 && idx < navList.length - 1 ? "" : "disabled"} data-tip="Next (→)">${icon("chevron-right")}</button>
+        <button class="btn icon ghost" type="button" data-close aria-label="Close">${icon("x")}</button></div>
+    </div>
+    <div class="m-tabs" role="tablist">
+      <button role="tab" data-t="overview" aria-selected="true">${icon("user")}Overview</button>
+      <button role="tab" data-t="contact" aria-selected="false">${icon("mail")}Contact <span class="n">${d.contacts.length}</span></button>
+      <button role="tab" data-t="repos" aria-selected="false">${icon("folder-git-2")}Repos <span class="n">${fmt(d.repo_total)}</span></button>
+      <button role="tab" data-t="details" aria-selected="false">${icon("database")}Data details</button>
+    </div>
+    <div class="m-body" data-panel="overview">
+      <div class="callout c-${p.priority_cohort}"><div class="ci">${icon("lightbulb")}</div><div>
+        <h4>Why ${p.priority_cohort}</h4><p>${esc(p.priority_cohort_reason)}.</p>
+        <p class="faint" style="font-size:12px;margin-top:4px">Rule ${esc(p.priority_cohort_rule ?? "–")} · draft assumption, not yet confirmed by the client</p></div></div>
+      ${flags.length ? `<div class="callout warn"><div class="ci">${icon("triangle-alert")}</div><div><h4>Check before contacting</h4>
+        <ul>${flags.map(f => `<li>${esc((FLAG_INFO[f] || [0, f.replaceAll("_", " ")])[1])}</li>`).join("")}</ul></div></div>` : ""}
+      <div class="stats">
+        <div class="stat"><span class="k">${icon("activity")}Active days, last 84</span><span class="v">${fmt(p.active_days_in_window)}</span>
+          <div class="meter"><div class="bar"><span style="width:${Math.min(100, (p.active_days_in_window || 0) / 84 * 100)}%"></span></div></div>
+          <span class="s">${lbl(p.activity_segment)} · max ${fmt(p.max_active_days_in_28d)} in 28 days</span></div>
+        <div class="stat"><span class="k">${icon("hourglass")}Crypto tenure</span><span class="v">${years != null ? years + " yrs" : "–"}</span>
+          <span class="s">${lbl(p.tenure_segment)} · since ${day(p.first_crypto_commit_date)}</span></div>
+        <div class="stat"><span class="k">${icon("blocks")}Chains</span><span class="v">${fmt(tops.length)}</span>
+          <span class="s">${p.exclusivity === "UNKNOWN" ? "Exclusivity n/a" : lbl(p.exclusivity)} · ${fmt(subs.length)} projects</span></div>
+        <div class="stat"><span class="k">${icon("clock")}Last crypto activity</span><span class="v" style="font-size:16px">${day(p.last_crypto_activity_date)}</span>
+          <span class="s">${fmt(p.commit_count_excluding_inherited)} original commits</span></div>
+      </div>
+      <div class="sect"><h3>Chains</h3><div class="tags">${tops.map(e => `<span class="tag" data-tip="${e.repo_count} repos · ${fmt(e.commits)} commits<br>last active ${day(e.last_active_date)}">${icon("hexagon")}${esc(e.ecosystem_name)}</span>`).join("") || `<span class="faint">None</span>`}</div></div>
+      ${subs.length ? `<div class="sect"><h3>Projects</h3><div class="tags">${subs.slice(0, 24).map(e => `<span class="tag" data-tip="${e.repo_count} repos · ${fmt(e.commits)} commits<br>last active ${day(e.last_active_date)}">${esc(e.ecosystem_name)}</span>`).join("")}${subs.length > 24 ? `<span class="tag faint">+${subs.length - 24} more</span>` : ""}</div></div>` : ""}
+      <div class="sect"><h3>Top original crypto repos</h3>
+        <div class="card">${d.top_repos.length ? d.top_repos.map(r => {
+          const live = windowStart && r.last_original_date && r.last_original_date >= windowStart;
+          return `<div class="repo"><span class="dot ${live ? "on" : ""}" data-tip="${live ? "Active in the last 84 days" : "Not active in the last 84 days"}"></span>
+            <span class="rn">${r.repo_url ? `<a href="${esc(r.repo_url)}" target="_blank" rel="noopener">${esc(r.repo_name)}</a>` : esc(r.repo_name)}</span>
+            <span class="rm"><span>${icon("star")}${fmt(r.num_stars)}</span><span>${icon("calendar-days")}${fmt(r.active_days)} days</span><span>${icon("clock")}${day(r.last_original_date)}</span></span></div>`;
+        }).join("") : emptyState("folder-x", "No original crypto repos", "Their commits are in forks or non-crypto repos.")}</div></div>
+    </div>
+    <div class="m-body" data-panel="contact" hidden>
+      <div class="callout warn"><div class="ci">${icon("mail-question")}</div><div><h4>Unverified emails</h4>
+        <p>These are commit-author addresses, not confirmed contact details. Don't infer an employer from the domain. ${realEmails ? "" : "<b>No usable address:</b> only GitHub noreply or shared placeholders."}</p></div></div>
+      <div class="card">${d.contacts.map(c => `<div class="email"><span class="ev">${esc(c.value)}</span>
+          ${c.is_github_noreply ? `<span class="tag">${icon("github")}noreply</span>` : ""}${c.is_placeholder ? `<span class="tag warn" data-tip="Used by ${fmt(c.shared_by_n_developers)} different developers">${icon("users")}shared</span>` : ""}
+          <span class="em">${fmt(c.n_commits)} commits · last ${day(c.last_seen_at)}</span>
+          <button class="btn sm icon ghost" type="button" data-copy="${esc(c.value)}" aria-label="Copy email" data-tip="Copy">${icon("copy")}</button></div>`).join("")
+        || emptyState("mail-x", "No emails", "No commit-author email is on record.")}</div>
+    </div>
+    <div class="m-body" data-panel="repos" hidden>
+      <div class="tablewrap"><table><thead><tr><th>Repo</th><th class="r">Commits</th><th class="r">Active days</th><th>First</th><th>Last</th></tr></thead><tbody>
+        ${d.repos.map(r => `<tr><td>${r.repo_url ? `<a href="${esc(r.repo_url)}" target="_blank" rel="noopener">${esc(r.repo_name)}</a>` : esc(r.repo_name)}
+          ${r.inherited_history ? ` <span class="tag warn" data-tip="Fork or copied history: commits may not be theirs">${icon("git-fork")}fork</span>` : ""}</td>
+          <td class="r num">${fmt(r.commits)}</td><td class="r num">${fmt(r.active_days)}</td><td class="num">${day(r.first_active_date)}</td><td class="num">${day(r.last_active_date)}</td></tr>`).join("")}
+      </tbody></table></div>
+      ${d.repo_total > 100 ? `<p class="faint" style="margin:0;font-size:12.5px">Showing the 100 most recent of ${fmt(d.repo_total)} repos.</p>` : ""}
+    </div>
+    <div class="m-body" data-panel="details" hidden>
+      <div class="card"><div class="kv">
+        <div><span>Person id</span><b class="mono">${esc(p.person_id)}</b></div>
+        <div><span>GitHub match</span><b>${lbl(p.github_confidence)} · ${esc(p.github_resolution_method)}</b></div>
+        <div><span>GitHub user id</span><b class="mono">${esc(p.github_user_id) || "–"}</b></div>
+        <div><span>First commit (any repo)</span><b>${day(p.first_commit_date)}</b></div>
+        <div><span>First original crypto commit</span><b>${day(p.first_crypto_commit_date)}</b></div>
+        <div><span>Last activity (any repo)</span><b>${day(p.last_activity_date)}</b></div>
+        <div><span>Commits (original only)</span><b>${fmt(p.commit_count)} (${fmt(p.commit_count_excluding_inherited)})</b></div>
+        <div><span>Repos (without forks)</span><b>${fmt(p.repository_count)} (${fmt(p.repository_count_excluding_inherited)})</b></div>
+        <div><span>EC contribution rank</span><b>${esc(p.odd_contribution_rank_asof) || "–"}</b></div>
+        <div><span>Exclusivity</span><b>${lbl(p.exclusivity)}${p.exclusivity === "UNKNOWN" ? " (no chain-mapped work in window)" : ""}</b></div>
+        <div><span>Snapshot</span><b class="mono">${esc(p.source_snapshot_id)}</b></div>
+        <div><span>Activity window</span><b>${day(p.activity_window_start)} → ${day(p.as_of_activity_date)}</b></div>
+      </div></div>
+      <div class="sect"><h3>Developer ids (${d.members.length})</h3><div class="tags">${d.members.map(x => `<span class="tag mono" data-tip="${fmt(x.n_commits)} commits · ${esc(x.link_method.toLowerCase().replaceAll("_", " "))}">${esc(x.canonical_developer_id)}</span>`).join("")}</div></div>
+    </div>`;
+  m.querySelectorAll("[data-close]").forEach(b => b.addEventListener("click", () => closeLayer()));
+  m.querySelectorAll("[data-nav]").forEach(b => b.addEventListener("click", () => navPerson(+b.dataset.nav)));
+  m.querySelector("[data-star]").addEventListener("click", () => toggleShortlist(p.person_id, p));
+  m.querySelectorAll("[data-copy]").forEach(b => b.addEventListener("click", async () => {
+    try { await navigator.clipboard.writeText(b.dataset.copy); toast("Email copied", "clipboard-check"); } catch { toast("Couldn't copy. Select the text instead.", "x"); }
+  }));
+  m.querySelectorAll(".m-tabs button").forEach(b => b.addEventListener("click", () => {
+    m.querySelectorAll(".m-tabs button").forEach(x => x.setAttribute("aria-selected", x === b));
+    m.querySelectorAll("[data-panel]").forEach(x => x.hidden = x.dataset.panel !== b.dataset.t);
+  }));
+  icons();
+}
+function navPerson(step){
+  if (!currentPerson) return;
+  const i = navList.indexOf(currentPerson.person_id), next = navList[i + step];
+  if (i >= 0 && next) openPerson(next, navList);
+}
+document.addEventListener("keydown", e => {
+  if (!currentPerson || popEl || /INPUT|TEXTAREA/.test(document.activeElement.tagName)) return;
+  if (e.key === "ArrowRight") navPerson(1);
+  if (e.key === "ArrowLeft") navPerson(-1);
+});
+
+/* ======================= boot ======================= */
+(async () => {
+  readURL();
+  try {
+    META = await api("/api/meta");
+    const r = META.run;
+    $("asof").textContent = `Activity through ${day(r.as_of_activity_date)}`;
+    $("footSnap").textContent = `Snapshot ${r.source_snapshot_id}, activity through ${day(r.as_of_activity_date)}.`;
+  } catch (e) { $("asof").textContent = "Data unavailable"; toast(e.message, "server-crash"); }
+  render();
+  syncHash();
+  icons();
+})();
+</script>
+
+<!-- Guided tour: React Joyride, loaded as ES modules from esm.sh (no build step). It runs once on a
+     viewer's first visit and again from the "?" button. It walks both tabs, switching view as needed. -->
+<div id="tour-root"></div>
+<script type="module">
+import React from "https://esm.sh/react@18.3.1";
+import { createRoot } from "https://esm.sh/react-dom@18.3.1/client";
+import Joyride, { ACTIONS, EVENTS, STATUS } from "https://esm.sh/react-joyride@2.9.3?deps=react@18.3.1,react-dom@18.3.1";
+
+const h = React.createElement;
+const narrow = () => innerWidth < 640;
+const P = (...lines) => h("div", {style:{textAlign:"left", fontSize:13.5, lineHeight:1.55}}, ...lines.map((l, i) => h("p", {key:i, style:{margin: i ? "8px 0 0" : 0}}, l)));
+const STEPS = [
+  {view:"overview", target:"body", placement:"center", title:"Welcome to Talent Seed",
+   content:P("Find the most active open-source crypto developers by chain, project and cohort.", "This 1-minute tour shows you around. You can replay it from the ? button.")},
+  {view:"overview", target:"#cohortCards", title:"Priority cohorts",
+   content:P("P1 is who to look at first: full-time developers with over a year of tenure. HOLD is mostly people not active lately.", "Click a card to see the people in it.")},
+  {view:"overview", target:"#chainBars", mobileTarget:"#chainHead", placement:"right", title:"Developers per chain",
+   content:P("Active developers on each chain, with the P1 share in dark blue. Click a bar to explore that chain.")},
+  {view:"overview", target:"#heat", title:"Tenure × activity",
+   content:P("How experienced and how active people are. Each cell names the cohort it feeds; click one to see those people.")},
+  {view:"overview", target:"#notesBtn", title:"Draft data, read the notes",
+   content:P("Cohorts are a draft until the client confirms them, and emails are unverified. The snapshot date and data credit live here.")},
+  {view:"explore", target:"#cohortSeg", title:"Pick a cohort",
+   content:P("Switch between cohorts, or see P1–P3 together.")},
+  {view:"explore", target:"#q", title:"Search",
+   content:P("Search by name, GitHub login, an exact email, or a person id. Press / from anywhere to jump here.")},
+  {view:"explore", target:"#addFilter", title:"Filter",
+   content:P("Narrow by chain or project (e.g. Uniswap, Anza), activity, tenure, exclusivity or country. Filters stay in the URL, so you can bookmark or share a view.")},
+  {view:"explore", target:"#sortBtn", title:"Sort",
+   content:P("Results sort by days active in the last 84 days. Commit counts are inflated by forks, so use them with care.")},
+  {view:"explore", target:"#results .pcard, #results tbody tr", title:"Open a profile",
+   content:P("Each card shows why the person is in their cohort. Click it for chains, top repos and contact details. Use ← → to step through people.", "The ★ adds them to your shortlist.")},
+  {view:"explore", target:"#shortlistBtn", title:"Your shortlist",
+   content:P("Starred people collect here and are kept in this browser.")},
+  {view:"explore", target:"#exportBtn", title:"Export for outreach",
+   content:P("Download the current filter or your shortlist as CSV. Caveats (unverified emails, draft cohorts, attribution) travel with every row.")},
+].map(s => ({disableBeacon:true, spotlightPadding:6, ...s}));
+// Phones: a step can point at a smaller element (e.g. a chart's header) so the target and tooltip both fit on screen.
+const steps = () => STEPS.map(s => narrow() && s.mobileTarget ? {...s, target:s.mobileTarget, placement:"bottom"} : s);
+
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const waitFor = (sel, ms=6000) => new Promise(res => {
+  const t0 = Date.now();
+  const tick = () => { const el = document.querySelector(sel); if (el && el.offsetParent !== null) return res(true); if (Date.now() - t0 > ms) return res(false); setTimeout(tick, 100); };
+  tick();
+});
+const seen = () => { try { return localStorage.getItem("ts.tourSeen") === "1"; } catch { return true; } };
+const markSeen = () => { try { localStorage.setItem("ts.tourSeen", "1"); } catch {} };
+
+function Tour(){
+  const [run, setRun] = React.useState(false);
+  const [index, setIndex] = React.useState(0);
+  const [colors, setColors] = React.useState({});
+
+  // Show step i, switching tab first if the step lives on the other view.
+  const show = React.useCallback(async i => {
+    const step = steps()[i];
+    if (!step) { setRun(false); markSeen(); return; }
+    if (S.view !== step.view) { setRun(false); setView(step.view); }
+    document.querySelector(".pop") && closePop();
+    if (step.target !== "body") {
+      if (!(await waitFor(step.target))) return show(i + 1);
+      // On wide screens, scroll the target just below the sticky top bar ourselves (Joyride's scrolling tucks tall
+      // targets under it). On phones Joyride scrolls, because it keeps the tooltip and its buttons on screen.
+      const el = document.querySelector(step.target), bar = document.querySelector(".topbar").offsetHeight;
+      if (!el.closest(".topbar") && !narrow()) {
+        const r = el.getBoundingClientRect();
+        if (r.top < bar + 12 || r.bottom > innerHeight - 12) scrollTo({top:scrollY + r.top - bar - 16, behavior:"instant"});
+      }
+    }
+    setColors({primaryColor:css("--accent"), backgroundColor:css("--surface"), textColor:css("--fg"), arrowColor:css("--surface"), overlayColor:css("--scrim")});
+    setIndex(i); setRun(true);
+  }, []);
+
+  React.useEffect(() => {
+    window.startTour = () => { if (layer) closeLayer(true); show(0); };
+    $("tourBtn").hidden = false; icons();
+    if (!seen()) setTimeout(() => window.startTour(), 900);
+  }, []);
+
+  const onEvent = d => {
+    if (d.status === STATUS.FINISHED || d.status === STATUS.SKIPPED || d.action === ACTIONS.CLOSE) { setRun(false); markSeen(); return; }
+    if (d.type === EVENTS.STEP_AFTER) show(d.index + (d.action === ACTIONS.PREV ? -1 : 1));
+    else if (d.type === EVENTS.TARGET_NOT_FOUND) show(d.index + 1);
+  };
+
+  return h(Joyride, {
+    steps:steps(), stepIndex:index, run, continuous:true, showProgress:true, showSkipButton:true,
+    disableScrolling:!narrow(), scrollOffset:70, disableOverlayClose:true, callback:onEvent,
+    locale:{back:"Back", close:"Close", last:"Done", next:"Next", skip:"Skip tour"},
+    styles:{
+      options:{...colors, zIndex:100, width:360},
+      tooltip:{borderRadius:14, padding:18, boxShadow:"var(--shadow-lg)", fontFamily:"var(--body)"},
+      tooltipTitle:{fontSize:15.5, fontWeight:700, textAlign:"left", margin:"0 0 6px"},
+      tooltipContent:{padding:"4px 0 8px"},
+      buttonNext:{borderRadius:8, fontSize:13.5, fontWeight:600, padding:"8px 14px", color:css("--accent-fg")},
+      buttonBack:{color:css("--muted"), fontSize:13.5, marginRight:6},
+      buttonSkip:{color:css("--muted"), fontSize:13},
+      spotlight:{borderRadius:12},
+    },
+  });
+}
+createRoot($("tour-root")).render(h(Tour));
+$("tourBtn").addEventListener("click", () => window.startTour?.());
+</script>
+</body>
+</html>

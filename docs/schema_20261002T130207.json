@@ -1,0 +1,716 @@
+{
+  "canonical_developer_locations": {
+    "rows": 923905,
+    "local": true,
+    "columns": [
+      [
+        "canonical_developer_id",
+        "INTEGER"
+      ],
+      [
+        "created_at",
+        "TIMESTAMP WITH TIME ZONE"
+      ],
+      [
+        "input",
+        "VARCHAR"
+      ],
+      [
+        "country",
+        "VARCHAR"
+      ],
+      [
+        "admin_level_1",
+        "VARCHAR"
+      ],
+      [
+        "admin_level_2",
+        "VARCHAR"
+      ],
+      [
+        "locality",
+        "VARCHAR"
+      ],
+      [
+        "sublocality",
+        "VARCHAR"
+      ],
+      [
+        "formatted_address",
+        "VARCHAR"
+      ],
+      [
+        "lat",
+        "DOUBLE"
+      ],
+      [
+        "lng",
+        "DOUBLE"
+      ],
+      [
+        "raw",
+        "VARCHAR"
+      ]
+    ]
+  },
+  "canonical_developers": {
+    "rows": 3513047,
+    "local": true,
+    "columns": [
+      [
+        "id",
+        "INTEGER"
+      ],
+      [
+        "primary_developer_email_identity_id",
+        "INTEGER"
+      ],
+      [
+        "primary_github_user_id",
+        "VARCHAR"
+      ]
+    ]
+  },
+  "commits": {
+    "rows": 491574165,
+    "local": false,
+    "columns": [
+      [
+        "id",
+        "BIGINT"
+      ],
+      [
+        "repo_id",
+        "INTEGER"
+      ],
+      [
+        "sha1",
+        "VARCHAR"
+      ],
+      [
+        "created_at",
+        "TIMESTAMP WITH TIME ZONE"
+      ],
+      [
+        "additions",
+        "INTEGER"
+      ],
+      [
+        "deletions",
+        "INTEGER"
+      ],
+      [
+        "authored_at",
+        "TIMESTAMP WITH TIME ZONE"
+      ],
+      [
+        "authored_at_offset",
+        "INTEGER"
+      ],
+      [
+        "committed_at",
+        "TIMESTAMP WITH TIME ZONE"
+      ],
+      [
+        "committed_at_offset",
+        "INTEGER"
+      ],
+      [
+        "commit_author_name",
+        "VARCHAR"
+      ],
+      [
+        "commit_author_email",
+        "VARCHAR"
+      ],
+      [
+        "canonical_developer_id",
+        "INTEGER"
+      ],
+      [
+        "is_bot",
+        "UTINYINT"
+      ]
+    ]
+  },
+  "developer_activities": {
+    "rows": 101190240,
+    "local": false,
+    "columns": [
+      [
+        "repo_id",
+        "INTEGER"
+      ],
+      [
+        "day",
+        "DATE"
+      ],
+      [
+        "canonical_developer_id",
+        "INTEGER"
+      ],
+      [
+        "num_commits",
+        "UBIGINT"
+      ]
+    ]
+  },
+  "eco_developer_28d_activities": {
+    "rows": 4074260639,
+    "local": false,
+    "columns": [
+      [
+        "ecosystem_id",
+        "INTEGER"
+      ],
+      [
+        "canonical_developer_id",
+        "INTEGER"
+      ],
+      [
+        "day",
+        "DATE"
+      ],
+      [
+        "repo_ids",
+        "INTEGER[]"
+      ],
+      [
+        "num_commits",
+        "UBIGINT"
+      ],
+      [
+        "original_day",
+        "DATE"
+      ],
+      [
+        "is_exclusive_28d",
+        "BOOLEAN"
+      ],
+      [
+        "l28_days",
+        "UBIGINT"
+      ]
+    ]
+  },
+  "eco_developer_activities": {
+    "rows": 785006497,
+    "local": false,
+    "columns": [
+      [
+        "ecosystem_id",
+        "INTEGER"
+      ],
+      [
+        "day",
+        "DATE"
+      ],
+      [
+        "canonical_developer_id",
+        "INTEGER"
+      ],
+      [
+        "repo_ids",
+        "INTEGER[]"
+      ],
+      [
+        "num_commits",
+        "UBIGINT"
+      ],
+      [
+        "is_exclusive",
+        "BOOLEAN"
+      ]
+    ]
+  },
+  "eco_developer_contribution_ranks": {
+    "rows": 4074260639,
+    "local": false,
+    "columns": [
+      [
+        "ecosystem_id",
+        "INTEGER"
+      ],
+      [
+        "canonical_developer_id",
+        "INTEGER"
+      ],
+      [
+        "day",
+        "DATE"
+      ],
+      [
+        "points",
+        "UTINYINT"
+      ],
+      [
+        "points_28d",
+        "UTINYINT"
+      ],
+      [
+        "points_56d",
+        "UTINYINT"
+      ],
+      [
+        "contribution_rank",
+        "VARCHAR"
+      ]
+    ]
+  },
+  "eco_developer_tenures": {
+    "rows": 4036560651,
+    "local": false,
+    "columns": [
+      [
+        "ecosystem_id",
+        "INTEGER"
+      ],
+      [
+        "canonical_developer_id",
+        "INTEGER"
+      ],
+      [
+        "day",
+        "DATE"
+      ],
+      [
+        "tenure_days",
+        "BIGINT"
+      ],
+      [
+        "category",
+        "UTINYINT"
+      ]
+    ]
+  },
+  "eco_mads": {
+    "rows": 10596544,
+    "local": true,
+    "columns": [
+      [
+        "ecosystem_id",
+        "INTEGER"
+      ],
+      [
+        "day",
+        "DATE"
+      ],
+      [
+        "all_devs",
+        "UBIGINT"
+      ],
+      [
+        "exclusive_devs",
+        "UBIGINT"
+      ],
+      [
+        "multichain_devs",
+        "UBIGINT"
+      ],
+      [
+        "num_commits",
+        "UBIGINT"
+      ],
+      [
+        "devs_0_1y",
+        "UBIGINT"
+      ],
+      [
+        "devs_1_2y",
+        "UBIGINT"
+      ],
+      [
+        "devs_2y_plus",
+        "UBIGINT"
+      ],
+      [
+        "one_time_devs",
+        "UBIGINT"
+      ],
+      [
+        "part_time_devs",
+        "UBIGINT"
+      ],
+      [
+        "full_time_devs",
+        "UBIGINT"
+      ]
+    ]
+  },
+  "ecosystems": {
+    "rows": 13328,
+    "local": true,
+    "columns": [
+      [
+        "id",
+        "INTEGER"
+      ],
+      [
+        "launch_date",
+        "DATE"
+      ],
+      [
+        "earliest_first_party_commit_date",
+        "DATE"
+      ],
+      [
+        "earliest_first_party_repo_id",
+        "INTEGER"
+      ],
+      [
+        "earliest_repo_commit_date",
+        "DATE"
+      ],
+      [
+        "earliest_repo_id",
+        "INTEGER"
+      ],
+      [
+        "derived_launch_date",
+        "DATE"
+      ],
+      [
+        "name",
+        "VARCHAR"
+      ],
+      [
+        "is_crypto",
+        "UTINYINT"
+      ],
+      [
+        "is_category",
+        "UTINYINT"
+      ],
+      [
+        "is_virtual",
+        "UTINYINT"
+      ],
+      [
+        "is_chain",
+        "UTINYINT"
+      ],
+      [
+        "is_multichain",
+        "UTINYINT"
+      ]
+    ]
+  },
+  "ecosystems_child_ecosystems": {
+    "rows": 29976,
+    "local": false,
+    "columns": [
+      [
+        "id",
+        "INTEGER"
+      ],
+      [
+        "created_at",
+        "TIMESTAMP WITH TIME ZONE"
+      ],
+      [
+        "parent_id",
+        "INTEGER"
+      ],
+      [
+        "child_id",
+        "INTEGER"
+      ],
+      [
+        "connected_at",
+        "TIMESTAMP WITH TIME ZONE"
+      ]
+    ]
+  },
+  "ecosystems_child_ecosystems_recursive": {
+    "rows": 1829080,
+    "local": false,
+    "columns": [
+      [
+        "parent_id",
+        "INTEGER"
+      ],
+      [
+        "child_id",
+        "INTEGER"
+      ],
+      [
+        "created_at",
+        "TIMESTAMP WITH TIME ZONE"
+      ],
+      [
+        "ecosystem_ecosystem_paths",
+        "INTEGER[]"
+      ],
+      [
+        "ecosystem_chain_ecosystem_paths",
+        "INTEGER[]"
+      ],
+      [
+        "connection_dates",
+        "DATE[]"
+      ],
+      [
+        "connected_at",
+        "DATE"
+      ]
+    ]
+  },
+  "ecosystems_organizations": {
+    "rows": 7187,
+    "local": false,
+    "columns": [
+      [
+        "id",
+        "INTEGER"
+      ],
+      [
+        "created_at",
+        "TIMESTAMP WITH TIME ZONE"
+      ],
+      [
+        "ecosystem_id",
+        "INTEGER"
+      ],
+      [
+        "organization_id",
+        "INTEGER"
+      ],
+      [
+        "is_first_party",
+        "UTINYINT"
+      ]
+    ]
+  },
+  "ecosystems_repos": {
+    "rows": 3082088,
+    "local": true,
+    "columns": [
+      [
+        "id",
+        "INTEGER"
+      ],
+      [
+        "created_at",
+        "TIMESTAMP WITH TIME ZONE"
+      ],
+      [
+        "ecosystem_id",
+        "INTEGER"
+      ],
+      [
+        "repo_id",
+        "INTEGER"
+      ],
+      [
+        "connected_at",
+        "TIMESTAMP WITH TIME ZONE"
+      ]
+    ]
+  },
+  "ecosystems_repos_recursive": {
+    "rows": 29373691,
+    "local": false,
+    "columns": [
+      [
+        "ecosystem_id",
+        "INTEGER"
+      ],
+      [
+        "repo_id",
+        "INTEGER"
+      ],
+      [
+        "created_at",
+        "TIMESTAMP WITH TIME ZONE"
+      ],
+      [
+        "connected_at",
+        "DATE"
+      ],
+      [
+        "path",
+        "INTEGER[]"
+      ],
+      [
+        "distance",
+        "UBIGINT"
+      ],
+      [
+        "is_explicit",
+        "BOOLEAN"
+      ],
+      [
+        "is_direct_exclusive",
+        "BOOLEAN"
+      ],
+      [
+        "is_indirect_exclusive",
+        "BOOLEAN"
+      ],
+      [
+        "exclusive_at_connection",
+        "BOOLEAN"
+      ],
+      [
+        "exclusive_till",
+        "DATE"
+      ]
+    ]
+  },
+  "organizations": {
+    "rows": 95150,
+    "local": false,
+    "columns": [
+      [
+        "id",
+        "INTEGER"
+      ],
+      [
+        "created_at",
+        "TIMESTAMP WITH TIME ZONE"
+      ],
+      [
+        "name",
+        "VARCHAR"
+      ],
+      [
+        "link",
+        "VARCHAR"
+      ],
+      [
+        "github_created_at",
+        "TIMESTAMP WITH TIME ZONE"
+      ]
+    ]
+  },
+  "repo_developer_28d_activities": {
+    "rows": 757269696,
+    "local": false,
+    "columns": [
+      [
+        "repo_id",
+        "INTEGER"
+      ],
+      [
+        "canonical_developer_id",
+        "INTEGER"
+      ],
+      [
+        "day",
+        "DATE"
+      ],
+      [
+        "num_commits",
+        "UBIGINT"
+      ],
+      [
+        "original_day",
+        "DATE"
+      ],
+      [
+        "l28_days",
+        "UBIGINT"
+      ]
+    ]
+  },
+  "repo_developer_activities": {
+    "rows": 923255094,
+    "local": false,
+    "columns": [
+      [
+        "ecosystem_id",
+        "INTEGER"
+      ],
+      [
+        "repo_id",
+        "INTEGER"
+      ],
+      [
+        "day",
+        "DATE"
+      ],
+      [
+        "canonical_developer_id",
+        "INTEGER"
+      ],
+      [
+        "num_commits",
+        "UBIGINT"
+      ],
+      [
+        "is_explicit",
+        "BOOLEAN"
+      ],
+      [
+        "is_chain",
+        "UTINYINT"
+      ],
+      [
+        "is_direct_exclusive",
+        "BOOLEAN"
+      ],
+      [
+        "is_indirect_exclusive",
+        "BOOLEAN"
+      ],
+      [
+        "exclusive_at_connection",
+        "BOOLEAN"
+      ],
+      [
+        "exclusive_till",
+        "DATE"
+      ]
+    ]
+  },
+  "repos": {
+    "rows": 2648396,
+    "local": true,
+    "columns": [
+      [
+        "id",
+        "INTEGER"
+      ],
+      [
+        "created_at",
+        "TIMESTAMP WITH TIME ZONE"
+      ],
+      [
+        "repo_created_at",
+        "TIMESTAMP WITH TIME ZONE"
+      ],
+      [
+        "name",
+        "VARCHAR"
+      ],
+      [
+        "github_graphql_id",
+        "VARCHAR"
+      ],
+      [
+        "link",
+        "VARCHAR"
+      ],
+      [
+        "organization_id",
+        "INTEGER"
+      ],
+      [
+        "num_stars",
+        "INTEGER"
+      ],
+      [
+        "num_forks",
+        "INTEGER"
+      ],
+      [
+        "num_issues",
+        "INTEGER"
+      ],
+      [
+        "is_blacklist",
+        "UTINYINT"
+      ]
+    ]
+  }
+}

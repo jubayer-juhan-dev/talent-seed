@@ -1,0 +1,110 @@
+# Talent Seed — segment and cohort thresholds (single source of truth)
+#
+# Every threshold is tagged:
+#   basis = "EC_DOCUMENTED"  – stated in Electric Capital's published methodology
+#   basis = "EC_VERIFIED"    – not fully published, but reproduced exactly from ODD's own data
+#   basis = "ASSUMPTION"     – our choice, NOT from EC and NOT from the client spec.
+#                              The client spec (spec_v0_2.md) was unavailable when this was written,
+#                              so every ASSUMPTION needs client sign-off.
+#
+# Sources:
+#   [EC-ABOUT]  https://www.developerreport.com/about  (fetched 2026-10-04)
+#   [ODD-MAN]   ODD manifest descriptions, snapshot 20261002T130207
+#   [VERIFY-1]  scripts check, 2026-10-04: formula below reproduced eco_developer_contribution_ranks
+#               for all 14,307 Ethereum devs on 2026-09-24 (points, points_28d, points_56d and
+#               contribution_rank all matched 14,307/14,307; totals match eco_mads).
+
+[as_of]
+# The 84-day window ends on the last day with activity data in the snapshot
+# (max(day) of developer_activities), not on the download date. For 20261002T130207 that is 2026-09-24.
+rule = "max_activity_day_in_snapshot"
+basis = "ASSUMPTION"
+why = "ODD activity stops ~8 days before the snapshot timestamp; ending the window on the snapshot date would undercount everyone's recent activity."
+
+[tenure]
+# tenure_days = as_of - first_commit_date (first commit with a valid date across all ODD repos)
+newcomer_max_days = 365     # NEWCOMER     : 0–365 days     (ODD eco_developer_tenures.category 0 / eco_mads devs_0_1y)
+emerging_max_days = 730     # EMERGING     : 366–730 days   (category 1 / devs_1_2y)
+                            # ESTABLISHED  : >= 731 days    (category 2 / devs_2y_plus)
+basis = "EC_DOCUMENTED"
+why = "[ODD-MAN] 'tenure segments by first blockchain commit: devs_0_1y, devs_1_2y, devs_2y_plus'; the day cut-offs (365/730) were read off eco_developer_tenures (category vs tenure_days). The names Newcomer/Emerging/Established follow EC's developer-report wording."
+caveat = "EC computes tenure per ecosystem; we compute one developer-level tenure from the first commit in any ODD repo. Both are reported (odd_signals.tenure_by_ecosystem)."
+unknown_when = "no commit with a valid authored date (dates before 2005-04-01 or after the snapshot are discarded)"
+
+[activity]
+# EC contribution rank, reproduced exactly from ODD data [VERIFY-1].
+window_days = 84            # three consecutive 28-day windows ending at as_of: (as_of-28, as_of], (as_of-56, as_of-28], (as_of-84, as_of-56]
+window_count = 3
+# active days in a 28-day window -> points
+points_for_0_days = 0
+points_for_1_day = 1
+points_for_2_to_9_days = 4
+points_for_10_plus_days = 10   # [EC-ABOUT] "A 'Full-Time' developer is someone who commits code 10 or more days in a rolling 28 day period."
+full_time_min_points = 14      # sum of the three windows >= 14  -> FULL_TIME
+part_time_min_points = 2       # sum 2..13                        -> PART_TIME
+one_time_points = 1            # sum == 1                         -> ONE_TIME
+                               # sum == 0 (no activity in 84 days) -> UNKNOWN
+basis = "EC_VERIFIED"
+why = "[EC-ABOUT] defines full/part/one-time over an 84-day rolling window and full-time as 10+ days in 28; the 0/1/4/10 points and the 14/2/1 cut-offs are not published but reproduce ODD's contribution_rank 14,307/14,307."
+caveat = "EC ranks per ecosystem and only for devs active in the latest 28 days (MAD). We apply the same formula to a developer's activity across ALL ODD repos, and also report EC's per-ecosystem ranks."
+
+[exclusivity]
+# Primary: ODD field eco_developer_activities.is_exclusive, chain ecosystems only (is_chain = 1), last 84 days.
+#   EXCLUSIVE   : every chain-level activity row in the window has is_exclusive = true
+#   MULTICHAIN  : at least one chain-level row has is_exclusive = false
+#   UNKNOWN     : no chain-level rows in the window
+# Fallback (only if the ODD field gives UNKNOWN but the developer has activity): count distinct
+# top-level ecosystems in the window: 1 -> EXCLUSIVE, >=2 -> MULTICHAIN.
+window_days = 84
+basis = "ASSUMPTION"
+why = "ODD's is_exclusive flag is EC's (definition in [EC-ABOUT]: single-chain vs multi-chain). Rolling the daily per-ecosystem flag up to one developer-level label over 84 days ('any non-exclusive day => MULTICHAIN') is our choice."
+
+[ecosystems]
+# Top-level ecosystem = ecosystem with is_chain = 1 reached through ecosystems_repos_recursive.
+# Sub-ecosystem      = ecosystem with is_chain = 0, is_category = 0, is_virtual = 0 (e.g. Uniswap, Anza).
+# Categories / virtual lists ('Top 200 2021Q3', 'cohort_snapshot_…', '[Candidates] …') are ignored.
+top_level_rule = "is_chain = 1"
+sub_ecosystem_rule = "is_chain = 0 AND is_category = 0 AND is_virtual = 0"
+basis = "ASSUMPTION"
+why = "ODD's hierarchy mixes real ecosystems with EC internal cohort lists (Ethereum has ~40 such parents), so 'has no parent' does not identify top-level ecosystems. is_chain is EC's own flag."
+many_ecosystems_repo_flag = 10   # flag a repo that rolls up to more than this many top-level ecosystems (ASSUMPTION)
+
+[identity]
+# An email shared by more than this many canonical developers is treated as a placeholder
+# (none@none, you@example.com, devnull@localhost …): kept, but flagged and never used to match.
+placeholder_email_min_devs = 5
+# Commits flagged is_bot above this share make the developer a bot for cohort purposes.
+bot_commit_share = 0.5
+# When one input matches several canonical developers, build full records for up to this many;
+# beyond that, only list candidates and require --dev-id.
+max_candidate_records = 5
+basis = "ASSUMPTION"
+
+[github]
+# Resolution order (first success wins; later methods are still recorded as corroboration when free):
+#   NOREPLY       – '<id>+<login>@users.noreply.github.com' or '<login>@users.noreply.github.com'
+#   ODD_GITHUB_ID – canonical_developers.primary_github_user_id decoded offline to the numeric ID,
+#                   then GET /user/{id} for the login (1 API call)
+#   COMMIT_API    – GET /repos/{owner}/{repo}/commits/{sha} on 1–2 of the developer's commits
+#   UNRESOLVED
+order = ["NOREPLY", "ODD_GITHUB_ID", "COMMIT_API"]
+commit_api_max_commits = 2
+# Confidence (ASSUMPTION): HIGH = two independent sources agree on the numeric ID;
+# MEDIUM = one source; LOW = sources disagree (conflict recorded).
+basis = "ASSUMPTION"
+
+[cohort]
+# Ordered rules, first match wins. ALL ASSUMPTIONS — client cohort table unavailable.
+# Rationale: prioritise developers who are active now and have staying power; hold anything
+# we cannot contact reliably or that is not a person.
+basis = "ASSUMPTION"
+rules = [
+  { cohort = "HOLD", when = "is_bot",                          why = "not a person" },
+  { cohort = "HOLD", when = "activity_segment == 'UNKNOWN'",   why = "no activity in the last 84 days" },
+  { cohort = "HOLD", when = "tenure_segment == 'UNKNOWN'",     why = "no valid first-commit date" },
+  { cohort = "HOLD", when = "identity_conflict",               why = "GitHub identity sources disagree; needs review before outreach" },
+  { cohort = "P1",   when = "activity_segment == 'FULL_TIME' and tenure_segment in ('ESTABLISHED', 'EMERGING')", why = "full-time now, >1 year in crypto" },
+  { cohort = "P2",   when = "activity_segment == 'FULL_TIME' and tenure_segment == 'NEWCOMER'",                   why = "full-time but <1 year in crypto" },
+  { cohort = "P2",   when = "activity_segment == 'PART_TIME' and tenure_segment in ('ESTABLISHED', 'EMERGING')", why = "experienced, currently part-time" },
+  { cohort = "P3",   when = "activity_segment in ('PART_TIME', 'ONE_TIME')",                                     why = "light or one-off recent activity" },
+]
