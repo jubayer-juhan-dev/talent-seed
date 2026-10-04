@@ -27,6 +27,7 @@ import {
 import type { ReactNode } from "react";
 import { toast } from "sonner";
 import type { PersonDetail } from "@/api/client";
+import { AiBadge } from "@/components/app/ai-badge";
 import { CohortBadge } from "@/components/app/cohort-badge";
 import { EmptyState } from "@/components/app/empty-state";
 import { GithubIcon } from "@/components/app/github-icon";
@@ -105,7 +106,7 @@ export function ProfileBody({ d, prev, next, onNavigate, onClose }: Props) {
         <PersonAvatar person={p} className="size-[60px] text-xl" />
         <div className="min-w-0 flex-1">
           <h2 className="flex flex-wrap items-center gap-2.5 text-xl font-bold tracking-tight">
-            {p.display_name || "(no name)"} <CohortBadge cohort={p.priority_cohort} />
+            {p.display_name || "(no name)"} <CohortBadge cohort={p.priority_cohort} /> <AiBadge person={p} />
           </h2>
           <div className="mt-1 flex flex-wrap gap-x-3.5 gap-y-1.5 text-[13px] text-muted-foreground [&_svg]:size-3.5">
             {p.github_login ? (
@@ -546,6 +547,14 @@ function Details({ d }: { d: PersonDetail }) {
     ["Last activity (any repo)", day(p.last_activity_date)],
     ["Commits (original only)", `${fmt(p.commit_count)} (${fmt(p.commit_count_excluding_inherited)})`],
     ["Repos (without forks)", `${fmt(p.repository_count)} (${fmt(p.repository_count_excluding_inherited)})`],
+    [
+      "AI enriched",
+      p.ai_enriched
+        ? ["Yes", p.ai_enriched_by && `by ${p.ai_enriched_by}`, p.ai_enriched_at && day(p.ai_enriched_at)]
+            .filter(Boolean)
+            .join(" · ")
+        : "No",
+    ],
     ["EC contribution rank", p.odd_contribution_rank_asof || "–"],
     ["Exclusivity", `${label(p.exclusivity)}${p.exclusivity === "UNKNOWN" ? " (no chain-mapped work in window)" : ""}`],
     [

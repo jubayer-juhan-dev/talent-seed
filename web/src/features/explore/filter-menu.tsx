@@ -9,6 +9,7 @@ import {
   Hourglass,
   ListFilter as ListFilterIcon,
   MapPin,
+  Sparkles,
 } from "lucide-react";
 import { type ReactNode, useEffect, useState } from "react";
 import { $api } from "@/api/client";
@@ -28,7 +29,10 @@ import { cn } from "@/lib/utils";
 import { joinList, type ListFilter, listOf } from "./search";
 import { useExplore } from "./use-explore";
 
-export const FILTERS: Record<ListFilter, { title: string; icon: typeof Activity; hint: string; options?: string[] }> = {
+export const FILTERS: Record<
+  ListFilter,
+  { title: string; icon: typeof Activity; hint: string; options?: string[]; labels?: Record<string, string> }
+> = {
   eco: { title: "Chain or project", icon: Blocks, hint: "Ethereum, Solana, Uniswap, Anza…" },
   activity: {
     title: "Activity",
@@ -49,7 +53,18 @@ export const FILTERS: Record<ListFilter, { title: string; icon: typeof Activity;
     options: ["EXCLUSIVE", "MULTICHAIN", "UNKNOWN"],
   },
   country: { title: "Country", icon: MapPin, hint: "Where known" },
+  ai_enriched: {
+    title: "AI enriched",
+    icon: Sparkles,
+    hint: "Profiles enriched by an AI process",
+    options: ["yes", "no"],
+    labels: { yes: "AI enriched", no: "Not AI enriched" },
+  },
 };
+
+/** Display text for a filter value. */
+export const filterValueLabel = (k: ListFilter, v: string) =>
+  FILTERS[k].labels?.[v] ?? (k === "eco" || k === "country" ? v : label(v));
 
 /** "Filter" button: a menu of filter types, each opening a checklist. Chains/projects are searched on the server. */
 export function FilterMenu() {
@@ -138,7 +153,7 @@ function Panel({ filter, onBack }: { filter: ListFilter; onBack: () => void }) {
       {header}
       <CommandList>
         <OptionItems
-          options={(f.options ?? []).map((v) => ({ value: v, label: label(v) }))}
+          options={(f.options ?? []).map((v) => ({ value: v, label: filterValueLabel(filter, v) }))}
           selected={selected}
           toggle={toggle}
         />

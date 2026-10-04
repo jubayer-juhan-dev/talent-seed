@@ -16,6 +16,7 @@ import re
 
 import duckdb
 
+from . import enrichment
 from .logins import add_logins, looked_up
 from .settings import ATTRIBUTION, DB, EXPORT_LIMIT, PAGE_SIZE
 
@@ -70,7 +71,7 @@ def one(q, name):
     return (q.get(name) or [""])[0].strip()
 
 
-def build_filters(q):
+def build_filters(q, con=None):
     """WHERE clause and params shared by /api/people and /api/export.csv."""
     where, params = [], []
     for col, name in (("priority_cohort", "cohort"), ("activity_segment", "activity"),
@@ -91,6 +92,13 @@ def build_filters(q):
     if ids:
         where.append(f"person_id IN ({','.join('?' * len(ids))})")
         params += ids
+    # ai_enriched=1 / 0: AI-enriched or not (flag lives in data/enrichment.sqlite, attached on demand)
+    if one(q, "ai_enriched") in ("1", "0"):
+        enriched_sql = "person_id IN (SELECT person_id FROM enr.ai_enrichment WHERE ai_enriched = 1)"
+        if con is not None and enrichment.attach(con):
+            where.append(enriched_sql if one(q, "ai_enriched") == "1" else f"NOT {enriched_sql}")
+        elif one(q, "ai_enriched") == "1":
+            where.append("FALSE")  # no enrichment file yet: nobody is enriched
     if one(q, "hide_flagged") == "1":
         where.append("NOT flag_probable_bot AND NOT flag_github_conflict")
     text = one(q, "q")
@@ -114,12 +122,12 @@ def build_filters(q):
 
 
 def api_people(con, q):
-    w, params, order = build_filters(q)
+    w, params, order = build_filters(q, con)
     page = max(int(one(q, "page") or 1), 1)
     total = con.execute(f"SELECT count(*) FROM talent_seed {w}", params).fetchone()[0]
     rows = query(con, f"SELECT {LIST_COLS} FROM talent_seed {w} {order} "
                       f"LIMIT {PAGE_SIZE} OFFSET {(page - 1) * PAGE_SIZE}", params)
-    return {"total": total, "page": page, "page_size": PAGE_SIZE, "rows": add_logins(rows)}
+    return {"total": total, "page": page, "page_size": PAGE_SIZE, "rows": enrichment.add_ai_enriched(add_logins(rows))}
 
 
 def api_overview(con, _q):
@@ -152,7 +160,7 @@ def api_ecosystems(con, q):
 
 
 def export_csv(con, q):
-    w, params, order = build_filters(q)
+    w, params, order = build_filters(q, con)
     rows = query(con, f"""
         WITH people AS (SELECT * FROM talent_seed {w} {order} LIMIT {EXPORT_LIMIT}),
         best AS (SELECT person_id, first(value ORDER BY n_commits DESC, value) AS email FROM talent_seed_contact_points
@@ -170,6 +178,9 @@ def export_csv(con, q):
                  [*params, ATTRIBUTION])
     cols = list(rows[0].keys()) if rows else ["person_id"]  # before add_logins, which adds extra keys to some rows
     add_logins(rows)
+    enrichment.add_ai_enriched(rows)
+    if rows:
+        cols.insert(cols.index("priority_cohort"), "ai_enriched")
     buf = io.StringIO()
     out = csv.writer(buf)
     out.writerow(cols)
@@ -184,7 +195,7 @@ def api_person(con, q):
     if not p:
         return {"error": f"No person with id {pid}"}
     return {
-        "person": add_logins(p)[0],
+        "person": enrichment.add_ai_enriched(add_logins(p))[0],
         "members": query(con, "SELECT canonical_developer_id, link_method, n_commits FROM talent_seed_members "
                               "WHERE person_id = ? ORDER BY n_commits DESC, canonical_developer_id", [pid]),
         "contacts": query(con, """SELECT value, email_status, is_github_noreply, is_placeholder, shared_by_n_developers,

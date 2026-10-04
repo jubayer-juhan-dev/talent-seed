@@ -1,7 +1,6 @@
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { label } from "@/lib/format";
-import { FILTERS } from "./filter-menu";
+import { FILTERS, filterValueLabel } from "./filter-menu";
 import { joinList, LIST_FILTERS, type ListFilter, listOf } from "./search";
 import { useExplore } from "./use-explore";
 
@@ -14,8 +13,9 @@ export function FilterChips() {
     for (const v of values)
       chips.push({
         key: `${k}:${v}`,
-        text: FILTERS[k].title,
-        value: k === "eco" || k === "country" ? v : label(v),
+        // The AI-enriched values already read as a phrase ("AI enriched" / "Not AI enriched").
+        text: k === "ai_enriched" ? "" : FILTERS[k].title,
+        value: filterValueLabel(k, v),
         remove: () =>
           update({
             [k]: joinList(
@@ -41,11 +41,12 @@ export function FilterChips() {
           key={c.key}
           className="inline-flex h-7 animate-in items-center gap-1.5 rounded-full bg-accent-soft pr-1 pl-2.5 text-[12.5px] font-medium text-primary zoom-in-90 fade-in"
         >
-          {c.text}: <b className="font-semibold">{c.value}</b>
+          {c.text && `${c.text}: `}
+          <b className="font-semibold">{c.value}</b>
           <button
             type="button"
             onClick={c.remove}
-            aria-label={`Remove ${c.text} ${c.value}`}
+            aria-label={`Remove ${[c.text, c.value].filter(Boolean).join(" ")}`}
             className="grid size-5 place-items-center rounded-full hover:bg-primary/15"
           >
             <X className="size-3.5" />

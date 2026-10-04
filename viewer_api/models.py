@@ -33,7 +33,14 @@ class GithubOverlay(BaseModel):
     github_login_looked_up_at: str | None = None
 
 
-class PersonRow(GithubOverlay):
+class AiEnriched(BaseModel):
+    """From data/enrichment.sqlite; false until an AI enrichment process marks the person."""
+    ai_enriched: bool = False
+    ai_enriched_at: str | None = None
+    ai_enriched_by: str | None = None  # model or process
+
+
+class PersonRow(GithubOverlay, AiEnriched):
     """One row of /api/people."""
     person_id: str
     display_name: str | None = None
@@ -94,7 +101,7 @@ class Ecosystems(BaseModel):
     rows: list[EcosystemHit]
 
 
-class Person(GithubOverlay):
+class Person(GithubOverlay, AiEnriched):
     """Every column of talent_seed for one person (see docs/talent_seed_tables.md)."""
     model_config = ConfigDict(extra="allow")
     person_id: str

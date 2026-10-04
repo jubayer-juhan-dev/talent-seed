@@ -234,6 +234,15 @@ export interface components {
          * @description Every column of talent_seed for one person (see docs/talent_seed_tables.md).
          */
         Person: {
+            /**
+             * Ai Enriched
+             * @default false
+             */
+            ai_enriched: boolean;
+            /** Ai Enriched At */
+            ai_enriched_at?: string | null;
+            /** Ai Enriched By */
+            ai_enriched_by?: string | null;
             /** Github Login Source */
             github_login_source?: string | null;
             /** Github Login Looked Up At */
@@ -387,6 +396,15 @@ export interface components {
          * @description One row of /api/people.
          */
         PersonRow: {
+            /**
+             * Ai Enriched
+             * @default false
+             */
+            ai_enriched: boolean;
+            /** Ai Enriched At */
+            ai_enriched_at?: string | null;
+            /** Ai Enriched By */
+            ai_enriched_by?: string | null;
             /** Github Login Source */
             github_login_source?: string | null;
             /** Github Login Looked Up At */
@@ -617,6 +635,8 @@ export interface operations {
                 ids?: string;
                 /** @description 1 hides probable bots and GitHub conflicts */
                 hide_flagged?: string;
+                /** @description 1 = AI-enriched only, 0 = not AI-enriched */
+                ai_enriched?: string;
                 /** @description name or login substring, exact email, or person id */
                 q?: string;
                 /** @description commits, last_activity, first_commit, repos, ecosystems, active_days, name */
@@ -797,6 +817,8 @@ export interface operations {
                 ids?: string;
                 /** @description 1 hides probable bots and GitHub conflicts */
                 hide_flagged?: string;
+                /** @description 1 = AI-enriched only, 0 = not AI-enriched */
+                ai_enriched?: string;
                 /** @description name or login substring, exact email, or person id */
                 q?: string;
                 /** @description commits, last_activity, first_commit, repos, ecosystems, active_days, name */

@@ -1,5 +1,6 @@
 import { type ColumnDef, flexRender, getCoreRowModel, useReactTable } from "@tanstack/react-table";
 import type { PersonRow } from "@/api/client";
+import { AiBadge } from "@/components/app/ai-badge";
 import { CohortBadge } from "@/components/app/cohort-badge";
 import { PersonAvatar } from "@/components/app/person-avatar";
 import { StarButton } from "@/components/app/star-button";
@@ -41,6 +42,12 @@ const columns: Col[] = [
         <TooltipContent>{p.priority_cohort_reason}</TooltipContent>
       </Tooltip>
     ),
+  },
+  {
+    id: "ai",
+    header: "AI",
+    cell: ({ row }) =>
+      row.original.ai_enriched ? <AiBadge person={row.original} compact /> : <span className="text-faint">–</span>,
   },
   {
     id: "active",

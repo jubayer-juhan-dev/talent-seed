@@ -34,4 +34,12 @@ describe("explore search params", () => {
     expect(apiQuery(validateExploreSearch({ flagged: "show" })).hide_flagged).toBeUndefined();
     expect(joinList("eco", [])).toBeUndefined();
   });
+  it("passes the AI-enriched filter through", () => {
+    const s = validateExploreSearch({ ai_enriched: "yes" });
+    expect(listOf(s, "ai_enriched")).toEqual(["yes"]);
+    expect(apiQuery(s).ai_enriched).toBe("1");
+    expect(apiQuery(validateExploreSearch({ ai_enriched: "no" })).ai_enriched).toBe("0");
+    expect(apiQuery(validateExploreSearch({ ai_enriched: "yes,no" })).ai_enriched).toBeUndefined();
+    expect(apiQuery(validateExploreSearch({})).ai_enriched).toBeUndefined();
+  });
 });

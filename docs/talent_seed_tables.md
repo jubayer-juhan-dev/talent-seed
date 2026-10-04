@@ -61,3 +61,18 @@ Two rules were added on 2026-10-04 (see config):
 - No non-crypto ecosystems remain.
 - The Milestone 3 test developers matched their `inspect_developer.py` records before the 2026-10-04
   rules. `inspect_developer.py` doesn't apply those two rules yet.
+
+## State kept outside talent_seed.duckdb
+
+`talent_seed.duckdb` is rebuilt from scratch, so per-person data that must survive rebuilds lives in separate
+SQLite files under `data/`. The viewer API reads them read-only and overlays them on `talent_seed`.
+
+| file / table | written by | one row = |
+|---|---|---|
+| `github_logins.sqlite` · `github_logins` | `scripts/m5_lookup_github_logins.py` | a GitHub login looked up via the API (`USER_ID_API` / `COMMIT_API`) |
+| `enrichment.sqlite` · `ai_enrichment` | `scripts/set_ai_enriched.py` | `person_id`, `ai_enriched` (0/1), `enriched_at`, `enriched_by` (model or process) |
+
+`ai_enriched` is false for anyone without a row. The API returns it on every person (`ai_enriched`,
+`ai_enriched_at`, `ai_enriched_by`), filters on `?ai_enriched=1|0`, and exports it as a CSV column.
+Mark people with `uv run scripts/set_ai_enriched.py --by "<model or process>" gh:123 …` (or `--file ids.txt`,
+`--unset`, `--list`).

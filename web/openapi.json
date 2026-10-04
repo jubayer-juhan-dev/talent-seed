@@ -206,6 +206,18 @@
             "description": "1 hides probable bots and GitHub conflicts"
           },
           {
+            "name": "ai_enriched",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "1 = AI-enriched only, 0 = not AI-enriched",
+              "default": "",
+              "title": "Ai Enriched"
+            },
+            "description": "1 = AI-enriched only, 0 = not AI-enriched"
+          },
+          {
             "name": "q",
             "in": "query",
             "required": false,
@@ -530,6 +542,18 @@
               "title": "Hide Flagged"
             },
             "description": "1 hides probable bots and GitHub conflicts"
+          },
+          {
+            "name": "ai_enriched",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "1 = AI-enriched only, 0 = not AI-enriched",
+              "default": "",
+              "title": "Ai Enriched"
+            },
+            "description": "1 = AI-enriched only, 0 = not AI-enriched"
           },
           {
             "name": "q",
@@ -979,6 +1003,33 @@
       },
       "Person": {
         "properties": {
+          "ai_enriched": {
+            "type": "boolean",
+            "title": "Ai Enriched",
+            "default": false
+          },
+          "ai_enriched_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ai Enriched At"
+          },
+          "ai_enriched_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ai Enriched By"
+          },
           "github_login_source": {
             "anyOf": [
               {
@@ -1741,6 +1792,33 @@
       },
       "PersonRow": {
         "properties": {
+          "ai_enriched": {
+            "type": "boolean",
+            "title": "Ai Enriched",
+            "default": false
+          },
+          "ai_enriched_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ai Enriched At"
+          },
+          "ai_enriched_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ai Enriched By"
+          },
           "github_login_source": {
             "anyOf": [
               {

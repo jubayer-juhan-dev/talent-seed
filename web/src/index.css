@@ -44,6 +44,8 @@
   --hold-soft: #efeff2;
   --warn: #a15c07;
   --warn-soft: #fdf3e1;
+  --ai: #6d28d9;
+  --ai-soft: #f1eafe;
   --good: #15803d;
 
   /* charts */
@@ -98,6 +100,8 @@
   --hold-soft: #26262d;
   --warn: #f5b453;
   --warn-soft: #3a2a12;
+  --ai: #c4b5fd;
+  --ai-soft: #2a1f4a;
   --good: #4ade80;
 
   /* dark mode: its own steps of the same ramp, lighter = more */
@@ -151,6 +155,8 @@
   --color-hold-soft: var(--hold-soft);
   --color-warn: var(--warn);
   --color-warn-soft: var(--warn-soft);
+  --color-ai: var(--ai);
+  --color-ai-soft: var(--ai-soft);
   --color-good: var(--good);
 
   --color-bar-strong: var(--bar-strong);

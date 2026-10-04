@@ -1,6 +1,7 @@
 import { Activity, Bot, GitCompare, GitMerge, Hourglass, Link2, TriangleAlert } from "lucide-react";
 import type { ReactNode } from "react";
 import type { PersonRow } from "@/api/client";
+import { AiBadge } from "@/components/app/ai-badge";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { label } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -49,6 +50,7 @@ function Tag({
 export function PersonTags({ p }: { p: PersonRow }) {
   return (
     <div className="flex flex-wrap gap-1.5">
+      <AiBadge person={p} />
       <Tag icon={<Activity />}>{label(p.activity_segment)}</Tag>
       <Tag icon={<Hourglass />}>{label(p.tenure_segment)}</Tag>
       {p.exclusivity && p.exclusivity !== "UNKNOWN" && <Tag icon={<GitMerge />}>{label(p.exclusivity)}</Tag>}

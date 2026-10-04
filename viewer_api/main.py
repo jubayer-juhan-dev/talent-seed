@@ -70,6 +70,7 @@ class Filters:
         eco: Annotated[str, Query(description="chains or projects, separated by |")] = "",
         ids: Annotated[str, Query(description="person ids (gh:… / odd:…), comma-separated")] = "",
         hide_flagged: Annotated[str, Query(description="1 hides probable bots and GitHub conflicts")] = "",
+        ai_enriched: Annotated[str, Query(description="1 = AI-enriched only, 0 = not AI-enriched")] = "",
         q: Annotated[str, Query(description="name or login substring, exact email, or person id")] = "",
         sort: Annotated[str, Query(description=", ".join(queries.SORTS))] = "",
         dir: Annotated[str, Query(description="asc | desc")] = "",
