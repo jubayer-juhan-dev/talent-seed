@@ -103,7 +103,8 @@ def build_filters(q):
             params.append(text)
         else:
             extra = [r[0] for r in looked_up("github_login LIKE ? LIMIT 500", [f"{text}%"])]
-            where.append("(display_name ILIKE ? OR github_login ILIKE ?"
+            # Accent-insensitive on names, so "Szilagyi" finds "Szilágyi".
+            where.append("(strip_accents(display_name) ILIKE strip_accents(?) OR github_login ILIKE ?"
                          + (f" OR person_id IN ({','.join('?' * len(extra))})" if extra else "") + ")")
             params += [f"%{text}%", f"{text}%", *extra]
     sort = SORTS.get(one(q, "sort"), "active_days_in_window")

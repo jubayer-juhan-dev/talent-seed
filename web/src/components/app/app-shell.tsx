@@ -1,10 +1,29 @@
-import { Outlet } from "@tanstack/react-router";
+import { Outlet, useNavigate } from "@tanstack/react-router";
+import { useEffect } from "react";
 import { $api } from "@/api/client";
+import { SEARCH_INPUT_ID } from "@/features/explore/search-input";
 import { day } from "@/lib/format";
 import { TopBar } from "./top-bar";
 
 export function AppShell() {
   const { data } = $api.useQuery("get", "/api/meta", {}, { staleTime: Infinity });
+  const navigate = useNavigate();
+
+  // "/" anywhere (outside inputs and dialogs) jumps to Explore's search box.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const t = e.target as HTMLElement;
+      if (e.key !== "/" || e.metaKey || e.ctrlKey || e.altKey) return;
+      if (t.closest("input, textarea, [contenteditable], [role=dialog]")) return;
+      e.preventDefault();
+      const focus = () => document.getElementById(SEARCH_INPUT_ID)?.focus();
+      if (document.getElementById(SEARCH_INPUT_ID)) focus();
+      else navigate({ to: "/explore" }).then(() => requestAnimationFrame(focus));
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [navigate]);
+
   return (
     <div className="flex min-h-svh flex-col">
       <TopBar />

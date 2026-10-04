@@ -22,7 +22,7 @@ export function OverviewPage() {
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         {COHORTS.map((k) =>
           data ? (
-            <Link key={k} to="/explore" className="group">
+            <Link key={k} to="/explore" search={k === "P1" ? {} : { cohort: k }} className="group">
               <Card className="relative gap-1.5 overflow-hidden px-[18px] py-4 transition-all hover:-translate-y-0.5 hover:shadow-md">
                 <span className={`absolute inset-x-0 top-0 h-[3px] ${BAR[k]}`} />
                 <div className="flex items-center justify-between">
