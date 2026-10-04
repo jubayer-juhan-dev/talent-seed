@@ -22,6 +22,7 @@ import io
 import json
 import os
 import re
+import sqlite3
 from http.cookies import SimpleCookie
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -31,6 +32,8 @@ import duckdb
 
 ROOT = Path(__file__).resolve().parents[2]
 DB = ROOT / "data" / "talent_seed.duckdb"
+# GitHub logins found later by scripts/m5_lookup_github_logins.py; overlaid on talent_seed where it has none.
+LOGINS = ROOT / "data" / "github_logins.sqlite"
 INDEX = Path(__file__).with_name("index.html")
 ACCESS_KEY = os.environ.get("TALENT_SEED_KEY", "")
 KEY_COOKIE = "ts_key"
@@ -70,6 +73,43 @@ def connect():
     con = duckdb.connect(str(DB), read_only=True)
     con.execute("SET TimeZone='UTC'; SET threads=2;")
     return con
+
+
+def looked_up(where_sql, params):
+    """Rows from the login-lookup file (empty if the file doesn't exist yet). Read-only."""
+    if not LOGINS.exists():
+        return []
+    db = sqlite3.connect(f"file:{LOGINS}?mode=ro", uri=True)
+    try:
+        return db.execute(f"SELECT person_id, github_login, github_user_id, method, looked_up_at FROM github_logins "
+                          f"WHERE github_login IS NOT NULL AND {where_sql}", params).fetchall()
+    finally:
+        db.close()
+
+
+def add_logins(rows):
+    """Fill github_login (and github_url / github_user_id when present) from the lookup file, in place.
+    COMMIT_API matches are MEDIUM confidence, as in inspect_developer.py."""
+    need = [r["person_id"] for r in rows if not r.get("github_login")]
+    found = {}
+    for i in range(0, len(need), 900):  # SQLite parameter limit
+        chunk = need[i:i + 900]
+        found.update({pid: x for pid, *x in looked_up(f"person_id IN ({','.join('?' * len(chunk))})", chunk)})
+    for r in rows:
+        hit = found.get(r["person_id"])
+        if not hit:
+            continue
+        login, uid, method, at = hit
+        r["github_login"] = login
+        r["github_login_source"] = "GITHUB_API_" + method
+        r["github_login_looked_up_at"] = at
+        if "github_url" in r:
+            r["github_url"] = f"https://github.com/{login}"
+        if "github_user_id" in r and r["github_user_id"] is None:
+            r["github_user_id"] = uid
+        if "github_confidence" in r and method == "COMMIT_API" and r["github_confidence"] in (None, "NONE", "LOW"):
+            r["github_confidence"] = "MEDIUM"
+    return rows
 
 
 def api_meta(con, _q):
@@ -121,8 +161,10 @@ def build_filters(q):
             where.append("person_id = ?")
             params.append(text)
         else:
-            where.append("(display_name ILIKE ? OR github_login ILIKE ?)")
-            params += [f"%{text}%", f"{text}%"]
+            extra = [r[0] for r in looked_up("github_login LIKE ? LIMIT 500", [f"{text}%"])]
+            where.append("(display_name ILIKE ? OR github_login ILIKE ?"
+                         + (f" OR person_id IN ({','.join('?' * len(extra))})" if extra else "") + ")")
+            params += [f"%{text}%", f"{text}%", *extra]
     sort = SORTS.get(one(q, "sort"), "active_days_in_window")
     direction = "ASC" if one(q, "dir") == "asc" else "DESC"
     w = ("WHERE " + " AND ".join(where)) if where else ""
@@ -135,7 +177,7 @@ def api_people(con, q):
     total = con.execute(f"SELECT count(*) FROM talent_seed {w}", params).fetchone()[0]
     rows = query(con, f"SELECT {LIST_COLS} FROM talent_seed {w} {order} "
                       f"LIMIT {PAGE_SIZE} OFFSET {(page - 1) * PAGE_SIZE}", params)
-    return {"total": total, "page": page, "page_size": PAGE_SIZE, "rows": rows}
+    return {"total": total, "page": page, "page_size": PAGE_SIZE, "rows": add_logins(rows)}
 
 
 def api_overview(con, _q):
@@ -188,9 +230,10 @@ def export_csv(con, q):
                p.source_snapshot_id, p.as_of_activity_date, ? AS attribution
         FROM people p LEFT JOIN best b USING (person_id) {order.replace('ORDER BY ', 'ORDER BY p.').replace(', person_id', ', p.person_id')}""",
                  [*params, ATTRIBUTION])
+    cols = list(rows[0].keys()) if rows else ["person_id"]  # before add_logins, which adds extra keys to some rows
+    add_logins(rows)
     buf = io.StringIO()
     out = csv.writer(buf)
-    cols = list(rows[0].keys()) if rows else ["person_id"]
     out.writerow(cols)
     for r in rows:
         out.writerow(["" if r[c] is None else jsonable(r[c]) for c in cols])
@@ -203,7 +246,7 @@ def api_person(con, q):
     if not p:
         return {"error": f"No person with id {pid}"}
     return {
-        "person": p[0],
+        "person": add_logins(p)[0],
         "members": query(con, "SELECT canonical_developer_id, link_method, n_commits FROM talent_seed_members "
                               "WHERE person_id = ? ORDER BY n_commits DESC", [pid]),
         "contacts": query(con, """SELECT value, email_status, is_github_noreply, is_placeholder, shared_by_n_developers,

@@ -1057,7 +1057,9 @@ function renderPerson(m, d){
   const tops = d.ecosystems.filter(e => e.level === "TOP_LEVEL"), subs = d.ecosystems.filter(e => e.level !== "TOP_LEVEL");
   const windowStart = p.activity_window_start;
   const realEmails = d.contacts.filter(c => !c.is_github_noreply && !c.is_placeholder).length;
-  const gh = p.github_login ? `<a href="https://github.com/${encodeURIComponent(p.github_login)}" target="_blank" rel="noopener">${icon("github")}@${esc(p.github_login)}</a>`
+  const apiLogin = (p.github_login_source || "").startsWith("GITHUB_API_");
+  const gh = p.github_login ? `<a href="https://github.com/${encodeURIComponent(p.github_login)}" target="_blank" rel="noopener"${apiLogin ?
+      ` data-tip="Login looked up via the GitHub API on ${day(p.github_login_looked_up_at)}"` : ""}>${icon("github")}@${esc(p.github_login)}</a>`
     : p.github_user_id ? `<span data-tip="GitHub account id ${esc(p.github_user_id)} is known, but the login needs an API lookup that hasn't run yet.">${icon("github")}Login not looked up yet</span>`
     : `<span>${icon("github")}No GitHub match</span>`;
 
@@ -1126,6 +1128,7 @@ function renderPerson(m, d){
       <div class="card"><div class="kv">
         <div><span>Person id</span><b class="mono">${esc(p.person_id)}</b></div>
         <div><span>GitHub match</span><b>${lbl(p.github_confidence)} · ${esc(p.github_resolution_method)}</b></div>
+        <div><span>GitHub login source</span><b>${apiLogin ? `GitHub API (${p.github_login_source === "GITHUB_API_COMMIT_API" ? "commit author" : "account id"}), ${day(p.github_login_looked_up_at)}` : esc(p.github_login_source) || "–"}</b></div>
         <div><span>GitHub user id</span><b class="mono">${esc(p.github_user_id) || "–"}</b></div>
         <div><span>First commit (any repo)</span><b>${day(p.first_commit_date)}</b></div>
         <div><span>First original crypto commit</span><b>${day(p.first_crypto_commit_date)}</b></div>
