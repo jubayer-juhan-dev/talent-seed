@@ -15,7 +15,7 @@ export function TopBar() {
   const { theme, toggle } = useTheme();
   return (
     <header className="sticky top-0 z-30 border-b bg-background/80 backdrop-blur-md backdrop-saturate-150">
-      <div className="mx-auto flex max-w-[1320px] items-center gap-2 px-4 py-2.5 sm:gap-4 sm:px-5">
+      <div className="mx-auto flex max-w-[1320px] items-center gap-1 px-3 py-2.5 sm:gap-4 sm:px-5">
         <Link to="/" className="flex items-center gap-2.5 font-bold tracking-tight">
           <span className="grid size-[30px] place-items-center rounded-[9px] bg-gradient-to-br from-indigo-500 to-green-500 text-white">
             <Sprout className="size-[17px]" />

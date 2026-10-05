@@ -10,9 +10,9 @@ LOGINS = ROOT / "data" / "github_logins.sqlite"
 ENRICHMENT = ROOT / "data" / "enrichment.sqlite"
 # DuckDB extensions (sqlite reader). Explicit, because the systemd service has no home directory.
 DUCKDB_EXTENSIONS = ROOT / "data" / "duckdb_extensions"
-# The page served at "/". Until the React app replaces it (plan step 7), this is the current hand-written page.
-INDEX = ROOT / "scripts" / "seed_viewer" / "index.html"
-# The React app (web/, `pnpm build`), previewed at /next/ until the switch-over.
+# The first, hand-written viewer, kept at /legacy for comparison until it is retired.
+LEGACY_INDEX = ROOT / "scripts" / "seed_viewer" / "index.html"
+# The React app (web/, `pnpm build`), served at /.
 WEB_DIST = ROOT / "web" / "dist"
 ACCESS_KEY = os.environ.get("TALENT_SEED_KEY", "")
 KEY_COOKIE = "ts_key"

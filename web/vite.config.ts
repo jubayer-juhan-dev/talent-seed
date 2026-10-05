@@ -3,13 +3,12 @@ import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import { defineConfig, loadEnv } from "vite";
 
-// BASE: where the built app is served. "/next/" while it runs beside the current page (plan steps 2-6),
-// "/" after the switch-over (step 7).
+// BASE: where the built app is served (default "/"; override with BASE=/sub/path/ to host it elsewhere).
 // Dev: `pnpm dev` proxies /api to the FastAPI server and adds the access key from TALENT_SEED_KEY.
 export default defineConfig(({ mode }) => {
   const env = { ...process.env, ...loadEnv(mode, process.cwd(), "") };
   return {
-    base: env.BASE ?? "/next/",
+    base: env.BASE ?? "/",
     plugins: [react(), tailwindcss()],
     resolve: { alias: { "@": path.resolve(__dirname, "src") } },
     server: {

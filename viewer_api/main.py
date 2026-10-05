@@ -17,7 +17,7 @@ from fastapi.responses import FileResponse, JSONResponse, RedirectResponse, Resp
 
 from . import models, queries
 from .auth import access_gate
-from .settings import INDEX, WEB_DIST
+from .settings import LEGACY_INDEX, WEB_DIST
 
 app = FastAPI(title="Talent Seed viewer API", version="1.0", docs_url="/api/docs",
               openapi_url="/api/openapi.json", redoc_url=None)
@@ -119,24 +119,27 @@ def export(con: Con, f: Annotated[Filters, Depends()]):
                     headers={"Content-Disposition": f'attachment; filename="{name}"'})
 
 
-@app.get("/", include_in_schema=False)
-@app.get("/index.html", include_in_schema=False)
-def index():
-    return FileResponse(INDEX, media_type="text/html; charset=utf-8")
+@app.get("/legacy", include_in_schema=False)
+def legacy():
+    """The first viewer, kept for side-by-side comparison."""
+    return FileResponse(LEGACY_INDEX, media_type="text/html; charset=utf-8")
 
 
 @app.get("/next", include_in_schema=False)
-def next_redirect(request: Request):
-    return RedirectResponse(f"/next/{'?' + request.url.query if request.url.query else ''}")
-
-
 @app.get("/next/{path:path}", include_in_schema=False)
-def next_app(path: str):
-    """The React app: real files from web/dist, anything else gets index.html (client-side routes)."""
+def next_redirect(request: Request, path: str = ""):
+    """The React app was previewed at /next/ before the switch-over; send those links to the same page at /."""
+    return RedirectResponse(f"/{path}{'?' + request.url.query if request.url.query else ''}", status_code=301)
+
+
+@app.get("/{path:path}", include_in_schema=False)
+def web_app(path: str):
+    """The React app: real files from web/dist, anything else gets index.html (client-side routes like /explore)."""
+    if path.startswith("api/"):
+        raise HTTPException(404, "not found")
     if not (WEB_DIST / "index.html").exists():
-        raise HTTPException(404, "The new app isn't built yet (run `pnpm build` in web/).")
+        raise HTTPException(503, "The app isn't built yet (run `pnpm build` in web/).")
     f = (WEB_DIST / path).resolve()
     if path and f.is_file() and f.is_relative_to(WEB_DIST.resolve()):
         return FileResponse(f)
     return FileResponse(WEB_DIST / "index.html", media_type="text/html; charset=utf-8")
-

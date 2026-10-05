@@ -18,8 +18,8 @@ LOCKED_PAGE = """<!doctype html><meta charset="utf-8"><meta name="viewport" cont
 HEADERS = {"Cache-Control": "no-store", "X-Robots-Tag": "noindex, nofollow", "Referrer-Policy": "no-referrer"}
 # Built JS/CSS/fonts hold no data, and browsers fetch them without the key when cookies are blocked, so they
 # are public. Their file names carry a content hash, so they can be cached forever.
-PUBLIC_ASSETS = ("/next/assets/",)
-PUBLIC_FILES = ("/next/favicon.svg",)
+PUBLIC_ASSETS = ("/assets/",)
+PUBLIC_FILES = ("/favicon.svg",)
 
 
 def _ok(value: str) -> bool:
