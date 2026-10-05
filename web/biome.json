@@ -8,6 +8,8 @@
   "files": {
     "includes": [
       "src/**",
+      "e2e/**",
+      "*.config.ts",
       "!src/components/ui/**",
       "!src/api/schema.d.ts"
     ]

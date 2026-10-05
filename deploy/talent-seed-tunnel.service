@@ -1,0 +1,14 @@
+[Unit]
+Description=Cloudflare quick tunnel for the Talent Seed viewer (random trycloudflare.com URL)
+After=network-online.target talent-seed-viewer.service
+Wants=network-online.target
+
+[Service]
+ExecStart=/usr/bin/cloudflared tunnel --no-autoupdate --url http://127.0.0.1:8765
+Restart=always
+RestartSec=5
+StandardOutput=append:/root/talent-seed/scratch/tunnel.log
+StandardError=append:/root/talent-seed/scratch/tunnel.log
+
+[Install]
+WantedBy=multi-user.target

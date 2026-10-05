@@ -1,0 +1,15 @@
+[Unit]
+Description=Talent Seed viewer (FastAPI, read-only DuckDB, localhost only)
+After=network.target
+
+[Service]
+WorkingDirectory=/root/talent-seed
+EnvironmentFile=/etc/talent-seed-viewer.env
+ExecStart=/root/.local/bin/uv run uvicorn viewer_api.main:app --host 127.0.0.1 --port 8765 --no-server-header --no-access-log
+Restart=always
+RestartSec=3
+StandardOutput=append:/root/talent-seed/scratch/seed_viewer.log
+StandardError=append:/root/talent-seed/scratch/seed_viewer.log
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,45 @@
+# Checks on every push and pull request. The browser tests (web/e2e) need the real database, which never
+# leaves the VM, so they run there instead: see docs/viewer_run_and_deploy.md.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  web:
+    name: Web app (lint, types, unit tests, build)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: corepack enable
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm check
+      - run: pnpm test
+      - run: pnpm build
+
+  api:
+    name: API (compiles, OpenAPI types in sync)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.12"
+      - run: uv sync --frozen
+      - run: uv run python -m compileall -q viewer_api scripts
+      - name: web/openapi.json matches the API (run `pnpm gen:api` in web/ after API changes)
+        run: |
+          uv run python -m viewer_api.openapi_dump > /tmp/openapi.json
+          diff -u web/openapi.json /tmp/openapi.json

@@ -115,6 +115,7 @@ export function ExplorePage() {
       </div>
 
       <div
+        data-testid="result-summary"
         className="mb-3 flex flex-wrap items-center justify-between gap-2 text-[13px] text-muted-foreground"
         aria-live="polite"
       >
