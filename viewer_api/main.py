@@ -17,7 +17,7 @@ from fastapi.responses import FileResponse, JSONResponse, RedirectResponse, Resp
 
 from . import models, queries
 from .auth import access_gate
-from .settings import LEGACY_INDEX, WEB_DIST
+from .settings import WEB_DIST
 
 app = FastAPI(title="Talent Seed viewer API", version="1.0", docs_url="/api/docs",
               openapi_url="/api/openapi.json", redoc_url=None)
@@ -117,12 +117,6 @@ def export(con: Con, f: Annotated[Filters, Depends()]):
     name = "talent_seed_shortlist.csv" if f.values["ids"] else "talent_seed_export.csv"
     return Response(queries.export_csv(con, f.q()).encode("utf-8-sig"), media_type="text/csv; charset=utf-8",
                     headers={"Content-Disposition": f'attachment; filename="{name}"'})
-
-
-@app.get("/legacy", include_in_schema=False)
-def legacy():
-    """The first viewer, kept for side-by-side comparison."""
-    return FileResponse(LEGACY_INDEX, media_type="text/html; charset=utf-8")
 
 
 @app.get("/next", include_in_schema=False)

@@ -6,8 +6,7 @@
 Browser ── Cloudflare quick tunnel ── FastAPI (uvicorn, 127.0.0.1:8765) ── data/talent_seed.duckdb (read-only)
            talent-seed-tunnel           talent-seed-viewer                  data/github_logins.sqlite
                                          ├─ /api/*   JSON API                data/enrichment.sqlite
-                                         ├─ /        React app (web/dist)
-                                         └─ /legacy  first viewer (scripts/seed_viewer/index.html)
+                                         └─ /        React app (web/dist)
 ```
 
 | Piece | Where | Notes |
@@ -16,12 +15,12 @@ Browser ── Cloudflare quick tunnel ── FastAPI (uvicorn, 127.0.0.1:8765) 
 | Web app | `web/` (React 19, TypeScript, Vite, Tailwind, shadcn/ui, TanStack Query/Router) | Built to `web/dist`, served by the API. |
 | Services | `deploy/*.service` → `/etc/systemd/system/` | Restart on failure and at boot. |
 | Access key | `/etc/talent-seed-viewer.env` (`TALENT_SEED_KEY=…`, root-only) | Not in git. Needed as `?key=` on the link, `X-Access-Key`, or cookie. |
-| Public link | `scripts/seed_viewer/link.sh` prints it | The trycloudflare.com address changes when the tunnel restarts. |
+| Public link | `scripts/viewer_link.sh` prints it | The trycloudflare.com address changes when the tunnel restarts. |
 
 ## Everyday commands (on the VM)
 
 ```bash
-scripts/seed_viewer/link.sh                       # current link with the key
+scripts/viewer_link.sh                            # current link with the key
 systemctl status talent-seed-viewer talent-seed-tunnel
 systemctl restart talent-seed-viewer              # after API (Python) changes
 tail -f scratch/seed_viewer.log                   # API log
@@ -68,6 +67,4 @@ Long jobs: run them with `systemd-run --unit=<name> …` so they survive a close
 
 ## Roll back to the first viewer
 
-The first viewer still works at `/legacy`. To make it the main page again, point the `/` route in
-`viewer_api/main.py` at `LEGACY_INDEX`, or run the old server with
-`scratch/talent-seed-viewer.service.bak` (stdlib `scripts/seed_viewer/server.py`).
+The first viewer (`scripts/seed_viewer/`) was removed after sign-off. It is in git history: `git show a11fccc:scripts/seed_viewer/index.html`.

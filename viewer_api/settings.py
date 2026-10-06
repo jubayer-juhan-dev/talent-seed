@@ -10,8 +10,6 @@ LOGINS = ROOT / "data" / "github_logins.sqlite"
 ENRICHMENT = ROOT / "data" / "enrichment.sqlite"
 # DuckDB extensions (sqlite reader). Explicit, because the systemd service has no home directory.
 DUCKDB_EXTENSIONS = ROOT / "data" / "duckdb_extensions"
-# The first, hand-written viewer, kept at /legacy for comparison until it is retired.
-LEGACY_INDEX = ROOT / "scripts" / "seed_viewer" / "index.html"
 # The React app (web/, `pnpm build`), served at /.
 WEB_DIST = ROOT / "web" / "dist"
 ACCESS_KEY = os.environ.get("TALENT_SEED_KEY", "")
