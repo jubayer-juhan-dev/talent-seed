@@ -121,13 +121,13 @@ def build_filters(q, con=None):
     return w, params, f"ORDER BY {sort} {direction} NULLS LAST, person_id"
 
 
-def api_people(con, q):
+def api_people(con, q, page_size=PAGE_SIZE):
     w, params, order = build_filters(q, con)
     page = max(int(one(q, "page") or 1), 1)
     total = con.execute(f"SELECT count(*) FROM talent_seed {w}", params).fetchone()[0]
     rows = query(con, f"SELECT {LIST_COLS} FROM talent_seed {w} {order} "
-                      f"LIMIT {PAGE_SIZE} OFFSET {(page - 1) * PAGE_SIZE}", params)
-    return {"total": total, "page": page, "page_size": PAGE_SIZE, "rows": enrichment.add_ai_enriched(add_logins(rows))}
+                      f"LIMIT {page_size} OFFSET {(page - 1) * page_size}", params)
+    return {"total": total, "page": page, "page_size": page_size, "rows": enrichment.add_ai_enriched(add_logins(rows))}
 
 
 def api_overview(con, _q):

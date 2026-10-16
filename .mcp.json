@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "talent-seed": {
+      "type": "stdio",
+      "command": "sh",
+      "args": [
+        "-c",
+        "cd \"$(git rev-parse --show-toplevel)\" && exec uv run python -m viewer_api.mcp_server"
+      ],
+      "env": {}
+    }
+  }
+}

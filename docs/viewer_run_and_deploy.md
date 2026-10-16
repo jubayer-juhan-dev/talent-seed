@@ -44,6 +44,18 @@ No restart is needed after `pnpm build`: the API reads `web/dist` on each reques
 3. If response shapes or parameters changed: `cd web && pnpm gen:api` (regenerates `src/api/schema.d.ts`;
    CI fails if `web/openapi.json` is stale).
 
+## Use the data from Claude (MCP)
+
+`viewer_api/mcp_server.py` exposes the same queries to Claude as MCP tools: `meta`, `overview`,
+`search_ecosystems`, `search_people`, `get_person`, `export_csv` (writes to `exports/`) and `set_ai_enriched`.
+It opens the DuckDB file read-only and in-process, so it needs neither the viewer running nor the access key.
+
+- Claude Code: `.mcp.json` registers it. Start `claude` anywhere in the repo and approve the `talent-seed` server.
+- Claude Desktop / other clients: run `uv run python -m viewer_api.mcp_server` (stdio) from the repo root.
+
+During a database rebuild the tools return "database is being rebuilt". After changing `queries.py`, restart the
+session (or `/mcp` → reconnect) so the server reloads.
+
 ## Tests
 
 | Kind | Command | Where it runs |
