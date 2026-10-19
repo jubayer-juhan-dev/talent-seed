@@ -8,20 +8,47 @@ never locked between requests and scripts/m4_build_talent_seed.py can rebuild it
 until the build finishes). Same URLs and JSON as the old scripts/seed_viewer/server.py.
 """
 
+from contextlib import asynccontextmanager
 from typing import Annotated
 
 import duckdb
 from fastapi import Depends, FastAPI, HTTPException, Query, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import FileResponse, JSONResponse, RedirectResponse, Response
+from mcp.server.transport_security import TransportSecuritySettings
 
 from . import models, queries
 from .auth import access_gate
+from .mcp_server import remote
 from .settings import WEB_DIST
 
+# MCP for Claude at /mcp (viewer_api/mcp_server.py `remote`). Stateless JSON: no sessions to keep, nothing streamed.
+# Host checks are off because the tunnel's host name changes; the access gate is what protects it.
+mcp_app = remote.streamable_http_app(streamable_http_path="/mcp", stateless_http=True, json_response=True,
+                                     transport_security=TransportSecuritySettings(enable_dns_rebinding_protection=False))
+
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    async with remote.session_manager.run():
+        yield
+
+
 app = FastAPI(title="Talent Seed viewer API", version="1.0", docs_url="/api/docs",
-              openapi_url="/api/openapi.json", redoc_url=None)
+              openapi_url="/api/openapi.json", redoc_url=None, lifespan=lifespan)
 app.middleware("http")(access_gate)
+
+
+# Stateless server: no server-to-client stream to offer, and without this a GET (e.g. the URL opened in a browser)
+# would sit on an empty event stream forever. Clients take 405 here as "POST only", as the MCP spec allows.
+@app.get("/mcp", include_in_schema=False)
+def mcp_get():
+    return JSONResponse({"error": "This is the Talent Seed MCP endpoint for Claude. It doesn't open in a browser: add "
+                                  "this URL (with ?key=...) as a custom connector in Claude instead."},
+                        405, headers={"Allow": "POST"})
+
+
+app.router.routes.extend(mcp_app.routes)  # added before the routes below, so ahead of the web app catch-all
 
 
 # Errors keep the old {"error": "..."} shape, which the page shows to the user.

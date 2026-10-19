@@ -20,6 +20,7 @@ HEADERS = {"Cache-Control": "no-store", "X-Robots-Tag": "noindex, nofollow", "Re
 # are public. Their file names carry a content hash, so they can be cached forever.
 PUBLIC_ASSETS = ("/assets/",)
 PUBLIC_FILES = ("/favicon.svg",)
+JSON_PATHS = ("/api/", "/mcp")  # answered with JSON, and never given the cookie
 
 
 def _ok(value: str) -> bool:
@@ -35,12 +36,12 @@ async def access_gate(request: Request, call_next):
         return resp
     if ACCESS_KEY and not any(_ok(v) for v in (request.query_params.get("key", ""), request.headers.get("x-access-key", ""),
                                               request.cookies.get(KEY_COOKIE, ""))):
-        resp = (JSONResponse({"error": "Access link required"}, 401) if request.url.path.startswith("/api/")
+        resp = (JSONResponse({"error": "Access link required"}, 401) if path.startswith(JSON_PATHS)
                 else HTMLResponse(LOCKED_PAGE, 401))
     else:
         resp = await call_next(request)
         # A page opened with ?key=: also set a cookie, so a later visit without the key still works.
-        if ACCESS_KEY and _ok(request.query_params.get("key", "")) and not request.url.path.startswith("/api/"):
+        if ACCESS_KEY and _ok(request.query_params.get("key", "")) and not path.startswith(JSON_PATHS):
             resp.set_cookie(KEY_COOKIE, ACCESS_KEY, max_age=31536000, path="/", httponly=True, secure=True, samesite="lax")
     resp.headers.update(HEADERS)
     return resp

@@ -6,6 +6,7 @@
 Browser ── Cloudflare quick tunnel ── FastAPI (uvicorn, 127.0.0.1:8765) ── data/talent_seed.duckdb (read-only)
            talent-seed-tunnel           talent-seed-viewer                  data/github_logins.sqlite
                                          ├─ /api/*   JSON API                data/enrichment.sqlite
+                                         ├─ /mcp     MCP for Claude (key needed)
                                          └─ /        React app (web/dist)
 ```
 
@@ -44,6 +45,8 @@ No restart is needed after `pnpm build`: the API reads `web/dist` on each reques
 3. If response shapes or parameters changed: `cd web && pnpm gen:api` (regenerates `src/api/schema.d.ts`;
    CI fails if `web/openapi.json` is stale).
 
+ChatGPT users: a custom GPT over the same API, see `docs/chatgpt_gpt.md`.
+
 ## Use the data from Claude (MCP)
 
 `viewer_api/mcp_server.py` exposes the same queries to Claude as MCP tools: `meta`, `overview`,
@@ -52,6 +55,18 @@ It opens the DuckDB file read-only and in-process, so it needs neither the viewe
 
 - Claude Code: `.mcp.json` registers it. Start `claude` anywhere in the repo and approve the `talent-seed` server.
 - Claude Desktop / other clients: run `uv run python -m viewer_api.mcp_server` (stdio) from the repo root.
+
+### Other people, over the web
+
+The viewer also serves the tools at `/mcp` (Streamable HTTP), so anyone with the access key can use them from
+their own Claude. `scripts/viewer_link.sh mcp` prints the URL (`https://<tunnel>/mcp?key=…`). They add it as:
+
+- claude.ai / Claude Desktop: Settings → Connectors → Add custom connector → paste the URL.
+- Claude Code: `claude mcp add --transport http talent-seed '<url>'`
+
+The web version is read-only: no `set_ai_enriched`, and `export_csv_link` returns a download link instead of writing
+a file. Anyone with the URL has full read access (emails included); rotate `TALENT_SEED_KEY` to cut everyone off.
+The quick-tunnel address changes when the tunnel restarts, and then everyone has to update their connector URL.
 
 During a database rebuild the tools return "database is being rebuilt". After changing `queries.py`, restart the
 session (or `/mcp` → reconnect) so the server reloads.

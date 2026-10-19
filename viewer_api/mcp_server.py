@@ -1,6 +1,7 @@
 """MCP server: lets Claude (Claude Code, Claude Desktop, …) use Talent Seed directly.
 
 Run:   uv run python -m viewer_api.mcp_server          (stdio; Claude Code starts it from .mcp.json)
+Web:   `remote` below, served at /mcp by the viewer (viewer_api/main.py) for other users
 
 Same queries as the viewer API (viewer_api/queries.py), called in-process on a read-only DuckDB connection,
 so no running viewer or access key is needed. The only write is set_ai_enriched, which writes
@@ -12,16 +13,17 @@ import sqlite3
 from contextlib import contextmanager
 from datetime import datetime, timezone
 from typing import Annotated, Any, Literal
+from urllib.parse import urlencode
 
 import duckdb
-from mcp.server.mcpserver import MCPServer
+from mcp.server.mcpserver import Context, MCPServer
 from mcp.server.mcpserver.exceptions import ToolError
 from mcp.types import ToolAnnotations
 from pydantic import Field
 
 from . import queries
 from .enrichment import SCHEMA
-from .settings import ENRICHMENT, ROOT
+from .settings import ENRICHMENT, EXPORT_LIMIT, ROOT
 
 PERSON_ID = re.compile(r"(gh|odd):\d+")
 EXPORTS = ROOT / "exports"
@@ -184,6 +186,53 @@ def set_ai_enriched(
     finally:
         con.close()
     return f"{'Cleared' if unset else 'Marked'} {len(person_ids)} people. AI-enriched now: {total}."
+
+
+# Remote server: the same data over Streamable HTTP at /mcp on the viewer (viewer_api/main.py mounts it), for people
+# who add it as a connector in claude.ai / Claude Desktop / Claude Code. The access gate checks the key (?key= on the
+# connector URL, or X-Access-Key). Read-only: no set_ai_enriched, and export_csv returns a download link instead of
+# writing on this machine.
+remote = MCPServer("talent-seed", instructions=mcp.instructions)
+for tool in (meta, overview, search_ecosystems, search_people, get_person):
+    remote.add_tool(tool, annotations=READ)
+
+
+@remote.tool(annotations=READ)
+def export_csv_link(
+    ctx: Context,
+    cohort: list[Cohort] | None = None,
+    activity: list[Literal["FULL_TIME", "PART_TIME", "ONE_TIME", "UNKNOWN"]] | None = None,
+    tenure: list[Literal["ESTABLISHED", "EMERGING", "NEWCOMER", "UNKNOWN"]] | None = None,
+    exclusivity: list[Literal["EXCLUSIVE", "MULTICHAIN", "UNKNOWN"]] | None = None,
+    country: list[str] | None = None,
+    chain: str | None = None,
+    ecosystems: list[str] | None = None,
+    ids: list[str] | None = None,
+    hide_flagged: bool = True,
+    ai_enriched: bool | None = None,
+    text: str | None = None,
+    sort: Sort = "active_days",
+    direction: Literal["asc", "desc"] = "desc",
+) -> dict[str, Any]:
+    """Download link for up to 5,000 matching people as CSV (same filters as search_people). Give the link to the user."""
+    q = people_filters(cohort, activity, tenure, exclusivity, country, chain, ecosystems, ids, hide_flagged, ai_enriched,
+                       text, sort, direction)
+    request = ctx.request_context.request
+    params = {k: v[0] for k, v in q.items()}
+    key = request.query_params.get("key") or request.headers.get("x-access-key")
+    if key:
+        params["key"] = key
+    with db() as con:
+        total = queries.api_people(con, {**q, "page": ["1"]}, 1)["total"]
+    return {"url": f"{public_base(request)}/api/export.csv?{urlencode(params)}", "rows": min(total, EXPORT_LIMIT),
+            "matches": total}
+
+
+def public_base(request) -> str:
+    """https://<tunnel host> as the user reaches it (cloudflared talks plain http to us on localhost)."""
+    host = request.headers.get("host", "127.0.0.1:8765")
+    scheme = "http" if host.startswith(("127.0.0.1", "localhost")) else "https"
+    return f"{scheme}://{host}"
 
 
 if __name__ == "__main__":
