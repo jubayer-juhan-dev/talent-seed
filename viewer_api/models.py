@@ -219,5 +219,42 @@ class PersonDetail(BaseModel):
     repo_total: int
 
 
+class EnrichmentEvidence(BaseModel):
+    concept_name: str
+    concept_type: str
+    status: str
+    usage_level: str
+    confidence: float
+    source: str
+    note: str | None = None
+
+
+class PersonEnrichment(BaseModel):
+    enriched: bool
+    summary: str | None = None
+    seniority_band: str | None = None
+    seniority_confidence: float | None = None
+    llm_model: str | None = None
+    evidence: list[EnrichmentEvidence] = []
+
+
+class GithubProfile(BaseModel):
+    deleted: bool
+    login: str | None = None
+    name: str | None = None
+    bio: str | None = None
+    company: str | None = None
+    location: str | None = None
+    website: str | None = None
+    x_handle: str | None = None
+    x_url: str | None = None
+    linkedin_url: str | None = None
+    public_email: str | None = None
+    hireable: bool | None = None
+    followers: int | None = None
+    public_repos: int | None = None
+    account_created: str | None = None
+
+
 class Error(BaseModel):
     error: str

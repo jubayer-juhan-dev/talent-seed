@@ -133,6 +133,28 @@ def person(con: Con, person_id: Annotated[str, Query(alias="id", description="gh
     return queries.jsonable(out)
 
 
+@app.get("/api/person/enrichment", response_model=models.PersonEnrichment,
+         responses={**ERRORS, 404: {"model": models.Error}})
+def person_enrichment(person_id: Annotated[str, Query(alias="id", description="gh:... or odd:...")]):
+    """AI enrichment for one person: LLM summary, inferred roles, evidence rows (Neon)."""
+    from . import neon_enrichment
+    out = neon_enrichment.fetch(person_id)
+    if out is None:
+        raise HTTPException(404, "no AI enrichment for this person")
+    return out
+
+
+@app.get("/api/person/github-profile", response_model=models.GithubProfile,
+         responses={**ERRORS, 404: {"model": models.Error}})
+def person_github_profile(person_id: Annotated[str, Query(alias="id", description="gh:... or odd:...")]):
+    """GitHub profile details (website, X, LinkedIn, bio, ...) from the Tier-1 harvest cache."""
+    from . import github_profile
+    out = github_profile.fetch(person_id)
+    if out is None:
+        raise HTTPException(404, "GitHub profile not fetched yet for this person")
+    return out
+
+
 @app.get("/api/ecosystems", response_model=models.Ecosystems, response_model_exclude_unset=True, responses=ERRORS)
 def ecosystems(con: Con, q: str = ""):
     return queries.jsonable(queries.api_ecosystems(con, {"q": [q]} if q else {}))

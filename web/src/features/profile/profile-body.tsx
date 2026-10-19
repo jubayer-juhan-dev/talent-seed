@@ -39,6 +39,8 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { FLAG_INFO } from "@/features/explore/person-tags";
 import { day, fmt, label } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { EnrichmentSection } from "./enrichment-section";
+import { GithubProfileSection } from "./github-profile-section";
 
 type Props = {
   d: PersonDetail;
@@ -289,6 +291,7 @@ function Overview({
           </ul>
         </Callout>
       )}
+      {p.ai_enriched ? <EnrichmentSection id={p.person_id} /> : null}
       <div className="grid grid-cols-2 gap-2.5 md:grid-cols-4">
         <Stat
           icon={<Activity />}
@@ -417,6 +420,7 @@ function Contact({ d }: { d: PersonDetail }) {
   };
   return (
     <>
+      <GithubProfileSection id={d.person.person_id} />
       <Callout
         icon={<MailQuestion />}
         iconClass="bg-card text-warn"

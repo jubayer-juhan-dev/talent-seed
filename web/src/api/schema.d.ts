@@ -72,6 +72,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/person/enrichment": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Person Enrichment
+         * @description AI enrichment for one person: LLM summary, inferred roles, evidence rows (Neon).
+         */
+        get: operations["person_enrichment_api_person_enrichment_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/person/github-profile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Person Github Profile
+         * @description GitHub profile details (website, X, LinkedIn, bio, ...) from the Tier-1 harvest cache.
+         */
+        get: operations["person_github_profile_api_person_github_profile_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/ecosystems": {
         parameters: {
             query?: never;
@@ -164,10 +204,60 @@ export interface components {
             /** Rows */
             rows: components["schemas"]["EcosystemHit"][];
         };
+        /** EnrichmentEvidence */
+        EnrichmentEvidence: {
+            /** Concept Name */
+            concept_name: string;
+            /** Concept Type */
+            concept_type: string;
+            /** Status */
+            status: string;
+            /** Usage Level */
+            usage_level: string;
+            /** Confidence */
+            confidence: number;
+            /** Source */
+            source: string;
+            /** Note */
+            note?: string | null;
+        };
         /** Error */
         Error: {
             /** Error */
             error: string;
+        };
+        /** GithubProfile */
+        GithubProfile: {
+            /** Deleted */
+            deleted: boolean;
+            /** Login */
+            login?: string | null;
+            /** Name */
+            name?: string | null;
+            /** Bio */
+            bio?: string | null;
+            /** Company */
+            company?: string | null;
+            /** Location */
+            location?: string | null;
+            /** Website */
+            website?: string | null;
+            /** X Handle */
+            x_handle?: string | null;
+            /** X Url */
+            x_url?: string | null;
+            /** Linkedin Url */
+            linkedin_url?: string | null;
+            /** Public Email */
+            public_email?: string | null;
+            /** Hireable */
+            hireable?: boolean | null;
+            /** Followers */
+            followers?: number | null;
+            /** Public Repos */
+            public_repos?: number | null;
+            /** Account Created */
+            account_created?: string | null;
         };
         /** HTTPValidationError */
         HTTPValidationError: {
@@ -390,6 +480,24 @@ export interface components {
             commits?: number | null;
             /** Last Active Date */
             last_active_date?: string | null;
+        };
+        /** PersonEnrichment */
+        PersonEnrichment: {
+            /** Enriched */
+            enriched: boolean;
+            /** Summary */
+            summary?: string | null;
+            /** Seniority Band */
+            seniority_band?: string | null;
+            /** Seniority Confidence */
+            seniority_confidence?: number | null;
+            /** Llm Model */
+            llm_model?: string | null;
+            /**
+             * Evidence
+             * @default []
+             */
+            evidence: components["schemas"]["EnrichmentEvidence"][];
         };
         /**
          * PersonRow
@@ -707,6 +815,124 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PersonDetail"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    person_enrichment_api_person_enrichment_get: {
+        parameters: {
+            query: {
+                /** @description gh:... or odd:... */
+                id: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PersonEnrichment"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    person_github_profile_api_person_github_profile_get: {
+        parameters: {
+            query: {
+                /** @description gh:... or odd:... */
+                id: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GithubProfile"];
                 };
             };
             /** @description Unauthorized */
