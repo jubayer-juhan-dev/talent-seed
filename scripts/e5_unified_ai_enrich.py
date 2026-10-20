@@ -105,6 +105,14 @@ class OutreachChannel(BaseModel):
     reasoning: str = Field(description="Why you believe this belongs to this person")
 
 
+class Location(BaseModel):
+    city: str = Field(default="", description="City if found, else empty")
+    country: str = Field(default="", description="Country if found, else empty")
+    confidence: float = Field(default=0.0, ge=0, le=1)
+    basis: str = Field(default="",
+                       description="web_profile | bio_match | none")
+
+
 class EnrichmentOutput(BaseModel):
     roles: list[RoleInference] = Field(
         description="Inferred roles, strongest first. Empty if no confident inference.")
@@ -113,6 +121,10 @@ class EnrichmentOutput(BaseModel):
     outreach: list[OutreachChannel] = Field(
         description="X / LinkedIn / email channels. Empty if none found with "
                     "confidence >= 0.4. Never invent a URL.")
+    location: Location = Field(
+        default_factory=Location,
+        description="Where this person is based, from web search. "
+                    "Empty if nothing found. Never guess from the name.")
 
 
 def db_url():
@@ -248,7 +260,10 @@ Rules:
   (linked from their own site), login_match (same handle found via search),
   name_bio_match (name + matching bio/avatar), name_only (weakest).
   Never invent a URL. If nothing found, return an empty outreach list.
-  Emails found inside scraped pages may be reported with match_basis own_website."""
+  Emails found inside scraped pages may be reported with match_basis own_website.
+- LOCATION: if GitHub Location above is empty, use web_search (LinkedIn / X /
+  personal site bios) to find their city + country. Report only what you find;
+  empty + confidence 0 + basis "none" if nothing. Never guess from the name."""
 
 
 OUTREACH_CONCEPT = {"x": "Outreach channel (X)",
@@ -269,10 +284,25 @@ def main():
     import psycopg2
 
     client = OpenAI()
-    conn = psycopg2.connect(db_url())
-    conn.autocommit = True
-    cur = conn.cursor()
+    import time
+    conn = cur = None
+    for attempt in range(5):
+        try:
+            conn = psycopg2.connect(db_url())
+            conn.autocommit = True
+            cur = conn.cursor()
+            cur.execute("SELECT 1")
+            break
+        except Exception as ex:
+            print(f"db connect attempt {attempt + 1} failed: {ex}", flush=True)
+            time.sleep(5 * (attempt + 1))
+    if cur is None:
+        sys.exit("could not connect to Neon after 5 attempts")
     cur.execute(PROFILE_SCHEMA)
+    cur.execute("ALTER TABLE talent_profiles ADD COLUMN IF NOT EXISTS "
+                "location_text TEXT")
+    cur.execute("ALTER TABLE talent_profiles ADD COLUMN IF NOT EXISTS "
+                "location_confidence NUMERIC(3,2)")
     cur.execute(
         "SELECT concept_id, canonical_name FROM concepts WHERE concept_type = 'ROLE' "
         "ORDER BY concept_id"
@@ -337,6 +367,8 @@ def main():
             "AND source LIKE 'llm:%%'",
             (tid,),
         )
+        loc = out.location or Location()
+        loc_text = ", ".join(x for x in (loc.city, loc.country) if x) or None
         for r in out.roles:
             if not any(cid == r.concept_id for cid, _ in valid_roles):
                 continue
@@ -376,17 +408,34 @@ def main():
                  f"{o.url} | basis={basis} | {o.reasoning}"),
             )
 
+        # location as INFERENCE evidence (only if found with some confidence)
+        if loc_text and loc.confidence >= 0.4:
+            cur.execute(
+                """INSERT INTO talent_evidence
+                   (evidence_id, talent_id, concept_name, concept_type, status,
+                    usage_level, confidence, source, note, enriched_at)
+                   VALUES (%s,%s,%s,'SYSTEM','INFERENCE','DECLARED_USAGE',%s,%s,%s,now())
+                   ON CONFLICT (evidence_id) DO UPDATE SET
+                     concept_name=EXCLUDED.concept_name, confidence=EXCLUDED.confidence,
+                     source=EXCLUDED.source, note=EXCLUDED.note, enriched_at=now()""",
+                (f"e5loc:{tid}", tid, f"location:{loc_text}", loc.confidence,
+                 f"llm:{a.model}", f"web {loc.basis or 'profile'}"),
+            )
         cur.execute(
             """INSERT INTO talent_profiles
-               (talent_id, summary, seniority_band, seniority_confidence, llm_model)
-               VALUES (%s,%s,%s,%s,%s)
+               (talent_id, summary, seniority_band, seniority_confidence, llm_model,
+                location_text, location_confidence)
+               VALUES (%s,%s,%s,%s,%s,%s,%s)
                ON CONFLICT (talent_id) DO UPDATE SET
                  summary=EXCLUDED.summary,
                  seniority_band=EXCLUDED.seniority_band,
                  seniority_confidence=EXCLUDED.seniority_confidence,
-                 llm_model=EXCLUDED.llm_model, updated_at=now()""",
+                 llm_model=EXCLUDED.llm_model,
+                 location_text=EXCLUDED.location_text,
+                 location_confidence=EXCLUDED.location_confidence,
+                 updated_at=now()""",
             (tid, out.summary, out.seniority.band, out.seniority.confidence,
-             model_tag),
+             model_tag, loc_text, loc.confidence),
         )
         # flag for the viewer UI immediately
         try:
