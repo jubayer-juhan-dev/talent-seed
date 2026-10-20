@@ -181,21 +181,21 @@ def job_detail(job_id: str):
     return out
 
 
-@app.get("/api/jobs/{job_id}/matches", response_model=list[models.MatchRow],
+@app.get("/api/jobs/{job_id}/matches", response_model=models.JobMatches,
          responses={**ERRORS, 404: {"model": models.Error}})
-def job_matches(job_id: str, con: Con, pool: str = "ai", limit: int = 50):
+def job_matches(job_id: str, con: Con, pool: str = "all", limit: int = 50):
     """j3 matching: ranked talents with per-concept evidence breakdown."""
     from . import jobs as jobmod
     if jobmod.get_job(job_id) is None:
         raise HTTPException(404, "job not found")
-    rows = jobmod.match(job_id, pool=pool, limit=limit)
-    for r in rows:
+    out = jobmod.match(job_id, pool=pool, limit=limit)
+    for r in out["items"]:
         row = con.execute(
             "SELECT display_name, github_login FROM talent_seed WHERE person_id = ?",
             [r["talent_id"]]).fetchone()
         if row:
             r["name"], r["github_login"] = row[0], row[1]
-    return rows
+    return out
 
 
 class JobRequirementEdit(BaseModel):

@@ -87,11 +87,11 @@ def match(job_id, pool="ai", limit=50):
                WHERE job_id = %s AND concept_id IS NOT NULL""", (job_id,))
         reqs = cur.fetchall()
         if not reqs:
-            return []
+            return {"total": 0, "pool": 0, "items": []}
         concept_ids = [r[0] for r in reqs]
         pool_ids = _pool_ids(cur, pool)
         if not pool_ids:
-            return []
+            return {"total": 0, "pool": 0, "items": []}
         cur.execute(
             """SELECT talent_id, concept_id, status, usage_level, confidence
                FROM talent_evidence
@@ -115,7 +115,7 @@ def match(job_id, pool="ai", limit=50):
                 breakdown.append({
                     "concept_id": cid, "concept_name": cname, "requirement": reqtype,
                     "coverage": round(cov, 2),
-                    "state": ("covered" if cov >= 1.0 else
+                    "state": ("covered" if cov >= 0.8 else
                               "partial" if cov > 0 else "missing"),
                     "evidence_status": status, "confidence": conf})
             score = total / denom if denom else 0.0
@@ -123,6 +123,7 @@ def match(job_id, pool="ai", limit=50):
                 results.append({"talent_id": tid, "score": round(score, 3),
                                 "breakdown": breakdown})
         results.sort(key=lambda r: -r["score"])
-        return results[:limit]
+        return {"total": len(results), "pool": len(pool_ids),
+                "items": results[:limit]}
     finally:
         conn.close()

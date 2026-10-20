@@ -293,6 +293,8 @@ REGION_COUNTRY = {
 }
 
 _FLAG_RE = re.compile(r"[\U0001F1E6-\U0001F1FF]{2}")
+_COORD_RE = re.compile(
+    r"(\d{1,3}°|[-+]?\d{1,3}\.\d+\s*[, ]\s*[-+]?\d{1,3}\.\d+|[NSEW]\s*\d|\d\s*[NSEW]\b)")
 
 
 def _flag_country(text):
@@ -338,6 +340,8 @@ def normalize(location):
     low = raw.lower().strip(" .,")
     if low in JUNK:
         return None, None
+    if _COORD_RE.search(raw):
+        return None, None  # raw lat/long (e.g. Point Nemo jokes) is not a place
     if re.fullmatch(r"\d{1,3}(\.\d{1,3}){3}(:\d+)?", raw):
         return None, None
 

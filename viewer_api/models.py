@@ -324,3 +324,9 @@ class MatchRow(BaseModel):
     github_login: str | None = None
     score: float
     breakdown: list[MatchConcept] = []
+
+
+class JobMatches(BaseModel):
+    total: int
+    pool: int
+    items: list[MatchRow] = []

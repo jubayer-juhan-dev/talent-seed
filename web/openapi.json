@@ -703,7 +703,7 @@
             "required": false,
             "schema": {
               "type": "string",
-              "default": "ai",
+              "default": "all",
               "title": "Pool"
             }
           },
@@ -724,11 +724,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/MatchRow"
-                  },
-                  "title": "Response Job Matches Api Jobs  Job Id  Matches Get"
+                  "$ref": "#/components/schemas/JobMatches"
                 }
               }
             }
@@ -1668,6 +1664,32 @@
           "description"
         ],
         "title": "JobDetail"
+      },
+      "JobMatches": {
+        "properties": {
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "pool": {
+            "type": "integer",
+            "title": "Pool"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/MatchRow"
+            },
+            "type": "array",
+            "title": "Items",
+            "default": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "total",
+          "pool"
+        ],
+        "title": "JobMatches"
       },
       "JobRequirement": {
         "properties": {

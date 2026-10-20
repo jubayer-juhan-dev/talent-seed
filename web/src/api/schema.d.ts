@@ -395,6 +395,18 @@ export interface components {
              */
             requirements: components["schemas"]["JobRequirement"][];
         };
+        /** JobMatches */
+        JobMatches: {
+            /** Total */
+            total: number;
+            /** Pool */
+            pool: number;
+            /**
+             * Items
+             * @default []
+             */
+            items: components["schemas"]["MatchRow"][];
+        };
         /** JobRequirement */
         JobRequirement: {
             /** Concept Id */
@@ -1370,7 +1382,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["MatchRow"][];
+                    "application/json": components["schemas"]["JobMatches"];
                 };
             };
             /** @description Unauthorized */

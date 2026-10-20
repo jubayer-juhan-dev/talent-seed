@@ -47,10 +47,16 @@ export function JobDetailPage({ jobId }: { jobId: string }) {
         </Card>
       )}
 
-      <h2 className="text-lg font-semibold">Matches — AI-enriched talents</h2>
+      <h2 className="text-lg font-semibold">Matches</h2>
+      {matches.data && (
+        <p className="text-sm text-muted-foreground">
+          {matches.data.total} talents matched out of {matches.data.pool} with evidence
+          {matches.data.total > matches.data.items.length ? ` — showing top ${matches.data.items.length}` : ""}
+        </p>
+      )}
       {matches.isLoading && <Skeleton className="h-40 w-full" />}
       <div className="space-y-2">
-        {matches.data?.map((m) => (
+        {matches.data?.items.map((m) => (
           <Card key={m.talent_id}>
             <CardContent className="flex flex-col gap-2 pt-4">
               <div className="flex items-center gap-3">
@@ -84,9 +90,7 @@ export function JobDetailPage({ jobId }: { jobId: string }) {
             </CardContent>
           </Card>
         ))}
-        {matches.data?.length === 0 && (
-          <p className="text-sm text-muted-foreground">No AI-enriched talent matches this job yet.</p>
-        )}
+        {matches.data?.total === 0 && <p className="text-sm text-muted-foreground">No talent matches this job yet.</p>}
       </div>
     </div>
   );
