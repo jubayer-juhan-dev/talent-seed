@@ -86,7 +86,7 @@ export function PersonCard({ p, index, onOpen }: { p: PersonRow; index: number; 
         </span>
         <span className="flex shrink-0 items-center gap-1.5">
           <MapPin className="size-3.5" />
-          {p.country || "–"}
+          {p.location || p.country || "–"}
         </span>
       </div>
     </div>

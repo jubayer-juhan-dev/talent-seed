@@ -535,6 +535,8 @@ export interface components {
             github_confidence?: string | null;
             /** Country */
             country?: string | null;
+            /** Location */
+            location?: string | null;
             /** Priority Cohort */
             priority_cohort: string;
             /** Priority Cohort Reason */

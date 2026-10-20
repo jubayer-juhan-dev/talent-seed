@@ -127,7 +127,9 @@ def api_people(con, q, page_size=PAGE_SIZE):
     total = con.execute(f"SELECT count(*) FROM talent_seed {w}", params).fetchone()[0]
     rows = query(con, f"SELECT {LIST_COLS} FROM talent_seed {w} {order} "
                       f"LIMIT {page_size} OFFSET {(page - 1) * page_size}", params)
-    return {"total": total, "page": page, "page_size": page_size, "rows": enrichment.add_ai_enriched(add_logins(rows))}
+    from . import neon_enrichment
+    rows = neon_enrichment.add_locations(enrichment.add_ai_enriched(add_logins(rows)))
+    return {"total": total, "page": page, "page_size": page_size, "rows": rows}
 
 
 def api_overview(con, _q):

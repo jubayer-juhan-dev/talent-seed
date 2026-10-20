@@ -48,6 +48,7 @@ class PersonRow(GithubOverlay, AiEnriched):
     github_user_id: int | None = None
     github_confidence: str | None = None  # HIGH | MEDIUM | LOW | NONE
     country: str | None = None
+    location: str | None = None
     priority_cohort: str  # P1 | P2 | P3 | HOLD
     priority_cohort_reason: str | None = None
     tenure_segment: str | None = None  # ESTABLISHED | EMERGING | NEWCOMER | UNKNOWN

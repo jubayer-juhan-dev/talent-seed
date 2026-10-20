@@ -61,3 +61,38 @@ def fetch(person_id):
         "location": prof[6] if prof else None,
         "evidence": evidence,
     }
+
+def lookup_locations(person_ids):
+    """{person_id: resolved location} for the given ids (GitHub > AI)."""
+    ids = [i for i in person_ids if i]
+    if not ids:
+        return {}
+    try:
+        conn = psycopg2.connect(settings.NEON_URL, connect_timeout=8)
+    except Exception:
+        return {}
+    try:
+        cur = conn.cursor()
+        out = {}
+        for i in range(0, len(ids), 500):
+            chunk = ids[i:i + 500]
+            cur.execute(
+                "SELECT talent_id, location FROM talent_profiles "
+                "WHERE talent_id = ANY(%s) AND location IS NOT NULL",
+                (chunk,))
+            out.update({r[0]: r[1] for r in cur.fetchall()})
+        return out
+    except Exception:
+        return {}
+    finally:
+        conn.close()
+
+
+def add_locations(rows):
+    """Fill row['location'] with the resolved location when present, in place."""
+    found = lookup_locations(r["person_id"] for r in rows)
+    for r in rows:
+        if found.get(r["person_id"]):
+            r["location"] = found[r["person_id"]]
+    return rows
+

@@ -2358,6 +2358,17 @@
             ],
             "title": "Country"
           },
+          "location": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Location"
+          },
           "priority_cohort": {
             "type": "string",
             "title": "Priority Cohort"
