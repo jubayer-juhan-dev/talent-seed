@@ -464,8 +464,15 @@ def main():
                 or not (p.get("github_profile") or {}).get("location")
             search_text = ""
             if need_search:
-                q = f'"{tt.get("name") or ""}" "{tt.get("github") or ""}" linkedin OR twitter'
-                search_text = serper_search_rich(q)
+                nm = tt.get("name") or ""
+                gh = tt.get("github") or ""
+                parts = []
+                for q in (f'"{nm}" "{gh}" linkedin',
+                          f'"{nm}" "{gh}" twitter OR x.com'):
+                    r = serper_search_rich(q, fetch_top=2)
+                    if r:
+                        parts.append(r)
+                search_text = chr(10).join(parts)
             resp = client.responses.parse(
                 model=a.model,
                 input=[{"role": "user",
