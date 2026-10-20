@@ -74,7 +74,7 @@ def fetch(person_id):
     finally:
         conn.close()
     if not prof and not evidence:
-        return {"enriched": False, "evidence": []}
+        return {"enriched": False, "evidence": [], "components": components}
     return {
         "enriched": True,
         "summary": prof[0] if prof else None,

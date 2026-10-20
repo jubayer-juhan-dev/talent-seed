@@ -40,7 +40,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { FLAG_INFO } from "@/features/explore/person-tags";
 import { day, fmt, label } from "@/lib/format";
 import { cn } from "@/lib/utils";
-import { EnrichmentSection } from "./enrichment-section";
+import { ComponentsSection, EnrichmentSection } from "./enrichment-section";
 import { GithubProfileSection } from "./github-profile-section";
 
 type Props = {
@@ -296,7 +296,7 @@ function Overview({
           </ul>
         </Callout>
       )}
-      {p.ai_enriched ? <EnrichmentSection id={p.person_id} /> : null}
+      <EnrichmentGate id={p.person_id} aiEnriched={!!p.ai_enriched} />
       <div className="grid grid-cols-2 gap-2.5 md:grid-cols-4">
         <Stat
           icon={<Activity />}
@@ -596,6 +596,15 @@ function Details({ d }: { d: PersonDetail }) {
           ))}
         </div>
       </Section>
+    </>
+  );
+}
+
+function EnrichmentGate({ id, aiEnriched }: { id: string; aiEnriched: boolean }) {
+  return (
+    <>
+      {aiEnriched ? <EnrichmentSection id={id} /> : null}
+      {!aiEnriched ? <ComponentsSection id={id} /> : null}
     </>
   );
 }

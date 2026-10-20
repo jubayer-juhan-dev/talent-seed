@@ -94,24 +94,7 @@ export function EnrichmentSection({ id }: { id: string }) {
         </div>
       )}
 
-      {data.components && data.components.length > 0 && (
-        <div>
-          <p className="mb-1.5 text-xs font-medium text-faint">Components</p>
-          <div className="space-y-1.5">
-            {data.components.map((c) => (
-              <div key={c.component_id} className="flex items-baseline justify-between gap-3 text-sm">
-                <div>
-                  <span className="font-medium">{c.component_name}</span>
-                  {c.proof && <p className="mt-0.5 text-xs text-faint">{c.proof}</p>}
-                </div>
-                <span className="shrink-0 rounded bg-muted px-1.5 py-0.5 text-[11px] font-medium">
-                  {c.usage_level.replace("_USAGE", "")}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+      {data.components && data.components.length > 0 && <ComponentsList components={data.components} />}
 
       {[...byType.entries()].map(([type, list]) => (
         <div key={type}>
@@ -132,6 +115,48 @@ export function EnrichmentSection({ id }: { id: string }) {
           </div>
         </div>
       ))}
+    </section>
+  );
+}
+
+type ComponentRow = {
+  component_id: string;
+  component_name: string;
+  usage_level: string;
+  proof?: string | null;
+};
+
+export function ComponentsList({ components }: { components: ComponentRow[] }) {
+  return (
+    <div>
+      <p className="mb-1.5 text-xs font-medium text-faint">Components</p>
+      <div className="space-y-1.5">
+        {components.map((c) => (
+          <div key={c.component_id} className="flex items-baseline justify-between gap-3 text-sm">
+            <div>
+              <span className="font-medium">{c.component_name}</span>
+              {c.proof && <p className="mt-0.5 text-xs text-faint">{c.proof}</p>}
+            </div>
+            <span className="shrink-0 rounded bg-muted px-1.5 py-0.5 text-[11px] font-medium">
+              {c.usage_level.replace("_USAGE", "")}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/** Components-only section: shown on any profile that has component
+ *  evidence, even when the person is not AI-enriched. */
+export function ComponentsSection({ id }: { id: string }) {
+  const { data } = $api.useQuery("get", "/api/person/enrichment", {
+    params: { query: { id } },
+  });
+  if (!data?.components || data.components.length === 0) return null;
+  return (
+    <section>
+      <ComponentsList components={data.components} />
     </section>
   );
 }
