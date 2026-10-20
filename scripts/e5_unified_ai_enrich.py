@@ -202,6 +202,90 @@ def triage_score(person):
                if e.get("status") == "FACT" and (e.get("confidence") or 0) >= 0.7)
 
 
+WALLED = ("linkedin.com", "twitter.com", "x.com", "facebook.com", "instagram.com")
+_X_RE = None
+_LI_RE = None
+_EM_RE = None
+
+
+def _patterns():
+    global _X_RE, _LI_RE, _EM_RE
+    import re
+    if _X_RE is None:
+        _X_RE = re.compile(r"https?://(?:www\.)?(?:twitter\.com|x\.com)/([A-Za-z0-9_]{1,15})", re.I)
+        _LI_RE = re.compile(r"https?://(?:www\.)?linkedin\.com/in/([A-Za-z0-9\-_%]{3,100})", re.I)
+        _EM_RE = re.compile(r"[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}")
+    return _X_RE, _LI_RE, _EM_RE
+
+
+def fetch_page_extract(url, max_chars=2500):
+    """Fetch a page free; return visible text + any X/LinkedIn/email links found.
+    Login-walled domains are skipped (they return a wall, not content)."""
+    import re, urllib.request
+    if any(w in url for w in WALLED):
+        return ""
+    try:
+        req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+        with urllib.request.urlopen(req, timeout=10) as r:
+            html = r.read(400_000).decode("utf-8", "ignore")
+    except Exception:
+        return ""
+    x_re, li_re, em_re = _patterns()
+    found = []
+    for pat, label in ((x_re, "X"), (li_re, "LinkedIn")):
+        for m in pat.finditer(html):
+            u = m.group(0)
+            if u not in found:
+                found.append(u)
+    emails = sorted({e for e in em_re.findall(html)
+                     if not e.endswith((".png", ".jpg", ".gif", ".svg"))})
+    text = re.sub(r"<script.*?</script>|<style.*?</style>", " ", html, flags=re.S)
+    text = re.sub(r"<[^>]+>", " ", text)
+    text = re.sub(r"\s+", " ", text).strip()[:max_chars]
+    out = []
+    if found:
+        out.append("social links on page: " + ", ".join(found[:6]))
+    if emails:
+        out.append("emails on page: " + ", ".join(emails[:4]))
+    if text:
+        out.append("page text: " + text)
+    return chr(10).join(out)
+
+
+def serper_search_rich(query, num=8, fetch_top=3):
+    """Serper snippets + full content of the top non-walled result pages."""
+    import json as _json, os, urllib.request
+    key = os.environ.get("SERPER_API_KEY")
+    if not key:
+        return ""
+    try:
+        req = urllib.request.Request(
+            "https://google.serper.dev/search",
+            data=_json.dumps({"q": query, "num": num}).encode(),
+            headers={"X-API-KEY": key, "Content-Type": "application/json"})
+        with urllib.request.urlopen(req, timeout=20) as r:
+            data = _json.loads(r.read())
+    except Exception:
+        return ""
+    organic = (data.get("organic") or [])[:num]
+    lines = []
+    for it in organic:
+        lines.append(f"- {it.get('title','')} | {it.get('link','')} | {(it.get('snippet') or '')[:200]}")
+    fetched = 0
+    for it in organic:
+        if fetched >= fetch_top:
+            break
+        link = it.get("link") or ""
+        if not link or any(w in link for w in WALLED):
+            continue
+        ext = fetch_page_extract(link)
+        fetched += 1
+        if ext:
+            lines.append(f"[page content from {link}]")
+            lines.append(ext)
+    return chr(10).join(lines)
+
+
 def serper_search(query, num=8):
     """One Serper (Google) search; returns compact text results or ''."""
     import json as _json, os, urllib.request
@@ -385,7 +469,7 @@ def main():
             search_text = ""
             if need_search:
                 q = f'"{tt.get("name") or ""}" "{tt.get("github") or ""}" linkedin OR twitter'
-                search_text = serper_search(q)
+                search_text = serper_search_rich(q)
             resp = client.responses.parse(
                 model=a.model,
                 input=[{"role": "user",
