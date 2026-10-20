@@ -376,6 +376,8 @@ def main():
         loc = out.location or Location()
         loc_text = ", ".join(x for x in (loc.city, loc.country) if x) or None
         gh_raw = ((p.get("github_profile") or {}).get("location") or "").strip() or None
+        if str(ROOT) not in sys.path:
+            sys.path.insert(0, str(ROOT))
         from viewer_api.location_norm import normalize as _norm
         _gd, _gc = _norm(gh_raw)
         _ad, _ac = _norm(loc_text)
