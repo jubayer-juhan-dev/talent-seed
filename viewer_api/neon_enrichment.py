@@ -44,6 +44,31 @@ def fetch(person_id):
             }
             for r in cur.fetchall()
         ]
+        components = []
+        try:
+            cur.execute(
+                """SELECT component_id, usage_level, package_name, evidence_url
+                   FROM library_usage_evidence WHERE talent_id = %s
+                   ORDER BY CASE usage_level WHEN 'ADVANCED_USAGE' THEN 0
+                       WHEN 'CONTRIBUTOR_USAGE' THEN 1
+                       WHEN 'OBSERVED_USAGE' THEN 2 ELSE 3 END,
+                       component_id""",
+                (person_id,),
+            )
+            from enrichment.components import BY_ID as _BY_ID
+            components = [
+                {
+                    "component_id": r[0],
+                    "component_name": (_BY_ID.get(r[0]) or {}).get("name", r[0]),
+                    "usage_level": r[1],
+                    "package_name": r[2],
+                    "proof": r[3],
+                }
+                for r in cur.fetchall()
+            ]
+        except Exception:
+            conn.rollback()
+            components = []
     except Exception:
         return None
     finally:
@@ -60,6 +85,7 @@ def fetch(person_id):
         "location_confidence": float(prof[5]) if prof and prof[5] is not None else None,
         "location": prof[6] if prof else None,
         "evidence": evidence,
+        "components": components,
     }
 
 def lookup_locations(person_ids):

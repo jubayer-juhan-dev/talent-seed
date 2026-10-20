@@ -243,6 +243,19 @@ export interface components {
             /** P1 */
             p1: number;
         };
+        /** ComponentUsage */
+        ComponentUsage: {
+            /** Component Id */
+            component_id: string;
+            /** Component Name */
+            component_name: string;
+            /** Usage Level */
+            usage_level: string;
+            /** Package Name */
+            package_name?: string | null;
+            /** Proof */
+            proof?: string | null;
+        };
         /** Contact */
         Contact: {
             /** Value */
@@ -481,6 +494,8 @@ export interface components {
             evidence_status?: string | null;
             /** Confidence */
             confidence?: number | null;
+            /** Usage Level */
+            usage_level?: string | null;
         };
         /** MatchRow */
         MatchRow: {
@@ -492,6 +507,11 @@ export interface components {
             github_login?: string | null;
             /** Score */
             score: number;
+            /**
+             * Contributor Concepts
+             * @default 0
+             */
+            contributor_concepts: number;
             /**
              * Breakdown
              * @default []
@@ -738,6 +758,11 @@ export interface components {
              * @default []
              */
             evidence: components["schemas"]["EnrichmentEvidence"][];
+            /**
+             * Components
+             * @default []
+             */
+            components: components["schemas"]["ComponentUsage"][];
         };
         /**
          * PersonRow

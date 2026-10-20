@@ -69,6 +69,11 @@ export function JobDetailPage({ jobId }: { jobId: string }) {
                     <span className="block h-full bg-primary" style={{ width: `${Math.round(m.score * 100)}%` }} />
                   </span>
                   <b>{Math.round(m.score * 100)}%</b>
+                  {m.contributor_concepts > 0 && (
+                    <span className="rounded bg-emerald-500/15 px-1.5 py-0.5 text-[11px] font-medium text-emerald-600">
+                      Contributor ×{m.contributor_concepts}
+                    </span>
+                  )}
                 </span>
               </div>
               <div className="flex flex-wrap gap-1.5">
@@ -78,7 +83,7 @@ export function JobDetailPage({ jobId }: { jobId: string }) {
                     className="inline-flex items-center gap-1"
                     title={
                       b.evidence_status
-                        ? `${b.evidence_status}${b.confidence ? ` (${Math.round(b.confidence * 100)}%)` : ""}`
+                        ? `${b.evidence_status}${b.usage_level ? ` · ${b.usage_level.replace("_USAGE", "")}` : ""}${b.confidence ? ` (${Math.round(b.confidence * 100)}%)` : ""}`
                         : "no evidence"
                     }
                   >

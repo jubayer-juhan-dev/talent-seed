@@ -97,32 +97,42 @@ def match(job_id, pool="ai", limit=50):
                FROM talent_evidence
                WHERE talent_id = ANY(%s) AND concept_id = ANY(%s)""",
             (pool_ids, concept_ids))
-        best = {}  # (talent, concept) -> (coverage, status, confidence)
+        LEVEL_RANK = {"CONTRIBUTOR_USAGE": 3, "ADVANCED_USAGE": 4,
+                      "OBSERVED_USAGE": 2, "DECLARED": 1, "DECLARED_USAGE": 1}
+        best = {}  # (talent, concept) -> (coverage, status, confidence, usage_level)
         for tid, cid, status, usage, conf in cur.fetchall():
             conf = float(conf) if conf is not None else None
             cov = _coverage(status, usage, conf)
             key = (tid, cid)
-            if key not in best or cov > best[key][0]:
-                best[key] = (cov, status, conf)
+            cur_rank = LEVEL_RANK.get(usage or "", 0)
+            if (key not in best or cov > best[key][0]
+                    or (cov == best[key][0] and cur_rank > LEVEL_RANK.get(best[key][3] or "", 0))):
+                best[key] = (cov, status, conf, usage)
         denom = sum(REQ_WEIGHT[r[2]] for r in reqs)
         results = []
         for tid in pool_ids:
             breakdown = []
             total = 0.0
+            contrib = 0
             for cid, cname, reqtype in reqs:
-                cov, status, conf = best.get((tid, cid), (0.0, None, None))
+                cov, status, conf, usage = best.get((tid, cid), (0.0, None, None, None))
                 total += REQ_WEIGHT[reqtype] * cov
+                if usage in ("CONTRIBUTOR_USAGE", "ADVANCED_USAGE") and cov >= 0.8:
+                    contrib += 1
                 breakdown.append({
                     "concept_id": cid, "concept_name": cname, "requirement": reqtype,
                     "coverage": round(cov, 2),
                     "state": ("covered" if cov >= 0.8 else
                               "partial" if cov > 0 else "missing"),
-                    "evidence_status": status, "confidence": conf})
+                    "evidence_status": status, "confidence": conf,
+                    "usage_level": usage})
             score = total / denom if denom else 0.0
             if score > 0:
                 results.append({"talent_id": tid, "score": round(score, 3),
+                                "contributor_concepts": contrib,
                                 "breakdown": breakdown})
-        results.sort(key=lambda r: -r["score"])
+        # contributor-backed coverage wins ties (boost is display-invisible)
+        results.sort(key=lambda r: (-r["score"], -r["contributor_concepts"]))
         return {"total": len(results), "pool": len(pool_ids),
                 "items": results[:limit]}
     finally:

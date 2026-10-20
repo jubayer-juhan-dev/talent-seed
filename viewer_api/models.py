@@ -230,6 +230,14 @@ class EnrichmentEvidence(BaseModel):
     note: str | None = None
 
 
+class ComponentUsage(BaseModel):
+    component_id: str
+    component_name: str
+    usage_level: str
+    package_name: str | None = None
+    proof: str | None = None
+
+
 class PersonEnrichment(BaseModel):
     enriched: bool
     summary: str | None = None
@@ -240,6 +248,7 @@ class PersonEnrichment(BaseModel):
     location: str | None = None
     location_confidence: float | None = None
     evidence: list[EnrichmentEvidence] = []
+    components: list[ComponentUsage] = []
 
 
 class GithubProfile(BaseModel):
@@ -316,6 +325,7 @@ class MatchConcept(BaseModel):
     state: str
     evidence_status: str | None = None
     confidence: float | None = None
+    usage_level: str | None = None
 
 
 class MatchRow(BaseModel):
@@ -323,6 +333,7 @@ class MatchRow(BaseModel):
     name: str | None = None
     github_login: str | None = None
     score: float
+    contributor_concepts: int = 0
     breakdown: list[MatchConcept] = []
 
 

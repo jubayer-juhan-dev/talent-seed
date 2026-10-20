@@ -1145,6 +1145,51 @@
         ],
         "title": "ChainCount"
       },
+      "ComponentUsage": {
+        "properties": {
+          "component_id": {
+            "type": "string",
+            "title": "Component Id"
+          },
+          "component_name": {
+            "type": "string",
+            "title": "Component Name"
+          },
+          "usage_level": {
+            "type": "string",
+            "title": "Usage Level"
+          },
+          "package_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Package Name"
+          },
+          "proof": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Proof"
+          }
+        },
+        "type": "object",
+        "required": [
+          "component_id",
+          "component_name",
+          "usage_level"
+        ],
+        "title": "ComponentUsage"
+      },
       "Contact": {
         "properties": {
           "value": {
@@ -1906,6 +1951,17 @@
               }
             ],
             "title": "Confidence"
+          },
+          "usage_level": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Usage Level"
           }
         },
         "type": "object",
@@ -1949,6 +2005,11 @@
           "score": {
             "type": "number",
             "title": "Score"
+          },
+          "contributor_concepts": {
+            "type": "integer",
+            "title": "Contributor Concepts",
+            "default": 0
           },
           "breakdown": {
             "items": {
@@ -3018,6 +3079,14 @@
             },
             "type": "array",
             "title": "Evidence",
+            "default": []
+          },
+          "components": {
+            "items": {
+              "$ref": "#/components/schemas/ComponentUsage"
+            },
+            "type": "array",
+            "title": "Components",
             "default": []
           }
         },
