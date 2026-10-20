@@ -92,9 +92,8 @@ def scan_repo(clone: Path) -> dict:
 
 
 def ensure_clone(full_name: str, cache: sqlite3.Connection) -> Path | None:
-    row = cache.execute("SELECT 1 FROM scanned WHERE repo = ?", (full_name,)).fetchone()
     dest = CLONES / full_name.replace("/", "__")
-    if row and dest.exists():
+    if dest.exists():
         return dest
     if not dest.exists():
         url = f"https://github.com/{full_name}.git"
@@ -110,6 +109,7 @@ def ensure_clone(full_name: str, cache: sqlite3.Connection) -> Path | None:
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--limit", type=int, default=200)
+    ap.add_argument("--offset", type=int, default=0)
     ap.add_argument("--own-repos", type=int, default=3)
     a = ap.parse_args()
 
@@ -133,7 +133,7 @@ def main():
         """SELECT person_id, github_login, commit_count FROM talent_seed
            WHERE github_login IS NOT NULL AND github_login NOT LIKE '%[bot]'
            ORDER BY commit_count DESC""").fetchall()
-        if t[0] in cohort][: a.limit]
+        if t[0] in cohort][a.offset: a.offset + a.limit]
     print(f"pilot: {len(talents)} talents")
 
     s1 = sqlite3.connect(ROOT / "data" / "tier1_github.sqlite")
@@ -177,6 +177,8 @@ def main():
                 if dest is None:
                     continue
                 scan = scan_repo(dest)
+                import shutil
+                shutil.rmtree(dest, ignore_errors=True)
                 cache.execute("INSERT OR REPLACE INTO repo_scan VALUES (?, ?)",
                               (full, json.dumps(scan)))
                 cache.execute("INSERT OR REPLACE INTO scanned VALUES (?, 'ok')", (full,))
