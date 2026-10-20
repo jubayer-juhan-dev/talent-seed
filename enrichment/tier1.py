@@ -1,0 +1,281 @@
+"""Tier-1 classifier: public GitHub profile + repos -> ontology-grounded talent evidence.
+
+Ported from the ProspectMind bundle's tier1_harvester.py (Skills Graph v0.4 discipline):
+
+    Talent -> Contribution -> Component -> Evidence -> Concept
+    status: FACT | INFERENCE | UNKNOWN
+    usage:  DECLARED | OBSERVED_USAGE | CONTRIBUTOR_USAGE | ADVANCED_USAGE
+
+The maps and rules are unchanged from the bundle. Differences:
+- input is a Talent Seed row (talent_seed column names) and output is keyed by person_id;
+- forks are skipped: a fork's language/topics are someone else's work, not evidence;
+- a GitHub account that no longer exists gives UNKNOWNs only.
+"""
+
+from collections import Counter
+from datetime import datetime, timezone
+from pathlib import Path
+
+SEED = Path(__file__).resolve().parents[1] / "ontology" / "ontology_seed.yaml"
+
+# Topic / language -> ontology concept map.
+# Explicit and reviewable on purpose: every row is a classification decision.
+# (concept_id, usage_level, note)
+TOPIC_MAP = {
+    # --- skills ---
+    "solidity": [("PM.SKILL.0002", "OBSERVED_USAGE", "topic on contract repos")],
+    "smart-contract": [("PM.SKILL.0009", "OBSERVED_USAGE", "topic")],
+    "smart-contracts": [("PM.SKILL.0009", "OBSERVED_USAGE", "topic")],
+    "typescript": [("PM.SKILL.0001", "OBSERVED_USAGE", "topic")],
+    "ts": [("PM.SKILL.0001", "OBSERVED_USAGE", "topic")],
+    "rust": [("PM.SKILL.0003", "OBSERVED_USAGE", "topic")],
+    "go": [("PM.SKILL.0004", "OBSERVED_USAGE", "topic")],
+    "golang": [("PM.SKILL.0004", "OBSERVED_USAGE", "topic")],
+    "python": [("PM.SKILL.0005", "OBSERVED_USAGE", "topic")],
+    # --- tools ---
+    "hardhat": [("PM.TOOL.0003", "OBSERVED_USAGE", "topic")],
+    "foundry": [("PM.TOOL.0002", "OBSERVED_USAGE", "topic")],
+    "forge": [("PM.TOOL.0002", "OBSERVED_USAGE", "topic")],
+    "nextjs": [("PM.TOOL.0001", "OBSERVED_USAGE", "Next.js implies React")],
+    "reactjs": [("PM.TOOL.0001", "OBSERVED_USAGE", "topic")],
+    "react": [("PM.TOOL.0001", "OBSERVED_USAGE", "topic")],
+    # --- supporting web3 tooling -> smart-contract development evidence ---
+    "ethersjs": [("PM.SKILL.0009", "OBSERVED_USAGE", "contract-interaction lib")],
+    "etherjs": [("PM.SKILL.0009", "OBSERVED_USAGE", "contract-interaction lib")],
+    "web3modal": [("PM.SKILL.0009", "OBSERVED_USAGE", "dapp wallet tooling")],
+    "metamask": [("PM.SKILL.0009", "OBSERVED_USAGE", "dapp wallet tooling")],
+    "alchemy": [("PM.SKILL.0009", "OBSERVED_USAGE", "node infra tooling")],
+    "chainlink": [("PM.SKILL.0009", "OBSERVED_USAGE", "oracle integration")],
+    "erc721": [("PM.SKILL.0009", "OBSERVED_USAGE", "token-standard work")],
+    "ipfs": [("PM.SKILL.0009", "OBSERVED_USAGE", "decentralized storage")],
+    "remix": [("PM.SKILL.0009", "OBSERVED_USAGE", "contract IDE")],
+    # --- dapps are web applications ---
+    "dapp": [("PM.SYS.0001", "OBSERVED_USAGE", "dapp topic -> web application")],
+    "web3": [("PM.SYS.0001", "OBSERVED_USAGE", "web3 frontend work")],
+}
+
+LANGUAGE_MAP = {  # repo primary language -> (concept, note)
+    "Solidity": ("PM.SKILL.0002", "dominant repo language"),
+    "TypeScript": ("PM.SKILL.0001", "repo language"),
+    "Rust": ("PM.SKILL.0003", "repo language"),
+    "Go": ("PM.SKILL.0004", "repo language"),
+    "Python": ("PM.SKILL.0005", "repo language"),
+}
+
+UNKNOWNS = ["Role seniority (beyond proxy)", "Availability / open-to-work",
+            "Rate expectations", "Smart-contract audit authorship"]
+
+
+def load_concepts():
+    """{concept_id: {id, type, name}} from the seed YAML (line parser, no yaml dependency)."""
+    concepts = {}
+    cur = None
+    for line in SEED.read_text().splitlines():
+        s = line.strip()
+        if s.startswith("- id: PM."):
+            cur = {"id": s.split(":", 1)[1].strip()}
+            concepts[cur["id"]] = cur
+        elif cur is not None and s.startswith("type:"):
+            cur["type"] = s.split(":", 1)[1].strip()
+        elif cur is not None and s.startswith("name:"):
+            cur["name"] = s.split(":", 1)[1].strip().strip('"')
+    return concepts
+
+
+def ev(concept_id, concepts, status, usage, confidence, source, note, contribution=""):
+    c = concepts.get(concept_id, {})
+    return {"concept_id": concept_id, "concept": c.get("name", concept_id), "type": c.get("type", "?"),
+            "status": status, "usage": usage, "confidence": confidence, "source": source,
+            "contribution": contribution, "note": note}
+
+
+def unknown(concept, note):
+    return {"concept_id": None, "concept": concept, "type": "?", "status": "UNKNOWN", "usage": "UNKNOWN",
+            "confidence": 0.0, "source": "none", "contribution": "", "note": note}
+
+
+def before(row):
+    return {"commits": row["commit_count"], "repos": row["repository_count"],
+            "active_days": row["active_days_in_window"], "ecosystems": row["ecosystem_count"],
+            "top_ecosystems": list(row["top_level_ecosystems"] or [])[:5], "country": row["country"]}
+
+
+def classify(row, user, repos, concepts, now=None):
+    """row: Talent Seed row (dict); user/repos: GitHub API bodies, user=None when the account is gone."""
+    now = now or datetime.now(timezone.utc)
+    talent = {"person_id": row["person_id"], "name": row["display_name"],
+              "github": (user or {}).get("login") or row["github_login"], "cohort": row["priority_cohort"]}
+    if user is None:
+        return {"talent": talent, "talent_seed_before": before(row), "github_profile": None,
+                "top_languages": {}, "top_topics": {}, "forks_skipped": 0,
+                "evidence": [unknown(u, "GitHub account not found (deleted or renamed away)") for u in UNKNOWNS],
+                "ontology_candidates": {"unmapped_topics": {}, "unmapped_languages": {}}}
+
+    evidence = []
+    unmapped_topics = Counter()
+    unmapped_langs = Counter()
+    own = [r for r in repos if not r.get("fork")]
+
+    topic_hits = Counter()
+    lang_hits = Counter()
+    for r in own:
+        if r.get("language"):
+            lang_hits[r["language"]] += 1
+        for t in r.get("topics") or []:
+            topic_hits[t.lower()] += 1
+
+    seen = set()
+
+    def plural(n, word="repo"):
+        return f"{n} {word}" if n == 1 else f"{n} {word}s"
+
+    def add_fact(cid, usage, conf, source, note, contribution=""):
+        key = (cid, usage)
+        if key in seen:
+            return
+        seen.add(key)
+        evidence.append(ev(cid, concepts, "FACT", usage, conf, source, note, contribution))
+
+    # --- FACTs from topics ---
+    for topic, n in topic_hits.items():
+        if topic in TOPIC_MAP:
+            for cid, usage, note in TOPIC_MAP[topic]:
+                add_fact(cid, usage, 0.9, f"github:topics ({plural(n)})",
+                         f"topic '{topic}' on {plural(n)} — {note}",
+                         contribution=f"{plural(n)} tagged '{topic}'")
+        else:
+            unmapped_topics[topic] = n
+
+    # --- FACTs from languages ---
+    total = sum(lang_hits.values()) or 1
+    for lang, n in lang_hits.items():
+        if lang in LANGUAGE_MAP:
+            cid, note = LANGUAGE_MAP[lang]
+            usage = "CONTRIBUTOR_USAGE" if n >= 10 else "OBSERVED_USAGE"
+            add_fact(cid, usage, 0.85, f"github:languages ({plural(n)} of {total} repos)",
+                     f"{lang} primary language in {plural(n)} — {note}")
+        else:
+            unmapped_langs[lang] = n
+
+    # --- FACTs from profile ---
+    if user.get("blog"):
+        evidence.append(ev("PM.SYS.0001", concepts, "FACT", "DECLARED", 0.7,
+                           "github:profile.blog", f"personal site: {user['blog']}",
+                           contribution="maintains a public portfolio site"))
+    if user.get("twitter_username"):
+        evidence.append({"concept_id": None, "concept": "Outreach channel (X)", "type": "IDENTITY",
+                         "status": "FACT", "usage": "DECLARED", "confidence": 1.0,
+                         "source": "github:profile.twitter_username", "contribution": "public X handle",
+                         "note": f"@{user['twitter_username']} — feeds Identity Resolution"})
+    # LinkedIn: from GitHub social accounts, else a website field pointing at linkedin.com
+    linkedin = next((a["url"] for a in user.get("social_accounts") or [] if a.get("provider") == "linkedin"), None)
+    li_source = "github:profile.social_accounts"
+    if not linkedin and "linkedin.com/" in (user.get("blog") or "").lower():
+        linkedin, li_source = user["blog"], "github:profile.blog"
+    if linkedin:
+        evidence.append({"concept_id": None, "concept": "Outreach channel (LinkedIn)", "type": "IDENTITY",
+                         "status": "FACT", "usage": "DECLARED", "confidence": 1.0,
+                         "source": li_source, "contribution": "public LinkedIn link",
+                         "note": f"{linkedin} — feeds Identity Resolution"})
+    if user.get("location"):
+        evidence.append({"concept_id": None, "concept": "Location cross-check", "type": "IDENTITY",
+                         "status": "FACT", "usage": "DECLARED", "confidence": 0.9,
+                         "source": "github:profile.location", "contribution": "self-reported location",
+                         "note": f"'{user['location']}' vs Talent Seed country '{row['country'] or '?'}'"})
+
+    # --- INFERENCEs ---
+    solidity_repos = lang_hits.get("Solidity", 0)
+    has_tooling = any(t in topic_hits for t in ("hardhat", "foundry", "forge"))
+    if solidity_repos >= 5 and has_tooling:
+        evidence.append(ev("PM.ROLE.0005", concepts, "INFERENCE", "CONTRIBUTOR_USAGE",
+                           0.9, "derived:languages+topics",
+                           f"{solidity_repos} Solidity repos + contract tooling "
+                           f"({', '.join(t for t in ('hardhat', 'foundry', 'forge') if t in topic_hits)})",
+                           contribution="sustained contract-code output with professional tooling"))
+    frontend_sig = sum(topic_hits.get(t, 0) for t in ("nextjs", "reactjs", "react"))
+    if frontend_sig >= 5 and (solidity_repos >= 3 or lang_hits.get("TypeScript", 0) >= 3):
+        evidence.append(ev("PM.ROLE.0003", concepts, "INFERENCE", "CONTRIBUTOR_USAGE",
+                           0.7, "derived:topics+languages",
+                           f"frontend ({frontend_sig} react/nextjs topics) + backend/contract code",
+                           contribution="ships across UI and contract layers"))
+    elif frontend_sig >= 5:
+        evidence.append(ev("PM.ROLE.0001", concepts, "INFERENCE", "OBSERVED_USAGE",
+                           0.6, "derived:topics",
+                           f"{frontend_sig} react/nextjs topic hits",
+                           contribution="repeated frontend-framework usage"))
+    if "openzeppelin" in topic_hits:
+        evidence.append(ev("PM.KNOW.0001", concepts, "INFERENCE", "OBSERVED_USAGE",
+                           0.55, "derived:topics",
+                           "builds on audited security libraries (using, not authoring — "
+                           "audit capability itself stays UNKNOWN)",
+                           contribution=f"{topic_hits['openzeppelin']} repos use OpenZeppelin"))
+    # seniority proxy — explicitly labeled as proxy
+    try:
+        age_y = (now - datetime.fromisoformat(user.get("created_at", ""))).days / 365.25
+    except ValueError:
+        age_y = 0
+    commits = int(row["commit_count"] or 0)
+    if age_y >= 4 and (user.get("followers") or 0) >= 10 and commits >= 200:
+        evidence.append({"concept_id": None, "concept": "Seniority band: senior", "type": "INFERENCE",
+                         "status": "INFERENCE", "usage": "OBSERVED_USAGE", "confidence": 0.6,
+                         "source": "derived:profile+talent-seed",
+                         "contribution": f"{age_y:.1f}y account, {user.get('followers')} followers, {commits} commits",
+                         "note": "proxy only — real seniority needs PR/ownership evidence"})
+
+    # --- explicit UNKNOWNs (honest, not guessed) ---
+    for u in UNKNOWNS:
+        evidence.append(unknown(u, "no public signal — talent-supplied or Benoît-side data needed"))
+
+    return {
+        "talent": talent,
+        "talent_seed_before": before(row),
+        "github_profile": {
+            "followers": user.get("followers"), "account_since": (user.get("created_at") or "")[:10],
+            "location": user.get("location"), "blog": user.get("blog"),
+            "twitter": user.get("twitter_username"), "public_repos": user.get("public_repos"),
+            "repos_analyzed": len(own),
+        },
+        "forks_skipped": len(repos) - len(own),
+        "top_languages": dict(lang_hits.most_common(8)),
+        "top_topics": dict(topic_hits.most_common(15)),
+        "evidence": evidence,
+        "ontology_candidates": {
+            "unmapped_topics": dict(unmapped_topics.most_common(10)),
+            "unmapped_languages": dict(unmapped_langs.most_common(5)),
+        },
+    }
+
+
+def demo_md(results, sample):
+    """Cohort summary + before/after tables for `sample` (list of results)."""
+    n = len(results)
+    status = Counter(e["status"] for r in results for e in r["evidence"])
+    with_fact = sum(any(e["status"] == "FACT" and e["concept_id"] for e in r["evidence"]) for r in results)
+    gone = sum(r["github_profile"] is None for r in results)
+    concepts = Counter(e["concept"] for r in results for e in r["evidence"] if e["status"] != "UNKNOWN" and e["concept_id"])
+    growth = Counter()
+    for r in results:
+        growth.update(r["ontology_candidates"]["unmapped_topics"].keys())
+    L = ["# Tier-1 enrichment — P1 cohort before → after", "",
+         f"_Generated {datetime.now(timezone.utc):%Y-%m-%d %H:%M} UTC · public GitHub data only · forks skipped_", "",
+         "## Cohort summary", "",
+         f"- People: **{n}** · with at least one concept FACT: **{with_fact}** ({with_fact / max(n, 1):.0%})"
+         f" · GitHub account not found: **{gone}**",
+         f"- Evidence rows: FACT {status['FACT']} · INFERENCE {status['INFERENCE']} · UNKNOWN {status['UNKNOWN']}", "",
+         "| Concept (FACT or INFERENCE) | People |", "|---|---|"]
+    L += [f"| {c} | {k} |" for c, k in concepts.most_common(20)]
+    L += ["", "**Top ontology growth candidates** (unmapped topics, people with each — for human review, "
+          "not auto-added): " + ", ".join(f"{t} ({k})" for t, k in growth.most_common(25)), ""]
+    for r in sample:
+        t, b = r["talent"], r["talent_seed_before"]
+        L += [f"## {t['name']} ([@{t['github']}](https://github.com/{t['github']})) — {t['cohort']} · `{t['person_id']}`",
+              "",
+              f"**BEFORE (Talent Seed row):** {b['commits']} commits · {b['repos']} repos · "
+              f"{b['active_days']} active days · {b['ecosystems']} ecosystems ({', '.join(b['top_ecosystems'])})",
+              "", "**AFTER (classified talent evidence):**", "",
+              "| Concept | Type | Status | Usage | Conf | Evidence |", "|---|---|---|---|---|---|"]
+        for e in r["evidence"]:
+            L.append(f"| {e['concept']} | {e['type']} | **{e['status']}** | {e['usage']} | "
+                     f"{e['confidence']:.2f} | {e['note']} |")
+        L += ["", f"_Top languages: {', '.join(f'{k}×{v}' for k, v in r['top_languages'].items()) or 'none'}_", ""]
+    return "\n".join(L)

@@ -1,0 +1,447 @@
+# ============================================================================
+# ProspectMind — Talent Ontology seed, v0.1
+# Grown from: "ProspectMind Talent — Skills Graph" v0.4, §7.1 (family map)
+# Load order: families → concepts (parents before children) → relations.
+# Conventions:
+#   - IDs are stable forever: PM.<TYPE>.<nnnn>. Never reuse a retired ID.
+#   - status REVIEW_REQUIRED = needs evidence review before use in matching.
+#   - evidence_rules follow v0.4 §7: DECLARED / OBSERVED_USAGE /
+#     CONTRIBUTOR_USAGE / ADVANCED_USAGE. These describe evidence, not mastery.
+#   - Web3 is detailed (per v0.4 §7.2) but one family among 25 — the seed is
+#     deliberately not Web3-shaped.
+# ============================================================================
+meta:
+  version: "0.1"
+  spec: "ProspectMind Talent — Skills Graph v0.4"
+  created: "2026-10-18"
+  notes: "Starter inventory. New concepts enter as REVIEW_REQUIRED with observed
+    label, proposed type, occurrences and evidence (v0.4 §13). Do not create a
+    concept per package/function encountered."
+
+families:
+  - { id: FAM.FRONTEND,   name: "Front-end web",                description: "Components, state, routing, design systems, accessibility, rendering, browser performance." }
+  - { id: FAM.BACKEND,    name: "Backend / services",           description: "APIs, business logic, auth, transactions, caches, queues, concurrency, integrations." }
+  - { id: FAM.FULLSTACK,  name: "Full-stack",                   description: "End-to-end workflows, frontend/API contracts, data consistency." }
+  - { id: FAM.MOBILE,     name: "Mobile",                       description: "Native and cross-platform, lifecycle, offline, sync, performance." }
+  - { id: FAM.DESKTOP,    name: "Desktop / client applications", description: "Native interfaces, OS integration, packaging, updates, local storage." }
+  - { id: FAM.DEVOPS,     name: "DevOps / release engineering", description: "Build, CI/CD, delivery, environments, configuration, automation." }
+  - { id: FAM.CLOUD,      name: "Cloud / platform engineering",  description: "IaC, orchestration, networking, identity, internal platforms, cost." }
+  - { id: FAM.SRE,        name: "SRE / production engineering",  description: "Observability, SLI/SLO, availability, incidents, capacity, resilience." }
+  - { id: FAM.APPSEC,     name: "Application / product security", description: "Threat modeling, access controls, secure coding, vulns, supply chain." }
+  - { id: FAM.INFRASEC,   name: "Cloud / systems security",      description: "IAM, secrets, hardening, segmentation, detection and response." }
+  - { id: FAM.ARCH,       name: "Software / distributed architecture", description: "Modularity, service boundaries, events, consistency, migrations, trade-offs." }
+  - { id: FAM.SYSTEMS,    name: "Systems / low-level engineering", description: "Memory, concurrency, networking, OS, runtimes, compilers, storage." }
+  - { id: FAM.DATA,       name: "Databases / storage engineering", description: "Modeling, SQL, indexing, transactions, replication, migrations." }
+  - { id: FAM.DATAENG,    name: "Data engineering",              description: "Ingestion, ETL/ELT, batch/streaming, orchestration, quality, lineage." }
+  - { id: FAM.BI,         name: "Analytics engineering / BI",    description: "Analytical models, metrics, semantic layers, warehouses, visualization." }
+  - { id: FAM.DATASCI,    name: "Data science / experimentation", description: "Statistics, exploration, causality, experimentation, forecasting." }
+  - { id: FAM.MLENG,      name: "Machine learning engineering",  description: "Features, training, validation, optimization, inference." }
+  - { id: FAM.MLRES,      name: "ML research / deep learning",   description: "Architectures, objectives, NLP, vision, recommendations, time series." }
+  - { id: FAM.AIAPP,      name: "AI application engineering",    description: "Model integration, retrieval/RAG, agents, tools, evaluations, safeguards." }
+  - { id: FAM.MLOPS,      name: "MLOps / ML platform",           description: "Data/model versioning, serving, monitoring, drift, deployment." }
+  - { id: FAM.QA,         name: "QA / test engineering",         description: "Unit, integration, contract, e2e, property, fuzzing, performance tests." }
+  - { id: FAM.PERF,       name: "Performance / HPC",             description: "Profiling, latency, throughput, parallelism, vectorization, GPU." }
+  - { id: FAM.EMBEDDED,   name: "Embedded / IoT / robotics",     description: "Firmware, real-time systems, sensors, control, hardware integration." }
+  - { id: FAM.GAMES,      name: "Games / 3D / simulation",       description: "Engines, rendering, shaders, physics, gameplay, real-time networking." }
+  - { id: FAM.WEB3,       name: "Web3 / blockchain",             description: "Smart contracts, protocols, consensus, cryptography/ZK, indexing, wallets, security." }
+
+concepts:
+  # ---------------- Roles ----------------
+  - id: PM.ROLE.0001
+    type: ROLE
+    name: "Frontend Engineer"
+    definition: "Builds user-facing web interfaces: components, state, routing, and client performance."
+    families: [FAM.FRONTEND]
+    aliases: ["front-end developer", "UI engineer"]
+    evidence_rules:
+      CONTRIBUTOR_USAGE: "Attributed substantial PRs touching component code, state logic, or rendering paths."
+      ADVANCED_USAGE: "Owns a design system, or documented rendering/accessibility deep work."
+
+  - id: PM.ROLE.0002
+    type: ROLE
+    name: "Backend Engineer"
+    definition: "Builds server-side systems: APIs, business logic, persistence, and service integrations."
+    families: [FAM.BACKEND]
+    aliases: ["server-side developer", "API engineer"]
+    evidence_rules:
+      CONTRIBUTOR_USAGE: "Attributed substantial PRs implementing endpoints, transactions, or service logic."
+      ADVANCED_USAGE: "Designs service boundaries, consistency models, or migration strategies."
+
+  - id: PM.ROLE.0003
+    type: ROLE
+    name: "Full-stack Engineer"
+    definition: "Ships features across interface, service, and persistence layers."
+    families: [FAM.FULLSTACK, FAM.FRONTEND, FAM.BACKEND]
+    evidence_rules:
+      CONTRIBUTOR_USAGE: "Attributable work traceable across at least two of: UI, API, persistence."
+
+  - id: PM.ROLE.0004
+    type: ROLE
+    name: "Protocol Engineer"
+    definition: "Designs and implements blockchain protocol logic: consensus, networking, state transition."
+    families: [FAM.WEB3, FAM.SYSTEMS]
+    evidence_rules:
+      CONTRIBUTOR_USAGE: "Attributed commits to consensus, p2p, or state-transition code in a chain client."
+      ADVANCED_USAGE: "Authors protocol specs or leads client releases."
+
+  - id: PM.ROLE.0005
+    type: ROLE
+    name: "Smart Contract Developer"
+    definition: "Writes, tests, and deploys on-chain programs, primarily EVM or SVM."
+    parent: null
+    families: [FAM.WEB3]
+    aliases: ["solidity developer", "contract dev"]
+    evidence_rules:
+      CONTRIBUTOR_USAGE: "Attributed substantial contract code with tests."
+      ADVANCED_USAGE: "Deployed audited protocols or novel contract patterns."
+
+  - id: PM.ROLE.0006
+    type: ROLE
+    name: "Security Researcher"
+    definition: "Finds and explains vulnerabilities; writes analyses, audits, or exploits."
+    families: [FAM.APPSEC, FAM.INFRASEC, FAM.WEB3]
+    aliases: ["security auditor", "appsec engineer"]
+    evidence_rules:
+      CONTRIBUTOR_USAGE: "Published audits, CVEs, or explained security fixes."
+      ADVANCED_USAGE: "Contest placements, novel vulnerability classes."
+
+  - id: PM.ROLE.0007
+    type: ROLE
+    name: "DevOps Engineer"
+    definition: "Owns build, delivery, and environments: CI/CD, automation, release strategy."
+    families: [FAM.DEVOPS, FAM.CLOUD]
+    evidence_rules:
+      CONTRIBUTOR_USAGE: "Designed or fixed pipelines, IaC modules, or release automation."
+      ADVANCED_USAGE: "Multi-env delivery strategy with measured reliability outcomes."
+
+  - id: PM.ROLE.0008
+    type: ROLE
+    name: "Data Engineer"
+    definition: "Builds ingestion and transformation pipelines: batch/streaming, orchestration, quality."
+    families: [FAM.DATAENG, FAM.DATA]
+    evidence_rules:
+      CONTRIBUTOR_USAGE: "Attributed pipeline code with orchestration and quality controls."
+      ADVANCED_USAGE: "Exactly-once streaming or lineage-tracked platforms at scale."
+
+  - id: PM.ROLE.0009
+    type: ROLE
+    name: "ML Engineer"
+    definition: "Builds training and inference systems: features, validation, optimization, serving."
+    families: [FAM.MLENG, FAM.MLOPS]
+    evidence_rules:
+      CONTRIBUTOR_USAGE: "Attributed training pipelines with justified splits and metrics."
+      ADVANCED_USAGE: "Production inference systems with monitoring and rollback."
+
+  # ---------------- Skills ----------------
+  - id: PM.SKILL.0001
+    type: SKILL
+    name: "TypeScript"
+    definition: "Typed superset of JavaScript for application development."
+    families: [FAM.FRONTEND, FAM.BACKEND]
+    aliases: ["TS"]
+    evidence_rules:
+      DECLARED: "tsconfig.json or .ts files in repo."
+      OBSERVED_USAGE: "TypeScript imports/calls in an analyzed component."
+      CONTRIBUTOR_USAGE: "Attributed substantial .ts/.tsx modifications."
+      ADVANCED_USAGE: "Library authorship, complex type-level programming."
+
+  - id: PM.SKILL.0002
+    type: SKILL
+    name: "Solidity"
+    definition: "Contract language for EVM-compatible chains."
+    parent: PM.SKILL.0009
+    families: [FAM.WEB3]
+    aliases: ["sol"]
+    evidence_rules:
+      DECLARED: "foundry.toml/hardhat config or .sol files."
+      OBSERVED_USAGE: "Solidity imports/calls in an analyzed component."
+      CONTRIBUTOR_USAGE: "Attributed substantial .sol modifications with tests."
+      ADVANCED_USAGE: "Gas-optimized or upgradeable-proxy patterns, documented."
+
+  - id: PM.SKILL.0003
+    type: SKILL
+    name: "Rust"
+    definition: "Systems language with ownership-based memory safety."
+    families: [FAM.SYSTEMS, FAM.WEB3, FAM.PERF]
+    evidence_rules:
+      CONTRIBUTOR_USAGE: "Attributed substantial Rust modifications (not just Cargo.toml)."
+      ADVANCED_USAGE: "Unsafe code with documented invariants, or perf-critical paths."
+
+  - id: PM.SKILL.0004
+    type: SKILL
+    name: "Go"
+    definition: "Compiled language for services, tooling, and infrastructure."
+    families: [FAM.BACKEND, FAM.CLOUD, FAM.DEVOPS]
+    aliases: ["golang"]
+    evidence_rules:
+      CONTRIBUTOR_USAGE: "Attributed substantial Go modifications incl. concurrency."
+
+  - id: PM.SKILL.0005
+    type: SKILL
+    name: "Python"
+    definition: "General-purpose language; dominant in data/ML/scientific stacks."
+    families: [FAM.BACKEND, FAM.DATAENG, FAM.DATASCI, FAM.MLENG]
+    aliases: ["py"]
+    evidence_rules:
+      CONTRIBUTOR_USAGE: "Attributed substantial Python modifications."
+
+  - id: PM.SKILL.0006
+    type: SKILL
+    name: "API Design"
+    definition: "Designing service interfaces: resources, contracts, versioning, errors."
+    families: [FAM.BACKEND, FAM.ARCH]
+    aliases: ["REST design", "interface design"]
+    evidence_rules:
+      CONTRIBUTOR_USAGE: "Attributed OpenAPI specs or endpoint implementations with versioning."
+      ADVANCED_USAGE: "Documented design decisions, breaking-change migrations."
+
+  - id: PM.SKILL.0007
+    type: SKILL
+    name: "Distributed Systems"
+    definition: "Designing systems across failure boundaries: consistency, coordination, resilience."
+    families: [FAM.ARCH, FAM.SYSTEMS, FAM.BACKEND]
+    evidence_rules:
+      CONTRIBUTOR_USAGE: "Attributed work on consensus, replication, or partition handling."
+      ADVANCED_USAGE: "Architecture docs with explicit trade-off analysis."
+
+  - id: PM.SKILL.0008
+    type: SKILL
+    name: "SQL & Data Modeling"
+    definition: "Schema design, querying, indexing, and transaction semantics."
+    families: [FAM.DATA, FAM.BACKEND]
+    aliases: ["SQL"]
+    evidence_rules:
+      CONTRIBUTOR_USAGE: "Attributed migrations, measured query optimizations."
+      ADVANCED_USAGE: "Replication logic, complex transaction design."
+
+  - id: PM.SKILL.0009
+    type: SKILL
+    name: "Smart Contract Development"
+    definition: "Parent skill: writing and testing on-chain programs."
+    families: [FAM.WEB3]
+    evidence_rules:
+      CONTRIBUTOR_USAGE: "Attributed contract code with tests (any chain)."
+
+  - id: PM.SKILL.0010
+    type: SKILL
+    name: "Zero-Knowledge Cryptography"
+    definition: "Designing and implementing ZK circuits and proving systems."
+    parent: null
+    families: [FAM.WEB3]
+    aliases: ["ZK", "zk-SNARKs", "zk-STARKs"]
+    evidence_rules:
+      DECLARED: "circom/noir/arkworks dependencies."
+      OBSERVED_USAGE: "Circuit code in an analyzed component."
+      CONTRIBUTOR_USAGE: "Attributed circuit implementations with tests."
+      ADVANCED_USAGE: "Custom constraint systems or novel protocol work."
+
+  - id: PM.SKILL.0011
+    type: SKILL
+    name: "Consensus Protocols"
+    definition: "Understanding and implementing agreement protocols (BFT, PoS, etc.)."
+    families: [FAM.WEB3, FAM.SYSTEMS]
+    evidence_rules:
+      CONTRIBUTOR_USAGE: "Attributed consensus-module code."
+      ADVANCED_USAGE: "Protocol design docs or new consensus research."
+
+  - id: PM.SKILL.0012
+    type: SKILL
+    name: "CI/CD & Release Automation"
+    definition: "Automating build, test, delivery, and release processes."
+    families: [FAM.DEVOPS]
+    aliases: ["CI/CD"]
+    evidence_rules:
+      CONTRIBUTOR_USAGE: "Attributed pipeline definitions with real delivery outcomes."
+
+  # ---------------- Knowledge domains ----------------
+  - id: PM.KNOW.0001
+    type: KNOWLEDGE
+    name: "Application Security"
+    definition: "Threat modeling, secure coding, vulnerability classes, supply-chain risk."
+    families: [FAM.APPSEC, FAM.WEB3]
+    aliases: ["appsec"]
+    evidence_rules:
+      CONTRIBUTOR_USAGE: "Explained security fixes, threat analyses, regression tests."
+      ADVANCED_USAGE: "Published audits or novel findings."
+
+  - id: PM.KNOW.0002
+    type: KNOWLEDGE
+    name: "Cryptography"
+    definition: "General cryptographic primitives and their correct application."
+    families: [FAM.APPSEC, FAM.WEB3, FAM.INFRASEC]
+    evidence_rules:
+      CONTRIBUTOR_USAGE: "Correct primitive usage in reviewed code; misuse analyses."
+
+  - id: PM.KNOW.0003
+    type: KNOWLEDGE
+    name: "Web Accessibility"
+    definition: "Building interfaces usable by people with disabilities (a11y)."
+    families: [FAM.FRONTEND]
+    aliases: ["a11y"]
+    evidence_rules:
+      CONTRIBUTOR_USAGE: "Accessibility tests, fixes, ARIA work in attributed PRs."
+
+  # ---------------- Capabilities ----------------
+  - id: PM.CAP.0001
+    type: CAPABILITY
+    name: "Build a design system"
+    definition: "Create and maintain a reusable component library with docs and versioning."
+    families: [FAM.FRONTEND]
+    evidence_rules:
+      CONTRIBUTOR_USAGE: "Attributed component-library code with documentation."
+      ADVANCED_USAGE: "Multi-brand theming, accessibility conformance."
+
+  - id: PM.CAP.0002
+    type: CAPABILITY
+    name: "Design an API"
+    definition: "Take an API from requirements to versioned, documented contract."
+    families: [FAM.BACKEND, FAM.ARCH]
+    evidence_rules:
+      CONTRIBUTOR_USAGE: "Attributed API surface with docs and versioning."
+
+  - id: PM.CAP.0003
+    type: CAPABILITY
+    name: "Write and test ZK circuits"
+    definition: "Implement zero-knowledge circuits with constraint testing."
+    families: [FAM.WEB3]
+    evidence_rules:
+      CONTRIBUTOR_USAGE: "Attributed circuit code with passing constraint tests."
+      ADVANCED_USAGE: "Audited circuits or proving-system contributions."
+
+  - id: PM.CAP.0004
+    type: CAPABILITY
+    name: "Conduct a smart contract audit"
+    definition: "Systematically review contract code for vulnerabilities and produce findings."
+    families: [FAM.WEB3, FAM.APPSEC]
+    evidence_rules:
+      CONTRIBUTOR_USAGE: "Published audit report with findings."
+      ADVANCED_USAGE: "High-severity findings or contest placements."
+
+  - id: PM.CAP.0005
+    type: CAPABILITY
+    name: "Build a data pipeline"
+    definition: "Ingest, transform, and deliver data reliably on a schedule or stream."
+    families: [FAM.DATAENG]
+    evidence_rules:
+      CONTRIBUTOR_USAGE: "Attributed pipeline with orchestration and quality checks."
+
+  # ---------------- Tools ----------------
+  - id: PM.TOOL.0001
+    type: TOOL
+    name: "React"
+    definition: "UI library for component-based web interfaces."
+    families: [FAM.FRONTEND]
+    evidence_rules:
+      DECLARED: "react in package.json."
+      OBSERVED_USAGE: "JSX/hooks in an analyzed component."
+      CONTRIBUTOR_USAGE: "Attributed substantial component code."
+      ADVANCED_USAGE: "Library authorship, concurrent-features work."
+
+  - id: PM.TOOL.0002
+    type: TOOL
+    name: "Foundry"
+    definition: "Ethereum development toolkit: forge, cast, anvil."
+    families: [FAM.WEB3]
+    aliases: ["forge"]
+    evidence_rules:
+      DECLARED: "foundry.toml."
+      OBSERVED_USAGE: "forge test/script usage in repo."
+      CONTRIBUTOR_USAGE: "Attributed test suites and deploy scripts."
+      ADVANCED_USAGE: "Fuzzing/invariant testing campaigns."
+
+  - id: PM.TOOL.0003
+    type: TOOL
+    name: "Hardhat"
+    definition: "Ethereum development environment."
+    families: [FAM.WEB3]
+    evidence_rules:
+      DECLARED: "hardhat.config."
+      CONTRIBUTOR_USAGE: "Attributed tasks, plugins, or deploy scripts."
+
+  - id: PM.TOOL.0004
+    type: TOOL
+    name: "Docker"
+    definition: "Container runtime and image tooling."
+    families: [FAM.DEVOPS, FAM.CLOUD]
+    evidence_rules:
+      CONTRIBUTOR_USAGE: "Attributed Dockerfiles with multi-stage/production patterns."
+
+  - id: PM.TOOL.0005
+    type: TOOL
+    name: "Kubernetes"
+    definition: "Container orchestration platform."
+    families: [FAM.CLOUD, FAM.SRE]
+    aliases: ["k8s"]
+    evidence_rules:
+      CONTRIBUTOR_USAGE: "Attributed manifests/operators; not just helm install."
+      ADVANCED_USAGE: "Custom operators or cluster-level policy."
+
+  - id: PM.TOOL.0006
+    type: TOOL
+    name: "PostgreSQL"
+    definition: "Relational database system."
+    families: [FAM.DATA, FAM.BACKEND]
+    aliases: ["postgres", "psql"]
+    evidence_rules:
+      CONTRIBUTOR_USAGE: "Attributed migrations, tuning, replication work."
+
+  - id: PM.TOOL.0007
+    type: TOOL
+    name: "Terraform"
+    definition: "Infrastructure-as-code tool."
+    families: [FAM.CLOUD, FAM.DEVOPS]
+    evidence_rules:
+      CONTRIBUTOR_USAGE: "Attributed modules with tests or policy checks."
+
+  - id: PM.TOOL.0008
+    type: TOOL
+    name: "PyTorch"
+    definition: "Deep learning framework."
+    families: [FAM.MLENG, FAM.MLRES]
+    evidence_rules:
+      DECLARED: "torch in requirements."
+      OBSERVED_USAGE: "Model code in an analyzed component."
+      CONTRIBUTOR_USAGE: "Attributed training loops with evaluation."
+      ADVANCED_USAGE: "Custom ops, distributed training."
+
+  # ---------------- Systems ----------------
+  - id: PM.SYS.0001
+    type: SYSTEM
+    name: "Web application"
+    definition: "Browser-delivered interactive software."
+    families: [FAM.FRONTEND, FAM.BACKEND]
+
+  - id: PM.SYS.0002
+    type: SYSTEM
+    name: "SaaS platform"
+    definition: "Multi-tenant hosted product with billing, auth, and SLAs."
+    families: [FAM.BACKEND, FAM.CLOUD, FAM.SRE]
+
+  - id: PM.SYS.0003
+    type: SYSTEM
+    name: "L1/L2 blockchain network"
+    definition: "Base or scaling blockchain network with consensus and execution."
+    families: [FAM.WEB3, FAM.SYSTEMS]
+
+  - id: PM.SYS.0004
+    type: SYSTEM
+    name: "DeFi protocol"
+    definition: "On-chain financial primitive: lending, AMM, derivatives, etc."
+    families: [FAM.WEB3]
+
+relations:
+  # Capability → tool associations (USES: technical association, not attribution)
+  - { source: PM.CAP.0004, relation: USES, target: PM.TOOL.0002 }
+  - { source: PM.CAP.0004, relation: USES, target: PM.TOOL.0003 }
+  - { source: PM.CAP.0003, relation: USES, target: PM.SKILL.0010 }
+  - { source: PM.CAP.0001, relation: USES, target: PM.TOOL.0001 }
+  # Capability → domain/system context (APPLIES_TO)
+  - { source: PM.CAP.0004, relation: APPLIES_TO, target: PM.SYS.0004 }
+  - { source: PM.CAP.0003, relation: APPLIES_TO, target: PM.KNOW.0002 }
+  - { source: PM.CAP.0001, relation: APPLIES_TO, target: PM.KNOW.0003 }
+  # Neighboring concepts (RELATED_TO, symmetric)
+  - { source: PM.SKILL.0002, relation: RELATED_TO, target: PM.TOOL.0002 }
+  - { source: PM.SKILL.0002, relation: RELATED_TO, target: PM.TOOL.0003 }
+  - { source: PM.SKILL.0010, relation: RELATED_TO, target: PM.KNOW.0002 }
+  - { source: PM.SKILL.0003, relation: RELATED_TO, target: PM.SKILL.0011 }
+  - { source: PM.TOOL.0005, relation: RELATED_TO, target: PM.TOOL.0007 }
