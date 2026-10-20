@@ -118,7 +118,7 @@ def main():
 
     CACHE_DIR.mkdir(parents=True, exist_ok=True)
     CLONES.mkdir(parents=True, exist_ok=True)
-    cache = sqlite3.connect(CACHE_DIR / "cache.sqlite")
+    cache = sqlite3.connect(CACHE_DIR / "cache.sqlite", timeout=180)
     cache.execute("CREATE TABLE IF NOT EXISTS scanned (repo TEXT PRIMARY KEY, result TEXT)")
     cache.execute("CREATE TABLE IF NOT EXISTS repo_scan (repo TEXT PRIMARY KEY, json TEXT)")
     cache.commit()
