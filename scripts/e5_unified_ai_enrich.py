@@ -56,6 +56,18 @@ def flag_ai_enriched(talent_id, by):
     db.close()
 
 
+def ensure_db():
+    """Reconnect to Neon if the connection dropped (it closes idle conns)."""
+    global conn, cur
+    try:
+        cur.execute("SELECT 1")
+    except Exception:
+        import psycopg2
+        conn = psycopg2.connect(db_url())
+        conn.autocommit = True
+        cur = conn.cursor()
+
+
 PROFILE_SCHEMA = """
 CREATE TABLE IF NOT EXISTS talent_profiles (
   talent_id            TEXT PRIMARY KEY,
@@ -304,6 +316,7 @@ def main():
 
     for i, p in enumerate(todo, 1):
         tid = p["talent"]["person_id"]
+        ensure_db()
         try:
             resp = client.responses.parse(
                 model=a.model,
