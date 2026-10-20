@@ -271,18 +271,14 @@ def serper_search_rich(query, num=8, fetch_top=3):
     lines = []
     for it in organic:
         lines.append(f"- {it.get('title','')} | {it.get('link','')} | {(it.get('snippet') or '')[:200]}")
-    fetched = 0
-    for it in organic:
-        if fetched >= fetch_top:
-            break
-        link = it.get("link") or ""
-        if not link or any(w in link for w in WALLED):
-            continue
-        ext = fetch_page_extract(link)
-        fetched += 1
-        if ext:
-            lines.append(f"[page content from {link}]")
-            lines.append(ext)
+    from concurrent.futures import ThreadPoolExecutor
+    targets = [it.get("link") or "" for it in organic]
+    targets = [u for u in targets if u and not any(w in u for w in WALLED)][:fetch_top]
+    with ThreadPoolExecutor(max_workers=fetch_top) as ex:
+        for link, ext in zip(targets, ex.map(fetch_page_extract, targets)):
+            if ext:
+                lines.append(f"[page content from {link}]")
+                lines.append(ext)
     return chr(10).join(lines)
 
 
