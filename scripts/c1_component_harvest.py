@@ -46,7 +46,7 @@ def scan_repo(clone: Path) -> dict:
     """{packages: {eco: set(names)}, imports_hit: {comp_id: example_file}}"""
     packages: dict[str, set] = {"npm": set(), "cargo": set(), "go": set(), "pypi": set()}
     files = []
-    for dirpath, dirnames, filenames in os.walk(clone):
+    for dirpath, dirnames, filenames in os.walk(clone, onerror=lambda e: None):
         dirnames[:] = [d for d in dirnames if d not in SKIP_DIRS]
         for fn in filenames:
             p = Path(dirpath) / fn
@@ -60,14 +60,25 @@ def scan_repo(clone: Path) -> dict:
             except Exception:
                 pass
         elif p.name == "Cargo.toml":
-            txt = p.read_text(errors="ignore")
+            try:
+                txt = p.read_text(errors="ignore")
+            except Exception:
+                continue
             for m in re.finditer(r"^\s*([A-Za-z0-9_-]+)\s*=", txt, re.M):
                 packages["cargo"].add(m.group(1))
         elif p.name == "go.mod":
-            for m in re.finditer(r"^\s*(github\.com/[\w./-]+)", p.read_text(errors="ignore"), re.M):
+            try:
+                txt = p.read_text(errors="ignore")
+            except Exception:
+                continue
+            for m in re.finditer(r"^\s*(github\.com/[\w./-]+)", txt, re.M):
                 packages["go"].add(m.group(1))
         elif p.name in ("requirements.txt", "pyproject.toml"):
-            for m in re.finditer(r"^\s*([A-Za-z0-9_.-]+)", p.read_text(errors="ignore"), re.M):
+            try:
+                txt = p.read_text(errors="ignore")
+            except Exception:
+                continue
+            for m in re.finditer(r"^\s*([A-Za-z0-9_.-]+)", txt, re.M):
                 packages["pypi"].add(m.group(1).lower())
     hits: dict[str, str] = {}
     pats = [(c["id"], [re.compile(rx) for rx in c["imports"]]) for c in COMPONENTS if c["imports"]]
@@ -198,7 +209,11 @@ def main():
                 dest = ensure_clone(full, cache)
                 if dest is None:
                     continue
-                scan = scan_repo(dest)
+                try:
+                    scan = scan_repo(dest)
+                except Exception:
+                    scan = {"packages": {"npm": [], "cargo": [], "go": [], "pypi": []},
+                            "imports": {}}
                 import shutil
                 shutil.rmtree(dest, ignore_errors=True)
                 cache.execute("INSERT OR REPLACE INTO repo_scan VALUES (?, ?)",
