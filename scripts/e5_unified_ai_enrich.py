@@ -30,6 +30,32 @@ ROOT = Path(__file__).resolve().parents[1]
 IN_JSON = ROOT / "out" / "enrichment" / "p1_tier1_enriched.json"
 E4_JSONL = ROOT / "out" / "enrichment" / "outreach_candidates.jsonl"
 
+AI_FLAG_SCHEMA = """
+CREATE TABLE IF NOT EXISTS ai_enrichment (
+    person_id    TEXT PRIMARY KEY,
+    ai_enriched  INTEGER NOT NULL CHECK (ai_enriched IN (0, 1)),
+    enriched_at  TEXT NOT NULL,
+    enriched_by  TEXT
+);
+"""
+
+ENRICHMENT_SQLITE = ROOT / "data" / "enrichment.sqlite"
+
+
+def flag_ai_enriched(talent_id, by):
+    """Mark someone AI-enriched so the viewer shows the AI section immediately."""
+    import sqlite3
+    from datetime import datetime, timezone
+    db = sqlite3.connect(ENRICHMENT_SQLITE)
+    db.execute("PRAGMA journal_mode=WAL")
+    db.executescript(AI_FLAG_SCHEMA)
+    now = datetime.now(timezone.utc).isoformat(timespec="seconds")
+    db.execute("INSERT OR REPLACE INTO ai_enrichment VALUES (?, 1, ?, ?)",
+               (talent_id, now, by))
+    db.commit()
+    db.close()
+
+
 PROFILE_SCHEMA = """
 CREATE TABLE IF NOT EXISTS talent_profiles (
   talent_id            TEXT PRIMARY KEY,
@@ -349,6 +375,11 @@ def main():
             (tid, out.summary, out.seniority.band, out.seniority.confidence,
              model_tag),
         )
+        # flag for the viewer UI immediately
+        try:
+            flag_ai_enriched(tid, model_tag)
+        except Exception as ex:
+            print(f"[{i}/{len(todo)}] {tid} flag warning: {ex}", flush=True)
         if i % 10 == 0 or i == len(todo):
             print(f"[{i}/{len(todo)}] {tid}: {len(out.roles)} roles, "
                   f"{len(out.outreach)} channels, seniority {out.seniority.band}",
