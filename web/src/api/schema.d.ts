@@ -495,6 +495,8 @@ export interface components {
             llm_model?: string | null;
             /** Location Text */
             location_text?: string | null;
+            /** Location */
+            location?: string | null;
             /** Location Confidence */
             location_confidence?: number | null;
             /**

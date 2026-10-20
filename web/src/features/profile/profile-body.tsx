@@ -84,7 +84,7 @@ export function ProfileBody({ d, prev, next, onNavigate, onClose }: Props) {
   const enr = $api.useQuery("get", "/api/person/enrichment", {
     params: { query: { id: p.person_id } },
   });
-  const aiLocation = enr.data?.location_text ?? null;
+  const aiLocation = enr.data?.location ?? null;
   const tops = d.ecosystems.filter((e) => e.level === "TOP_LEVEL");
   const subs = d.ecosystems.filter((e) => e.level !== "TOP_LEVEL");
   const apiLogin = (p.github_login_source ?? "").startsWith("GITHUB_API_");

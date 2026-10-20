@@ -375,6 +375,8 @@ def main():
         )
         loc = out.location or Location()
         loc_text = ", ".join(x for x in (loc.city, loc.country) if x) or None
+        gh_loc = ((p.get("github_profile") or {}).get("location") or "").strip() or None
+        resolved_loc = gh_loc or loc_text
         for r in out.roles:
             if not any(cid == r.concept_id for cid, _ in valid_roles):
                 continue
@@ -430,8 +432,8 @@ def main():
         cur.execute(
             """INSERT INTO talent_profiles
                (talent_id, summary, seniority_band, seniority_confidence, llm_model,
-                location_text, location_confidence)
-               VALUES (%s,%s,%s,%s,%s,%s,%s)
+                location_text, location_confidence, location_github, location)
+               VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s)
                ON CONFLICT (talent_id) DO UPDATE SET
                  summary=EXCLUDED.summary,
                  seniority_band=EXCLUDED.seniority_band,
@@ -439,9 +441,11 @@ def main():
                  llm_model=EXCLUDED.llm_model,
                  location_text=EXCLUDED.location_text,
                  location_confidence=EXCLUDED.location_confidence,
+                 location_github=EXCLUDED.location_github,
+                 location=EXCLUDED.location,
                  updated_at=now()""",
             (tid, out.summary, out.seniority.band, out.seniority.confidence,
-             model_tag, loc_text, loc.confidence),
+             model_tag, loc_text, loc.confidence, gh_loc, resolved_loc),
         )
         # flag for the viewer UI immediately
         try:
