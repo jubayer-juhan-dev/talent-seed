@@ -5,7 +5,7 @@ Returns roles + seniority + summary + outreach channels (X / LinkedIn / email)
 in a single structured output. Supersedes e3 for the full run.
 
 New vs e3:
-  - outreach[] in the output schema, fed by e4 scrape snippets + web_search tool
+  - outreach[] in the output schema, fed by e4 scrape snippets + Serper web search
   - --triage: skip people whose rules evidence is already rich (>=10 strong FACTs)
   - outreach rows -> talent_evidence as FACT (github_profile / own_website basis)
     or INFERENCE (web-search basis), never below 0.6 without review flag
@@ -202,7 +202,28 @@ def triage_score(person):
                if e.get("status") == "FACT" and (e.get("confidence") or 0) >= 0.7)
 
 
-def build_prompt(person, valid_roles, e4):
+def serper_search(query, num=8):
+    """One Serper (Google) search; returns compact text results or ''."""
+    import json as _json, os, urllib.request
+    key = os.environ.get("SERPER_API_KEY")
+    if not key:
+        return ""
+    try:
+        req = urllib.request.Request(
+            "https://google.serper.dev/search",
+            data=_json.dumps({"q": query, "num": num}).encode(),
+            headers={"X-API-KEY": key, "Content-Type": "application/json"})
+        with urllib.request.urlopen(req, timeout=20) as r:
+            data = _json.loads(r.read())
+    except Exception:
+        return ""
+    lines = []
+    for it in (data.get("organic") or [])[:num]:
+        lines.append(f"- {it.get('title','')} | {it.get('link','')} | {(it.get('snippet') or '')[:200]}")
+    return chr(10).join(lines)
+
+
+def build_prompt(person, valid_roles, e4, search_text=""):
     t = person["talent"]
     gh = person.get("github_profile") or {}
     tid = t["person_id"]
@@ -227,6 +248,7 @@ def build_prompt(person, valid_roles, e4):
             f"- {c['channel']}: {c['url']} (found via {c['source']}; "
             f"emails: {', '.join(ci.get('emails', [])) or 'none'})")
     e4_block = "\n".join(e4_lines) if e4_lines else "none found by scraper"
+    search_block = search_text or 'no web search performed'
 
     return f"""You are classifying a crypto developer's GitHub profile into a talent ontology,
 and finding their outreach channels (X / LinkedIn / email).
@@ -245,6 +267,9 @@ Rules-derived skills (observed facts): {', '.join(facts[:20]) or '—'}
 Social channels already known / scraped (rules, no AI):
 {e4_block}
 
+Web search results (Google via Serper):
+{search_block}
+
 Valid role concept ids (pick ONLY from this list):
 {roles_list}
 
@@ -254,15 +279,15 @@ Rules:
 - confidence is your honest uncertainty, 0-1.
 - Seniority band: junior | mid | senior | staff | unknown. Prefer unknown over a guess.
 - Summary: 2-3 lines a recruiter can skim. No hype.
-- OUTREACH: use the web_search tool (2-3 queries like "<name>" "<login>" twitter|linkedin)
-  for people with no known channel. Report a channel ONLY if confidence >= 0.4.
+- OUTREACH: use the web search results above to find channels for people
+  with no known channel. Report a channel ONLY if confidence >= 0.4.
   match_basis must be honest: github_profile (listed on their GitHub), own_website
   (linked from their own site), login_match (same handle found via search),
   name_bio_match (name + matching bio/avatar), name_only (weakest).
   Never invent a URL. If nothing found, return an empty outreach list.
   Emails found inside scraped pages may be reported with match_basis own_website.
-- LOCATION: if GitHub Location above is empty, use web_search (LinkedIn / X /
-  personal site bios) to find their city + country. Report only what you find;
+- LOCATION: if GitHub Location above is empty, use the web search results
+  (LinkedIn / X / personal site bios) to find their city + country. Report only what you find;
   empty + confidence 0 + basis "none" if nothing. Never guess from the name."""
 
 
@@ -347,19 +372,25 @@ def main():
 
     if a.limit:
         todo = todo[: a.limit]
-    print(f"{len(todo)} people to enrich with {a.model} (+web_search) [{model_tag}]",
+    print(f"{len(todo)} people to enrich with {a.model} (+serper) [{model_tag}]",
           flush=True)
 
     for i, p in enumerate(todo, 1):
         tid = p["talent"]["person_id"]
         ensure_db()
         try:
+            tt = p["talent"]
+            need_search = not (e4.get(tid) or {}).get("channels") \
+                or not (p.get("github_profile") or {}).get("location")
+            search_text = ""
+            if need_search:
+                q = f'"{tt.get("name") or ""}" "{tt.get("github") or ""}" linkedin OR twitter'
+                search_text = serper_search(q)
             resp = client.responses.parse(
                 model=a.model,
                 input=[{"role": "user",
-                        "content": build_prompt(p, valid_roles, e4)}],
+                        "content": build_prompt(p, valid_roles, e4, search_text)}],
                 text_format=EnrichmentOutput,
-                tools=[{"type": "web_search"}],
             )
             out = resp.output_parsed
         except Exception as ex:
