@@ -129,11 +129,27 @@ def main():
     for name in ("p1_cohort.csv", "p1_rest_cohort.csv"):
         with open(ROOT / "exports" / name) as f:
             cohort |= {r["person_id"] for r in _csv.DictReader(f)}
-    talents = [t for t in d.execute(
+    rows = d.execute(
         """SELECT person_id, github_login, commit_count FROM talent_seed
            WHERE github_login IS NOT NULL AND github_login NOT LIKE '%[bot]'
            ORDER BY commit_count DESC""").fetchall()
-        if t[0] in cohort][a.offset: a.offset + a.limit]
+    # Batch-2 talents sit at the tail of the commit ranking; when their
+    # github_login was resolved later (m5), talent_seed.github_login can be
+    # NULL while the cohort CSV carries the login. Append any cohort member
+    # missing from the ranked list so offset/limit covers ALL of P1.
+    seen = {t[0] for t in rows}
+    talents = [t for t in rows if t[0] in cohort]
+    import csv as _csv2
+    login_by_id = {}
+    for name in ("p1_cohort.csv", "p1_rest_cohort.csv"):
+        with open(ROOT / "exports" / name) as f:
+            for r in _csv2.DictReader(f):
+                login_by_id[r["person_id"]] = r.get("github_login") or ""
+    for pid in sorted(cohort - seen):
+        cc = d.execute("SELECT commit_count FROM talent_seed WHERE person_id = ?",
+                       [pid]).fetchone()
+        talents.append((pid, login_by_id.get(pid) or None, cc[0] if cc else 0))
+    talents = talents[a.offset: a.offset + a.limit]
     print(f"pilot: {len(talents)} talents")
 
     s1 = sqlite3.connect(ROOT / "data" / "tier1_github.sqlite")
