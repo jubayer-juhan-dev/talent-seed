@@ -378,6 +378,9 @@ def normalize(location):
         if i != country_idx and p.lower() not in JUNK:
             city = p
             break
+    if city is None and parts[country_idx].lower() in CITY_COUNTRY:
+        # the location was a bare city ("Berlin") -> keep it in the display
+        city = parts[country_idx]
     if city and city.lower() != country.lower():
         return f"{city}, {country}", country
     return country, country
