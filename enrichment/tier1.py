@@ -94,6 +94,11 @@ TOPIC_MAP = {
     "circom": [("PM.SKILL.0010", "OBSERVED_USAGE", "topic: ZK circuit language")],
     "postgres": [("PM.TOOL.0006", "OBSERVED_USAGE", "topic")],
     "postgresql": [("PM.TOOL.0006", "OBSERVED_USAGE", "topic")],
+    "docker": [("PM.TOOL.0004", "OBSERVED_USAGE", "topic")],
+    "kubernetes": [("PM.TOOL.0005", "OBSERVED_USAGE", "topic")],
+    "k8s": [("PM.TOOL.0005", "OBSERVED_USAGE", "topic: k8s")],
+    "terraform": [("PM.TOOL.0007", "OBSERVED_USAGE", "topic")],
+    "pytorch": [("PM.TOOL.0008", "OBSERVED_USAGE", "topic")],
     # --- dapps are web applications ---
     "dapp": [("PM.SYS.0001", "OBSERVED_USAGE", "dapp topic -> web application")],
     "web3": [("PM.SYS.0001", "OBSERVED_USAGE", "web3 frontend work")],
