@@ -277,6 +277,8 @@ def main():
     ap.add_argument("--model", default="gpt-6-luna")
     ap.add_argument("--triage", action="store_true",
                     help="skip people with >=10 strong FACTs (they don't need Luna)")
+    ap.add_argument("--ids-file",
+                    help="file with one talent_id per line: only enrich these")
     a = ap.parse_args()
     model_tag = f"{a.model}-unified"
 
@@ -326,6 +328,10 @@ def main():
                 (model_tag,))
     done = {r[0] for r in cur.fetchall()}
     todo = [p for p in people if p["talent"]["person_id"] not in done]
+    if a.ids_file:
+        want = {l.strip() for l in open(a.ids_file) if l.strip()}
+        todo = [p for p in todo if p["talent"]["person_id"] in want]
+        print(f"targeted run: {len(todo)} people from {a.ids_file}", flush=True)
 
     skipped = 0
     if a.triage:
