@@ -87,7 +87,9 @@ Valid concept ids (pick ONLY from this list):
 
 Rules:
 - Extract what the CANDIDATE must have. 'You will use X', 'experience with X', 'requirements: X'
-  count. 'We use X' about the company's stack does NOT count unless the role demands it.
+  count. An explicit Skills/Tags section on the posting (e.g. 'Skills: TypeScript, React, Docker')
+  counts — the poster listed those skills deliberately. Pure company-stack prose
+  ('our stack includes X' with no candidate demand) does NOT count.
 - requirement = required | nice_to_have (things under 'bonus', 'nice to have', 'plus' are nice_to_have).
 - Every requirement needs an evidence_text: a short exact quote from the posting.
 - confidence is your honest uncertainty, 0-1.
