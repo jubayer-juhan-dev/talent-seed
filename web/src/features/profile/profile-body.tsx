@@ -27,6 +27,7 @@ import {
 import type { ReactNode } from "react";
 import { toast } from "sonner";
 import type { PersonDetail } from "@/api/client";
+import { $api } from "@/api/client";
 import { AiBadge } from "@/components/app/ai-badge";
 import { CohortBadge } from "@/components/app/cohort-badge";
 import { EmptyState } from "@/components/app/empty-state";
@@ -80,6 +81,10 @@ function IconButton({
 
 export function ProfileBody({ d, prev, next, onNavigate, onClose }: Props) {
   const p = d.person;
+  const enr = $api.useQuery("get", "/api/person/enrichment", {
+    params: { query: { id: p.person_id } },
+  });
+  const aiLocation = enr.data?.location_text ?? null;
   const tops = d.ecosystems.filter((e) => e.level === "TOP_LEVEL");
   const subs = d.ecosystems.filter((e) => e.level !== "TOP_LEVEL");
   const apiLogin = (p.github_login_source ?? "").startsWith("GITHUB_API_");
@@ -143,7 +148,7 @@ export function ProfileBody({ d, prev, next, onNavigate, onClose }: Props) {
             )}
             <span className="inline-flex items-center gap-1.5">
               <MapPin />
-              {p.location || p.country || "Location unknown"}
+              {p.location || p.country || aiLocation || "Location unknown"}
             </span>
             <Tip tip="How sure we are this is the right GitHub account">
               <span className="inline-flex items-center gap-1.5">
