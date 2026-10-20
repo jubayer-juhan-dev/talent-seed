@@ -97,9 +97,14 @@ def ensure_clone(full_name: str, cache: sqlite3.Connection) -> Path | None:
         return dest
     if not dest.exists():
         url = f"https://github.com/{full_name}.git"
-        r = subprocess.run(["git", "clone", "--depth", "1", "--single-branch", url, str(dest)],
-                           capture_output=True, timeout=180)
-        if r.returncode != 0:
+        try:
+            r = subprocess.run(["git", "clone", "--depth", "1", "--single-branch", url, str(dest)],
+                               capture_output=True, timeout=180)
+            ok = r.returncode == 0
+        except subprocess.TimeoutExpired:
+            ok = False
+        if not ok:
+            shutil.rmtree(dest, ignore_errors=True)
             cache.execute("INSERT OR REPLACE INTO scanned VALUES (?, ?)", (full_name, "clone-failed"))
             cache.commit()
             return None
