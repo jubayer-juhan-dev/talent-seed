@@ -61,5 +61,8 @@ def attach(con):
     except duckdb.Error:  # first use: download the extension once into data/duckdb_extensions
         con.execute("INSTALL sqlite")
         con.execute("LOAD sqlite")
-    con.execute(f"ATTACH '{ENRICHMENT}' AS enr (TYPE sqlite, READ_ONLY)")
+    try:
+        con.execute(f"ATTACH '{ENRICHMENT}' AS enr (TYPE sqlite, READ_ONLY)")
+    except duckdb.Error:
+        pass  # already attached on this connection
     return True

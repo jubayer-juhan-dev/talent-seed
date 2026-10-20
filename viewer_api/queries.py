@@ -64,6 +64,20 @@ def api_meta(con, _q):
                            GROUP BY 1 ORDER BY 2 DESC, 1 LIMIT 60""")
     countries = query(con, """SELECT country AS k, count(*) AS n FROM talent_seed
                               WHERE country IS NOT NULL AND priority_cohort <> 'HOLD' GROUP BY 1 ORDER BY 2 DESC, 1 LIMIT 80""")
+    # merge normalized resolved countries (GitHub/AI locations) into the facet
+    try:
+        if enrichment.attach(con):
+            extra = query(con, """SELECT tl.country AS k, count(*) AS n FROM enr.talent_location tl
+                                  JOIN talent_seed t ON t.person_id = tl.person_id
+                                  WHERE t.priority_cohort <> 'HOLD' AND t.country IS NULL
+                                  GROUP BY 1""")
+            by_k = {c["k"]: c["n"] for c in countries}
+            for e in extra:
+                by_k[e["k"]] = by_k.get(e["k"], 0) + e["n"]
+            countries = sorted(({"k": k, "n": n} for k, n in by_k.items()),
+                                 key=lambda c: (-c["n"], c["k"]))[:80]
+    except Exception:
+        pass
     return {"run": run, "cohorts": cohorts, "chains": chains, "countries": countries}
 
 
@@ -75,11 +89,23 @@ def build_filters(q, con=None):
     """WHERE clause and params shared by /api/people and /api/export.csv."""
     where, params = [], []
     for col, name in (("priority_cohort", "cohort"), ("activity_segment", "activity"),
-                      ("tenure_segment", "tenure"), ("exclusivity", "exclusivity"), ("country", "country")):
+                      ("tenure_segment", "tenure"), ("exclusivity", "exclusivity")):
         vals = [v for v in one(q, name).split(",") if v]
         if vals:
             where.append(f"{col} IN ({','.join('?' * len(vals))})")
             params += vals
+    # country: the DuckDB column OR the normalized resolved country
+    # (from GitHub/AI locations, kept in enr.talent_location)
+    cvals = [v for v in one(q, "country").split(",") if v]
+    if cvals:
+        ph = ','.join('?' * len(cvals))
+        clause = f"country IN ({ph})"
+        params += cvals
+        if con is not None and enrichment.attach(con):
+            clause = (f"({clause} OR person_id IN (SELECT person_id FROM enr.talent_location "
+                      f"WHERE country IN ({ph})))")
+            params += cvals
+        where.append(clause)
     if one(q, "chain"):
         where.append("person_id IN (SELECT person_id FROM talent_seed_ecosystems WHERE level='TOP_LEVEL' AND ecosystem_name = ?)")
         params.append(one(q, "chain"))

@@ -375,8 +375,14 @@ def main():
         )
         loc = out.location or Location()
         loc_text = ", ".join(x for x in (loc.city, loc.country) if x) or None
-        gh_loc = ((p.get("github_profile") or {}).get("location") or "").strip() or None
+        gh_raw = ((p.get("github_profile") or {}).get("location") or "").strip() or None
+        from viewer_api.location_norm import normalize as _norm
+        _gd, _gc = _norm(gh_raw)
+        _ad, _ac = _norm(loc_text)
+        gh_loc, gh_country = _gd, _gc
+        loc_text, ai_country = _ad, _ac
         resolved_loc = gh_loc or loc_text
+        resolved_country = gh_country or ai_country
         for r in out.roles:
             if not any(cid == r.concept_id for cid, _ in valid_roles):
                 continue
@@ -426,14 +432,15 @@ def main():
                    ON CONFLICT (evidence_id) DO UPDATE SET
                      concept_name=EXCLUDED.concept_name, confidence=EXCLUDED.confidence,
                      source=EXCLUDED.source, note=EXCLUDED.note, enriched_at=now()""",
-                (f"e5loc:{tid}", tid, f"location:{loc_text}", loc.confidence,
+                (f"e5loc:{tid}", tid, f"location:{resolved_loc or loc_text}", loc.confidence,
                  f"llm:{a.model}", f"web {loc.basis or 'profile'}"),
             )
         cur.execute(
             """INSERT INTO talent_profiles
                (talent_id, summary, seniority_band, seniority_confidence, llm_model,
-                location_text, location_confidence, location_github, location)
-               VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s)
+                location_text, location_confidence, location_github, location,
+                location_country)
+               VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
                ON CONFLICT (talent_id) DO UPDATE SET
                  summary=EXCLUDED.summary,
                  seniority_band=EXCLUDED.seniority_band,
@@ -443,9 +450,11 @@ def main():
                  location_confidence=EXCLUDED.location_confidence,
                  location_github=EXCLUDED.location_github,
                  location=EXCLUDED.location,
+                 location_country=EXCLUDED.location_country,
                  updated_at=now()""",
             (tid, out.summary, out.seniority.band, out.seniority.confidence,
-             model_tag, loc_text, loc.confidence, gh_loc, resolved_loc),
+             model_tag, loc_text, loc.confidence, gh_loc, resolved_loc,
+             resolved_country),
         )
         # flag for the viewer UI immediately
         try:
