@@ -2,6 +2,8 @@ import { createRootRoute, createRoute, createRouter, redirect, retainSearchParam
 import { AppShell } from "@/components/app/app-shell";
 import { ExplorePage } from "@/features/explore/explore-page";
 import { validateExploreSearch } from "@/features/explore/search";
+import { JobDetailPage } from "@/features/jobs/job-detail-page";
+import { JobsPage } from "@/features/jobs/jobs-page";
 import { OverviewPage } from "@/features/overview/overview-page";
 
 /** `key` (the access key) is kept on every navigation, so reloads work even when cookies are blocked. */
@@ -28,6 +30,23 @@ const overviewRoute = createRoute({
   component: OverviewPage,
 });
 
+const jobsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/jobs",
+  component: JobsPage,
+});
+
+function JobDetailRoute() {
+  const { jobId } = jobDetailRoute.useParams();
+  return <JobDetailPage jobId={jobId} />;
+}
+
+const jobDetailRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/jobs/$jobId",
+  component: JobDetailRoute,
+});
+
 const exploreRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/explore",
@@ -40,7 +59,7 @@ const exploreRoute = createRoute({
 });
 
 export const router = createRouter({
-  routeTree: rootRoute.addChildren([overviewRoute, exploreRoute]),
+  routeTree: rootRoute.addChildren([overviewRoute, exploreRoute, jobsRoute, jobDetailRoute]),
   basepath: import.meta.env.BASE_URL.replace(/\/$/, "") || "/",
   defaultPreload: "intent",
   scrollRestoration: true,

@@ -262,3 +262,65 @@ class GithubProfile(BaseModel):
 
 class Error(BaseModel):
     error: str
+
+
+class JobRow(BaseModel):
+    job_id: str
+    title: str
+    company: str | None = None
+    location_text: str | None = None
+    location_country: str | None = None
+    source: str
+    posted_at: str | None = None
+    requirements_count: int = 0
+
+
+class JobRequirement(BaseModel):
+    concept_id: str | None = None
+    concept_name: str
+    concept_type: str
+    requirement: str
+    status: str
+    confidence: float | None = None
+    evidence_text: str | None = None
+    source: str
+
+
+class JobDetail(BaseModel):
+    job_id: str
+    title: str
+    company: str | None = None
+    location_text: str | None = None
+    location_country: str | None = None
+    remote: bool | None = None
+    url: str | None = None
+    source: str
+    description: str
+    posted_at: str | None = None
+    active: bool = True
+    requirements: list[JobRequirement] = []
+
+
+class JobCreate(BaseModel):
+    title: str
+    company: str = ''
+    location: str = ''
+    description: str
+
+
+class MatchConcept(BaseModel):
+    concept_id: str
+    concept_name: str
+    requirement: str
+    coverage: float
+    state: str
+    evidence_status: str | None = None
+    confidence: float | None = None
+
+
+class MatchRow(BaseModel):
+    talent_id: str
+    name: str | None = None
+    github_login: str | None = None
+    score: float
+    breakdown: list[MatchConcept] = []

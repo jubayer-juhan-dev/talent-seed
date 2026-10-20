@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { CircleHelp, LayoutDashboard, Moon, Sprout, Sun, Users } from "lucide-react";
+import { Briefcase, CircleHelp, LayoutDashboard, Moon, Sprout, Sun, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { tour } from "@/features/tour/tour-store";
@@ -40,6 +40,10 @@ export function TopBar() {
           >
             <Users className="size-4" />
             <span className="hidden sm:inline">Explore</span>
+          </Link>
+          <Link to="/jobs" className={tab} activeProps={{ className: active }} activeOptions={{ includeSearch: false }}>
+            <Briefcase className="size-4" />
+            <span className="hidden sm:inline">Jobs</span>
           </Link>
         </nav>
         <div className="flex-1" />

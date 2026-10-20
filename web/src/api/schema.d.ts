@@ -112,6 +112,87 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/jobs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Jobs List
+         * @description Job Graph: all active jobs with requirement counts.
+         */
+        get: operations["jobs_list_api_jobs_get"];
+        put?: never;
+        /**
+         * Job Create
+         * @description Paste a job -> j2 extraction -> stored job with requirements.
+         */
+        post: operations["job_create_api_jobs_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/jobs/{job_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Job Detail */
+        get: operations["job_detail_api_jobs__job_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/jobs/{job_id}/matches": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Job Matches
+         * @description j3 matching: ranked talents with per-concept evidence breakdown.
+         */
+        get: operations["job_matches_api_jobs__job_id__matches_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/jobs/{job_id}/requirements": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Job Edit Requirements
+         * @description Recruiter correction: replace the extracted requirement set (optional step).
+         */
+        patch: operations["job_edit_requirements_api_jobs__job_id__requirements_patch"];
+        trace?: never;
+    };
     "/api/ecosystems": {
         parameters: {
             query?: never;
@@ -263,6 +344,147 @@ export interface components {
         HTTPValidationError: {
             /** Detail */
             detail?: components["schemas"]["ValidationError"][];
+        };
+        /** JobCreate */
+        JobCreate: {
+            /** Title */
+            title: string;
+            /**
+             * Company
+             * @default
+             */
+            company: string;
+            /**
+             * Location
+             * @default
+             */
+            location: string;
+            /** Description */
+            description: string;
+        };
+        /** JobDetail */
+        JobDetail: {
+            /** Job Id */
+            job_id: string;
+            /** Title */
+            title: string;
+            /** Company */
+            company?: string | null;
+            /** Location Text */
+            location_text?: string | null;
+            /** Location Country */
+            location_country?: string | null;
+            /** Remote */
+            remote?: boolean | null;
+            /** Url */
+            url?: string | null;
+            /** Source */
+            source: string;
+            /** Description */
+            description: string;
+            /** Posted At */
+            posted_at?: string | null;
+            /**
+             * Active
+             * @default true
+             */
+            active: boolean;
+            /**
+             * Requirements
+             * @default []
+             */
+            requirements: components["schemas"]["JobRequirement"][];
+        };
+        /** JobRequirement */
+        JobRequirement: {
+            /** Concept Id */
+            concept_id?: string | null;
+            /** Concept Name */
+            concept_name: string;
+            /** Concept Type */
+            concept_type: string;
+            /** Requirement */
+            requirement: string;
+            /** Status */
+            status: string;
+            /** Confidence */
+            confidence?: number | null;
+            /** Evidence Text */
+            evidence_text?: string | null;
+            /** Source */
+            source: string;
+        };
+        /** JobRequirementEdit */
+        JobRequirementEdit: {
+            /** Concept Id */
+            concept_id?: string | null;
+            /** Concept Name */
+            concept_name: string;
+            /**
+             * Concept Type
+             * @default SKILL
+             */
+            concept_type: string;
+            /**
+             * Requirement
+             * @default required
+             */
+            requirement: string;
+        };
+        /** JobRow */
+        JobRow: {
+            /** Job Id */
+            job_id: string;
+            /** Title */
+            title: string;
+            /** Company */
+            company?: string | null;
+            /** Location Text */
+            location_text?: string | null;
+            /** Location Country */
+            location_country?: string | null;
+            /** Source */
+            source: string;
+            /** Posted At */
+            posted_at?: string | null;
+            /**
+             * Requirements Count
+             * @default 0
+             */
+            requirements_count: number;
+        };
+        /** MatchConcept */
+        MatchConcept: {
+            /** Concept Id */
+            concept_id: string;
+            /** Concept Name */
+            concept_name: string;
+            /** Requirement */
+            requirement: string;
+            /** Coverage */
+            coverage: number;
+            /** State */
+            state: string;
+            /** Evidence Status */
+            evidence_status?: string | null;
+            /** Confidence */
+            confidence?: number | null;
+        };
+        /** MatchRow */
+        MatchRow: {
+            /** Talent Id */
+            talent_id: string;
+            /** Name */
+            name?: string | null;
+            /** Github Login */
+            github_login?: string | null;
+            /** Score */
+            score: number;
+            /**
+             * Breakdown
+             * @default []
+             */
+            breakdown: components["schemas"]["MatchConcept"][];
         };
         /** Member */
         Member: {
@@ -941,6 +1163,276 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["GithubProfile"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    jobs_list_api_jobs_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobRow"][];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    job_create_api_jobs_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["JobCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobDetail"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    job_detail_api_jobs__job_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                job_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobDetail"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    job_matches_api_jobs__job_id__matches_get: {
+        parameters: {
+            query?: {
+                pool?: string;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                job_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MatchRow"][];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    job_edit_requirements_api_jobs__job_id__requirements_patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                job_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["JobRequirementEdit"][];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobDetail"];
                 };
             };
             /** @description Unauthorized */

@@ -468,7 +468,8 @@ def main():
                 gh = tt.get("github") or ""
                 parts = []
                 for q in (f'"{nm}" "{gh}" linkedin',
-                          f'"{nm}" "{gh}" twitter OR x.com'):
+                          f'"{nm}" "{gh}" twitter OR x.com',
+                          f'"{nm}" "{gh}" email OR contact'):
                     r = serper_search_rich(q, fetch_top=2)
                     if r:
                         parts.append(r)

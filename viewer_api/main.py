@@ -12,10 +12,14 @@ from contextlib import asynccontextmanager
 from typing import Annotated
 
 import duckdb
+import sys
+from pathlib import Path
+
 from fastapi import Depends, FastAPI, HTTPException, Query, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import FileResponse, JSONResponse, RedirectResponse, Response
 from mcp.server.transport_security import TransportSecuritySettings
+from pydantic import BaseModel
 
 from . import models, queries
 from .auth import access_gate
@@ -153,6 +157,104 @@ def person_github_profile(person_id: Annotated[str, Query(alias="id", descriptio
     if out is None:
         raise HTTPException(404, "GitHub profile not fetched yet for this person")
     return out
+
+
+@app.get("/api/jobs", response_model=list[models.JobRow], responses=ERRORS)
+def jobs_list():
+    """Job Graph: all active jobs with requirement counts."""
+    from . import jobs as jobmod
+    out = []
+    for j in jobmod.list_jobs():
+        j = dict(j)
+        j["requirements_count"] = j.pop("count", 0) if "count" in j else 0
+        out.append(j)
+    return out
+
+
+@app.get("/api/jobs/{job_id}", response_model=models.JobDetail,
+         responses={**ERRORS, 404: {"model": models.Error}})
+def job_detail(job_id: str):
+    from . import jobs as jobmod
+    out = jobmod.get_job(job_id)
+    if out is None:
+        raise HTTPException(404, "job not found")
+    return out
+
+
+@app.get("/api/jobs/{job_id}/matches", response_model=list[models.MatchRow],
+         responses={**ERRORS, 404: {"model": models.Error}})
+def job_matches(job_id: str, con: Con, pool: str = "ai", limit: int = 50):
+    """j3 matching: ranked talents with per-concept evidence breakdown."""
+    from . import jobs as jobmod
+    if jobmod.get_job(job_id) is None:
+        raise HTTPException(404, "job not found")
+    rows = jobmod.match(job_id, pool=pool, limit=limit)
+    for r in rows:
+        row = con.execute(
+            "SELECT display_name, github_login FROM talent_seed WHERE person_id = ?",
+            [r["talent_id"]]).fetchone()
+        if row:
+            r["name"], r["github_login"] = row[0], row[1]
+    return rows
+
+
+class JobRequirementEdit(BaseModel):
+    concept_id: str | None = None
+    concept_name: str
+    concept_type: str = "SKILL"
+    requirement: str = "required"
+
+
+@app.patch("/api/jobs/{job_id}/requirements", response_model=models.JobDetail,
+           responses={**ERRORS, 404: {"model": models.Error}})
+def job_edit_requirements(job_id: str, body: list[JobRequirementEdit]):
+    """Recruiter correction: replace the extracted requirement set (optional step)."""
+    import os
+    import psycopg2
+    conn = psycopg2.connect(os.environ["DATABASE_URL"])
+    conn.autocommit = True
+    try:
+        cur = conn.cursor()
+        cur.execute("SELECT 1 FROM jobs WHERE job_id = %s", (job_id,))
+        if not cur.fetchone():
+            raise HTTPException(404, "job not found")
+        cur.execute("SELECT concept_id, canonical_name FROM concepts")
+        known = {name: cid for cid, name in cur.fetchall()}
+        cur.execute("DELETE FROM job_requirements WHERE job_id = %s", (job_id,))
+        for r in body:
+            cur.execute(
+                "INSERT INTO job_requirements (job_id, concept_id, concept_name,"
+                " concept_type, requirement, status, confidence, evidence_text, source)"
+                " VALUES (%s,%s,%s,%s,%s,'FACT',1.0,'recruiter edit','manual:edit')"
+                " ON CONFLICT DO NOTHING",
+                (job_id, known.get(r.concept_name, r.concept_id), r.concept_name,
+                 r.concept_type,
+                 r.requirement if r.requirement in ("required", "nice_to_have")
+                 else "required"))
+    finally:
+        conn.close()
+    from . import jobs as jobmod
+    return jobmod.get_job(job_id)
+
+
+@app.post("/api/jobs", response_model=models.JobDetail, responses=ERRORS)
+def job_create(body: models.JobCreate):
+    """Paste a job -> j2 extraction -> stored job with requirements."""
+    import os
+    import psycopg2
+    from openai import OpenAI
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+    from scripts.j2_extract_job import extract_job
+    from . import jobs as jobmod
+    conn = psycopg2.connect(os.environ["DATABASE_URL"])
+    conn.autocommit = True
+    try:
+        job_id, _rows, _out = extract_job(
+            conn.cursor(), OpenAI(), "gpt-6-luna", body.title, body.company,
+            body.location, body.description, "manual", None)
+    finally:
+        conn.close()
+    return jobmod.get_job(job_id)
 
 
 @app.get("/api/ecosystems", response_model=models.Ecosystems, response_model_exclude_unset=True, responses=ERRORS)
