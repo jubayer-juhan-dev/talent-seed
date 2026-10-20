@@ -19,7 +19,8 @@ def fetch(person_id):
     try:
         cur = conn.cursor()
         cur.execute(
-            """SELECT summary, seniority_band, seniority_confidence, llm_model
+            """SELECT summary, seniority_band, seniority_confidence, llm_model,
+                      location_text, location_confidence
                FROM talent_profiles WHERE talent_id = %s""",
             (person_id,),
         )
@@ -55,5 +56,7 @@ def fetch(person_id):
         "seniority_band": prof[1] if prof else None,
         "seniority_confidence": float(prof[2]) if prof and prof[2] is not None else None,
         "llm_model": prof[3] if prof else None,
+        "location_text": prof[4] if prof else None,
+        "location_confidence": float(prof[5]) if prof and prof[5] is not None else None,
         "evidence": evidence,
     }

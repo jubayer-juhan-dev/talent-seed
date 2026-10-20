@@ -235,6 +235,8 @@ class PersonEnrichment(BaseModel):
     seniority_band: str | None = None
     seniority_confidence: float | None = None
     llm_model: str | None = None
+    location_text: str | None = None
+    location_confidence: float | None = None
     evidence: list[EnrichmentEvidence] = []
 
 

@@ -493,6 +493,10 @@ export interface components {
             seniority_confidence?: number | null;
             /** Llm Model */
             llm_model?: string | null;
+            /** Location Text */
+            location_text?: string | null;
+            /** Location Confidence */
+            location_confidence?: number | null;
             /**
              * Evidence
              * @default []

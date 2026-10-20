@@ -62,6 +62,12 @@ export function EnrichmentSection({ id }: { id: string }) {
       {data.summary && (
         <div className="rounded-xl border border-violet-400/20 bg-violet-400/5 p-3.5">
           <p className="text-sm leading-relaxed">{data.summary}</p>
+          {data.location_text && (
+            <p className="text-sm mt-1 text-muted-foreground">
+              📍 {data.location_text}
+              {data.location_confidence != null && ` (${Math.round(data.location_confidence * 100)}% AI)`}
+            </p>
+          )}
           {data.seniority_band && data.seniority_band !== "unknown" && (
             <p className="mt-2 text-xs text-faint">
               Seniority: <span className="font-medium text-foreground">{data.seniority_band}</span>
