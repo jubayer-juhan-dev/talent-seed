@@ -32,13 +32,13 @@ MODEL_TAG = "llm:gpt-6-luna-job"
 # deterministic title -> role concept hints (FACT by construction)
 TITLE_ROLE_HINTS = [
     (re.compile(r"solidity|smart contract", re.I), "Smart Contract Developer"),
-    (re.compile(r"full[\s-]?stack", re.I), "Full-Stack Developer"),
-    (re.compile(r"front[\s-]?end", re.I), "Frontend Developer"),
-    (re.compile(r"back[\s-]?end", re.I), "Backend Developer"),
+    (re.compile(r"full[\s-]?stack", re.I), "Full-stack Engineer"),
+    (re.compile(r"front[\s-]?end", re.I), "Frontend Engineer"),
+    (re.compile(r"back[\s-]?end", re.I), "Backend Engineer"),
     (re.compile(r"devops|sre|site reliability", re.I), "DevOps Engineer"),
     (re.compile(r"data engineer", re.I), "Data Engineer"),
     (re.compile(r"protocol", re.I), "Protocol Engineer"),
-    (re.compile(r"security|auditor", re.I), "Security Engineer"),
+    (re.compile(r"security|auditor", re.I), "Security Researcher"),
 ]
 
 
@@ -63,10 +63,20 @@ def load_concepts(cur):
     return cur.fetchall()
 
 
+def evidence_counts(cur):
+    """{concept_id: talents with positive evidence}, so extraction knows what the pool can be matched on."""
+    from viewer_api.jobs import POSITIVE_EVIDENCE
+    cur.execute("SELECT e.concept_id, COUNT(DISTINCT e.talent_id) FROM talent_evidence e"
+                " WHERE e.concept_id IS NOT NULL AND " + POSITIVE_EVIDENCE + " GROUP BY 1")
+    return dict(cur.fetchall())
+
+
 def extract_job(cur, client, model, title, company, location, description, source="manual", url=None):
     concepts = load_concepts(cur)
     valid = {cid: (name, ctype) for cid, name, ctype in concepts}
-    concepts_list = "\n".join(f"- {cid}: {name} ({ctype})" for cid, name, ctype in concepts)
+    counts = evidence_counts(cur)
+    concepts_list = "\n".join(f"- {cid}: {name} ({ctype}) — {counts.get(cid, 0)} talents with evidence"
+                              for cid, name, ctype in concepts)
 
     job_id = "job:" + hashlib.sha1(
         f"{source}|{title}|{company or ''}|{description[:500]}".encode()).hexdigest()[:16]
@@ -94,6 +104,13 @@ Rules:
 - Every requirement needs an evidence_text: a short exact quote from the posting.
 - confidence is your honest uncertainty, 0-1.
 - seniority_band: junior|mid|senior|staff|unknown — from years/leadership signals only.
+- Map each ask to the CLOSEST concept even when the wording differs (e.g. 'HTML/CSS, responsive
+  design, cross-browser' -> Responsive UI & CSS; 'REST APIs' -> API Design). Use each concept once.
+- An either/or list ('React, Vue, or Angular') is not a hard requirement on any one item: mark the
+  listed concepts nice_to_have.
+- Prefer the role concept that matches the job title as required; extra roles are nice_to_have.
+- A concept with 0 talents with evidence can never be matched yet: include it only if the posting
+  clearly asks for it, and always as nice_to_have.
 - Terms the posting requires that are not in the concept list go to growth_candidates
   (names only). Never invent a concept id.
 """
@@ -115,15 +132,17 @@ Rules:
                              f"title: {title}", "rules:jobtitle"))
             break
 
-    seen = {(r[1], r[3]) for r in rows}
+    seen = {r[1] for r in rows}  # one row per concept
     for r in out.requirements:
         if r.concept_id not in valid:
             continue  # hallucinated id — growth candidates carry the name instead
         name, ctype = valid[r.concept_id]
         req = r.requirement if r.requirement in ("required", "nice_to_have") else "required"
-        if (name, req) in seen:
+        if req == "required" and not counts.get(r.concept_id):
+            req = "nice_to_have"  # nobody can be matched on it yet
+        if name in seen:
             continue
-        seen.add((name, req))
+        seen.add(name)
         rows.append((r.concept_id, name, ctype, req, "INFERENCE",
                      max(0.0, min(1.0, r.confidence)), r.evidence_text[:300], MODEL_TAG))
 
