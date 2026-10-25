@@ -527,6 +527,123 @@ concepts:
       OBSERVED_USAGE: "Cairo primary language or own repos tagged starknet."
       CONTRIBUTOR_USAGE: "Attributed substantial Cairo contracts."
 
+  - id: PM.SKILL.0039
+    type: SKILL
+    name: "Lua"
+    definition: "Lightweight scripting language embedded in games, tools and devices."
+    families: [FAM.GAMES, FAM.EMBEDDED]
+    evidence_rules:
+      OBSERVED_USAGE: "Lua primary language or lua topic on own repos."
+      CONTRIBUTOR_USAGE: "Attributed substantial Lua modifications."
+
+  - id: PM.SKILL.0040
+    type: SKILL
+    name: "AI-Assisted Development"
+    definition: "Developing software with AI coding assistants: Copilot, Cursor, Claude and similar tools in the loop."
+    families: [FAM.AIAPP]
+    aliases: ["AI pair programming", "vibe coding"]
+    evidence_rules:
+      OBSERVED_USAGE: "Own repos tagged ai/ai-tools/ai-assistant/ai-coding/cursor/copilot/github-copilot/vibe-coding or similar AI-tooling topics."
+      CONTRIBUTOR_USAGE: "Attributed code built with AI assistance tooling."
+
+  - id: PM.SKILL.0041
+    type: SKILL
+    name: "Assembly / Reverse Engineering"
+    definition: "Reading and writing assembly, and analyzing binaries to understand or modify their behavior."
+    families: [FAM.SYSTEMS, FAM.INFRASEC]
+    aliases: ["reverse engineering", "asm"]
+    evidence_rules:
+      OBSERVED_USAGE: "Assembly primary language or assembly/reverse-engineering topics on own repos."
+      CONTRIBUTOR_USAGE: "Attributed assembly code or documented binary analyses."
+
+  - id: PM.SKILL.0042
+    type: SKILL
+    name: "Embedded & IoT"
+    definition: "Firmware and connected-device development: microcontrollers, sensors, Arduino/ESP/Raspberry Pi ecosystems."
+    families: [FAM.EMBEDDED]
+    aliases: ["embedded systems", "IoT"]
+    evidence_rules:
+      OBSERVED_USAGE: "Own repos tagged embedded/iot/firmware/arduino/esp32/raspberry-pi or related platform topics."
+      CONTRIBUTOR_USAGE: "Attributed firmware or device code."
+
+  - id: PM.SKILL.0043
+    type: SKILL
+    name: "Real-time Communication"
+    definition: "Building real-time messaging, streaming and calling systems: WebRTC, WebSockets, socket servers."
+    families: [FAM.BACKEND, FAM.SYSTEMS]
+    aliases: ["RTC", "WebRTC"]
+    evidence_rules:
+      OBSERVED_USAGE: "Own repos tagged webrtc/websocket/socket-io/streaming/real-time or related topics."
+      CONTRIBUTOR_USAGE: "Attributed real-time transport or media code."
+
+  - id: PM.SKILL.0044
+    type: SKILL
+    name: "Compilers & Language Tooling"
+    definition: "Building compilers, interpreters, parsers and language servers."
+    families: [FAM.SYSTEMS]
+    aliases: ["compiler development", "language tooling"]
+    evidence_rules:
+      OBSERVED_USAGE: "Own repos tagged compiler/programming-language/parser/language-server/interpreter or related topics."
+      CONTRIBUTOR_USAGE: "Attributed compiler or language-tooling code."
+
+  - id: PM.SKILL.0045
+    type: SKILL
+    name: "Data Visualization"
+    definition: "Turning data into charts, dashboards and interactive visual explanations."
+    families: [FAM.BI, FAM.FRONTEND]
+    aliases: ["dataviz", "data visualisation"]
+    evidence_rules:
+      OBSERVED_USAGE: "Own repos tagged data-visualization/visualization/d3/charts/dashboard or related topics."
+      CONTRIBUTOR_USAGE: "Attributed chart, dashboard or visualization code."
+
+  - id: PM.SKILL.0046
+    type: SKILL
+    name: "Zig"
+    definition: "Systems language focused on robustness, optimality and clarity."
+    families: [FAM.SYSTEMS]
+    evidence_rules:
+      OBSERVED_USAGE: "Zig primary language or zig topic on own repos."
+      CONTRIBUTOR_USAGE: "Attributed substantial Zig modifications."
+
+  - id: PM.SKILL.0047
+    type: SKILL
+    name: "Authentication & Identity"
+    definition: "Implementing sign-in, sessions and identity: OAuth, JWT, SSO and access flows."
+    families: [FAM.BACKEND, FAM.APPSEC]
+    aliases: ["auth", "identity management"]
+    evidence_rules:
+      OBSERVED_USAGE: "Own repos tagged authentication/oauth/oauth2/jwt/identity/auth."
+      CONTRIBUTOR_USAGE: "Attributed auth flows or identity integrations."
+
+  - id: PM.SKILL.0048
+    type: SKILL
+    name: "R"
+    definition: "Statistical computing language for analysis and reporting."
+    families: [FAM.DATASCI]
+    evidence_rules:
+      OBSERVED_USAGE: "R primary language or r topic on own repos."
+      CONTRIBUTOR_USAGE: "Attributed substantial R analysis code."
+
+  - id: PM.SKILL.0049
+    type: SKILL
+    name: "GPU / CUDA Programming"
+    definition: "Programming GPUs for compute: CUDA, OpenCL, kernels and parallel algorithms."
+    families: [FAM.PERF]
+    aliases: ["CUDA", "GPGPU"]
+    evidence_rules:
+      OBSERVED_USAGE: "CUDA primary language or cuda/gpu/gpgpu/opencl topics on own repos."
+      CONTRIBUTOR_USAGE: "Attributed kernels or GPU-accelerated pipelines."
+
+  - id: PM.SKILL.0050
+    type: SKILL
+    name: "Front-end State Management"
+    definition: "Managing client application state with stores and predictable data flow (Redux, Zustand, MobX)."
+    families: [FAM.FRONTEND]
+    aliases: ["state management"]
+    evidence_rules:
+      OBSERVED_USAGE: "Own repos tagged state-management/redux/zustand/mobx/xstate."
+      CONTRIBUTOR_USAGE: "Attributed store architecture or state-flow code."
+
   # ---------------- Knowledge domains ----------------
   - id: PM.KNOW.0001
     type: KNOWLEDGE
@@ -574,6 +691,16 @@ concepts:
     evidence_rules:
       OBSERVED_USAGE: "Own repos tagged mev/flashbots/arbitrage/trading-bot."
       CONTRIBUTOR_USAGE: "Attributed searcher or trading systems."
+
+  - id: PM.KNOW.0006
+    type: KNOWLEDGE
+    name: "Algorithms & Data Structures"
+    definition: "Designing and analyzing algorithms and the structures that hold their data."
+    families: [FAM.SYSTEMS, FAM.ARCH]
+    aliases: ["DSA"]
+    evidence_rules:
+      OBSERVED_USAGE: "Own repos tagged algorithms/algorithm/data-structures/data-structure/leetcode."
+      CONTRIBUTOR_USAGE: "Attributed algorithm implementations with analysis or tests."
 
   # ---------------- Capabilities ----------------
   - id: PM.CAP.0001
@@ -823,6 +950,36 @@ concepts:
     evidence_rules:
       OBSERVED_USAGE: "Own repos tagged django."
       CONTRIBUTOR_USAGE: "Attributed web applications."
+
+  - id: PM.TOOL.0021
+    type: TOOL
+    name: "Nix"
+    definition: "Reproducible package and environment management (Nix, NixOS)."
+    families: [FAM.DEVOPS]
+    aliases: ["NixOS"]
+    evidence_rules:
+      OBSERVED_USAGE: "Nix primary language or nix/nixos topics on own repos."
+      CONTRIBUTOR_USAGE: "Attributed Nix expressions, flakes or NixOS configurations."
+
+  - id: PM.TOOL.0022
+    type: TOOL
+    name: "Front-end Build Tooling"
+    definition: "Bundlers, dev servers and transpilers for front-end code (Vite, webpack, esbuild, Babel)."
+    families: [FAM.FRONTEND, FAM.DEVOPS]
+    aliases: ["bundlers", "build tools"]
+    evidence_rules:
+      OBSERVED_USAGE: "Own repos tagged vite/webpack/esbuild/rollup/babel/bundler or related build topics."
+      CONTRIBUTOR_USAGE: "Attributed build configuration or tooling code."
+
+  - id: PM.TOOL.0023
+    type: TOOL
+    name: "Backend-as-a-Service"
+    definition: "Hosted backend platforms providing auth, database and storage (Firebase, Supabase, Appwrite)."
+    families: [FAM.BACKEND, FAM.CLOUD]
+    aliases: ["BaaS"]
+    evidence_rules:
+      OBSERVED_USAGE: "Own repos tagged firebase/supabase/appwrite/baas/pocketbase."
+      CONTRIBUTOR_USAGE: "Attributed applications built on a BaaS platform."
 
   # ---------------- Systems ----------------
   - id: PM.SYS.0001
