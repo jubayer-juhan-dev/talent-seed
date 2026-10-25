@@ -513,10 +513,53 @@
         }
       }
     },
+    "/api/concepts": {
+      "get": {
+        "summary": "Concepts List",
+        "description": "Talent Ontology: every active concept (roles, skills, tools, systems, knowledge, capabilities).",
+        "operationId": "concepts_list_api_concepts_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/Concept"
+                  },
+                  "type": "array",
+                  "title": "Response Concepts List Api Concepts Get"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/jobs": {
       "get": {
         "summary": "Jobs List",
-        "description": "Job Graph: all active jobs with requirement counts.",
+        "description": "Job Graph: all active jobs with requirement and match counts.",
         "operationId": "jobs_list_api_jobs_get",
         "responses": {
           "200": {
@@ -713,8 +756,21 @@
             "required": false,
             "schema": {
               "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
               "default": 50,
               "title": "Limit"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset"
             }
           }
         ],
@@ -1189,6 +1245,53 @@
           "usage_level"
         ],
         "title": "ComponentUsage"
+      },
+      "Concept": {
+        "properties": {
+          "concept_id": {
+            "type": "string",
+            "title": "Concept Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "type": {
+            "type": "string",
+            "title": "Type"
+          },
+          "definition": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Definition"
+          },
+          "aliases": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Aliases",
+            "default": []
+          },
+          "talents": {
+            "type": "integer",
+            "title": "Talents",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "required": [
+          "concept_id",
+          "name",
+          "type"
+        ],
+        "title": "Concept"
       },
       "Contact": {
         "properties": {
@@ -1720,6 +1823,11 @@
             "type": "integer",
             "title": "Pool"
           },
+          "offset": {
+            "type": "integer",
+            "title": "Offset",
+            "default": 0
+          },
           "items": {
             "items": {
               "$ref": "#/components/schemas/MatchRow"
@@ -1894,9 +2002,35 @@
             ],
             "title": "Posted At"
           },
+          "created_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At"
+          },
           "requirements_count": {
             "type": "integer",
             "title": "Requirements Count",
+            "default": 0
+          },
+          "required_count": {
+            "type": "integer",
+            "title": "Required Count",
+            "default": 0
+          },
+          "nice_to_have_count": {
+            "type": "integer",
+            "title": "Nice To Have Count",
+            "default": 0
+          },
+          "matches_count": {
+            "type": "integer",
+            "title": "Matches Count",
             "default": 0
           }
         },
@@ -2001,6 +2135,39 @@
               }
             ],
             "title": "Github Login"
+          },
+          "github_user_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Github User Id"
+          },
+          "priority_cohort": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Priority Cohort"
+          },
+          "country": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Country"
           },
           "score": {
             "type": "number",

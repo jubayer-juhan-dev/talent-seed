@@ -112,6 +112,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/concepts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Concepts List
+         * @description Talent Ontology: every active concept (roles, skills, tools, systems, knowledge, capabilities).
+         */
+        get: operations["concepts_list_api_concepts_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/jobs": {
         parameters: {
             query?: never;
@@ -121,7 +141,7 @@ export interface paths {
         };
         /**
          * Jobs List
-         * @description Job Graph: all active jobs with requirement counts.
+         * @description Job Graph: all active jobs with requirement and match counts.
          */
         get: operations["jobs_list_api_jobs_get"];
         put?: never;
@@ -255,6 +275,27 @@ export interface components {
             package_name?: string | null;
             /** Proof */
             proof?: string | null;
+        };
+        /** Concept */
+        Concept: {
+            /** Concept Id */
+            concept_id: string;
+            /** Name */
+            name: string;
+            /** Type */
+            type: string;
+            /** Definition */
+            definition?: string | null;
+            /**
+             * Aliases
+             * @default []
+             */
+            aliases: string[];
+            /**
+             * Talents
+             * @default 0
+             */
+            talents: number;
         };
         /** Contact */
         Contact: {
@@ -415,6 +456,11 @@ export interface components {
             /** Pool */
             pool: number;
             /**
+             * Offset
+             * @default 0
+             */
+            offset: number;
+            /**
              * Items
              * @default []
              */
@@ -472,11 +518,28 @@ export interface components {
             source: string;
             /** Posted At */
             posted_at?: string | null;
+            /** Created At */
+            created_at?: string | null;
             /**
              * Requirements Count
              * @default 0
              */
             requirements_count: number;
+            /**
+             * Required Count
+             * @default 0
+             */
+            required_count: number;
+            /**
+             * Nice To Have Count
+             * @default 0
+             */
+            nice_to_have_count: number;
+            /**
+             * Matches Count
+             * @default 0
+             */
+            matches_count: number;
         };
         /** MatchConcept */
         MatchConcept: {
@@ -505,6 +568,12 @@ export interface components {
             name?: string | null;
             /** Github Login */
             github_login?: string | null;
+            /** Github User Id */
+            github_user_id?: number | null;
+            /** Priority Cohort */
+            priority_cohort?: string | null;
+            /** Country */
+            country?: string | null;
             /** Score */
             score: number;
             /**
@@ -1240,6 +1309,44 @@ export interface operations {
             };
         };
     };
+    concepts_list_api_concepts_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Concept"][];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
     jobs_list_api_jobs_get: {
         parameters: {
             query?: never;
@@ -1392,6 +1499,7 @@ export interface operations {
             query?: {
                 pool?: string;
                 limit?: number;
+                offset?: number;
             };
             header?: never;
             path: {

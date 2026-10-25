@@ -44,6 +44,8 @@ function JobDetailRoute() {
 const jobDetailRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/jobs/$jobId",
+  // ?p=<person id> opens that match's profile over the job, as on Explore
+  validateSearch: (s: Record<string, unknown>): { p?: string } => (typeof s.p === "string" ? { p: s.p } : {}),
   component: JobDetailRoute,
 });
 
