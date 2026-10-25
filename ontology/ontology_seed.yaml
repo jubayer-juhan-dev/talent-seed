@@ -132,6 +132,16 @@ concepts:
       CONTRIBUTOR_USAGE: "Attributed training pipelines with justified splits and metrics."
       ADVANCED_USAGE: "Production inference systems with monitoring and rollback."
 
+  - id: PM.ROLE.0010
+    type: ROLE
+    name: "AI Engineer"
+    definition: "Builds products and systems on top of AI models: LLM integration, agents, retrieval, evaluation and safeguards."
+    families: [FAM.AIAPP, FAM.MLENG]
+    aliases: ["AI developer", "LLM engineer"]
+    evidence_rules:
+      CONTRIBUTOR_USAGE: "Attributed LLM or agent application code with evaluation or safeguard work."
+      ADVANCED_USAGE: "Owns production AI systems with measured quality or reliability outcomes."
+
   # ---------------- Skills ----------------
   - id: PM.SKILL.0001
     type: SKILL
@@ -263,6 +273,65 @@ concepts:
       OBSERVED_USAGE: "Own repos tagged css/tailwindcss/sass/bootstrap/responsive, or with CSS/SCSS as primary language."
       CONTRIBUTOR_USAGE: "Attributed layout/styling PRs; styling libraries (tailwindcss, sass, styled-components) found in own code."
       ADVANCED_USAGE: "Maintains a responsive component library or design tokens used across products."
+
+  - id: PM.SKILL.0014
+    type: SKILL
+    name: "JavaScript"
+    definition: "Core language of the web platform, used for browser, server and tooling code."
+    families: [FAM.FRONTEND, FAM.BACKEND]
+    aliases: ["JS", "ECMAScript"]
+    evidence_rules:
+      DECLARED: ".js/.jsx files or package.json in repo."
+      OBSERVED_USAGE: "JavaScript primary language or javascript/js/es6 topics on own repos."
+      CONTRIBUTOR_USAGE: "Attributed substantial .js modifications."
+
+  - id: PM.SKILL.0015
+    type: SKILL
+    name: "C++"
+    definition: "Compiled systems language for performance-critical native code."
+    families: [FAM.SYSTEMS, FAM.PERF]
+    aliases: ["cpp"]
+    evidence_rules:
+      OBSERVED_USAGE: "C++ primary language or cpp/cplusplus topics on own repos."
+      CONTRIBUTOR_USAGE: "Attributed substantial C++ modifications."
+
+  - id: PM.SKILL.0016
+    type: SKILL
+    name: "Java"
+    definition: "JVM language for enterprise services and Android applications."
+    families: [FAM.BACKEND]
+    evidence_rules:
+      OBSERVED_USAGE: "Java primary language or java/spring/spring-boot topics on own repos."
+      CONTRIBUTOR_USAGE: "Attributed substantial Java modifications."
+
+  - id: PM.SKILL.0017
+    type: SKILL
+    name: "C"
+    definition: "Foundational systems language for operating systems, embedded and native code."
+    families: [FAM.SYSTEMS, FAM.EMBEDDED]
+    evidence_rules:
+      OBSERVED_USAGE: "C primary language or c topic on own repos."
+      CONTRIBUTOR_USAGE: "Attributed substantial C modifications."
+
+  - id: PM.SKILL.0018
+    type: SKILL
+    name: "AI Agents & Tool Use (MCP)"
+    definition: "Building autonomous or tool-using AI agents, including Model Context Protocol servers and clients."
+    families: [FAM.AIAPP]
+    aliases: ["AI agents", "agent development", "MCP"]
+    evidence_rules:
+      OBSERVED_USAGE: "Own repos tagged ai-agents/ai-agent/agents/multi-agent/mcp/mcp-server/model-context-protocol."
+      CONTRIBUTOR_USAGE: "Attributed agent-framework or MCP server code."
+
+  - id: PM.SKILL.0019
+    type: SKILL
+    name: "LLM Application Development"
+    definition: "Integrating large language models into products: prompting, provider APIs and SDKs, local model serving."
+    families: [FAM.AIAPP]
+    aliases: ["LLM apps", "GenAI development"]
+    evidence_rules:
+      OBSERVED_USAGE: "Own repos tagged llm/openai/claude/anthropic/chatgpt/gemini/prompt-engineering/langchain/ollama."
+      CONTRIBUTOR_USAGE: "Attributed LLM integration code."
 
   # ---------------- Knowledge domains ----------------
   - id: PM.KNOW.0001
@@ -414,6 +483,46 @@ concepts:
       OBSERVED_USAGE: "Model code in an analyzed component."
       CONTRIBUTOR_USAGE: "Attributed training loops with evaluation."
       ADVANCED_USAGE: "Custom ops, distributed training."
+
+  - id: PM.TOOL.0009
+    type: TOOL
+    name: "Vue"
+    definition: "Progressive JavaScript framework for building user interfaces (Vue, Nuxt)."
+    families: [FAM.FRONTEND]
+    aliases: ["Vue.js", "Nuxt"]
+    evidence_rules:
+      OBSERVED_USAGE: "Vue primary language or vue/vuejs/vue3/nuxt/vuex/pinia topics on own repos."
+      CONTRIBUTOR_USAGE: "Attributed substantial component code."
+
+  - id: PM.TOOL.0010
+    type: TOOL
+    name: "Node.js"
+    definition: "JavaScript runtime for servers, APIs and tooling."
+    families: [FAM.BACKEND]
+    aliases: ["Node", "nodejs"]
+    evidence_rules:
+      OBSERVED_USAGE: "Own repos tagged nodejs/node/express/expressjs/bun/nestjs/fastify."
+      CONTRIBUTOR_USAGE: "Attributed server or CLI code."
+
+  - id: PM.TOOL.0011
+    type: TOOL
+    name: "Svelte"
+    definition: "Component framework compiling to vanilla JavaScript (Svelte, SvelteKit)."
+    families: [FAM.FRONTEND]
+    aliases: ["SvelteKit"]
+    evidence_rules:
+      OBSERVED_USAGE: "Svelte primary language or svelte/sveltekit topics on own repos."
+      CONTRIBUTOR_USAGE: "Attributed substantial component code."
+
+  - id: PM.TOOL.0012
+    type: TOOL
+    name: "Angular"
+    definition: "TypeScript web application framework by Google."
+    families: [FAM.FRONTEND]
+    aliases: ["AngularJS"]
+    evidence_rules:
+      OBSERVED_USAGE: "Own repos tagged angular/angularjs/rxjs."
+      CONTRIBUTOR_USAGE: "Attributed substantial application code."
 
   # ---------------- Systems ----------------
   - id: PM.SYS.0001
