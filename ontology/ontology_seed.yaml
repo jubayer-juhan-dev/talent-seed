@@ -440,6 +440,73 @@ concepts:
       OBSERVED_USAGE: "Own repos tagged ios/swiftui/xcode, or Objective-C primary language."
       CONTRIBUTOR_USAGE: "Attributed iOS application code."
 
+  - id: PM.SKILL.0030
+    type: SKILL
+    name: "Haskell"
+    definition: "Pure functional language used in finance and the Cardano ecosystem."
+    families: [FAM.SYSTEMS, FAM.WEB3]
+    evidence_rules:
+      OBSERVED_USAGE: "Haskell primary language on own repos."
+      CONTRIBUTOR_USAGE: "Attributed substantial Haskell modifications."
+
+  - id: PM.SKILL.0031
+    type: SKILL
+    name: "Game / 3D Development"
+    definition: "Building games and real-time 3D experiences: engines, rendering, WebGL."
+    families: [FAM.GAMES]
+    aliases: ["game development", "gamedev"]
+    evidence_rules:
+      OBSERVED_USAGE: "Own repos tagged game/gamedev/threejs/godot/webgl, or GDScript primary language."
+      CONTRIBUTOR_USAGE: "Attributed game or 3D code."
+
+  - id: PM.SKILL.0032
+    type: SKILL
+    name: "Scala"
+    definition: "JVM functional-object language used for services and data pipelines."
+    families: [FAM.BACKEND, FAM.DATAENG]
+    evidence_rules:
+      OBSERVED_USAGE: "Scala primary language on own repos."
+      CONTRIBUTOR_USAGE: "Attributed substantial Scala modifications."
+
+  - id: PM.SKILL.0033
+    type: SKILL
+    name: "Desktop App Development"
+    definition: "Building desktop applications with Electron, Tauri or native UI toolkits."
+    families: [FAM.DESKTOP]
+    aliases: ["desktop apps"]
+    evidence_rules:
+      OBSERVED_USAGE: "Own repos tagged electron/tauri/desktop-app, or QML primary language."
+      CONTRIBUTOR_USAGE: "Attributed desktop application code."
+
+  - id: PM.SKILL.0034
+    type: SKILL
+    name: "Elixir"
+    definition: "Functional language on the Erlang VM for fault-tolerant services (Phoenix)."
+    families: [FAM.BACKEND]
+    evidence_rules:
+      OBSERVED_USAGE: "Elixir primary language on own repos."
+      CONTRIBUTOR_USAGE: "Attributed substantial Elixir modifications."
+
+  - id: PM.SKILL.0035
+    type: SKILL
+    name: "Monitoring & Observability"
+    definition: "Instrumenting and observing production systems: metrics, traces, dashboards, alerts."
+    families: [FAM.SRE]
+    aliases: ["observability", "monitoring"]
+    evidence_rules:
+      OBSERVED_USAGE: "Own repos tagged monitoring/observability/prometheus/grafana/opentelemetry."
+      CONTRIBUTOR_USAGE: "Attributed instrumentation, dashboard or alerting code."
+
+  - id: PM.SKILL.0036
+    type: SKILL
+    name: "WebAssembly"
+    definition: "Portable binary instruction format for web and edge runtimes (Wasm)."
+    families: [FAM.SYSTEMS, FAM.FRONTEND]
+    aliases: ["Wasm"]
+    evidence_rules:
+      OBSERVED_USAGE: "Own repos tagged wasm/webassembly."
+      CONTRIBUTOR_USAGE: "Attributed Wasm modules or runtime code."
+
   # ---------------- Knowledge domains ----------------
   - id: PM.KNOW.0001
     type: KNOWLEDGE
@@ -741,6 +808,65 @@ concepts:
     name: "DeFi protocol"
     definition: "On-chain financial primitive: lending, AMM, derivatives, etc."
     families: [FAM.WEB3]
+
+  - id: PM.SYS.0005
+    type: SYSTEM
+    name: "Bitcoin & Lightning"
+    definition: "The Bitcoin network and its Lightning layer-2 payment network."
+    families: [FAM.WEB3]
+    aliases: ["BTC", "Lightning Network"]
+    evidence_rules:
+      OBSERVED_USAGE: "Own repos tagged bitcoin/lightning-network/lightning/ordinals."
+      CONTRIBUTOR_USAGE: "Attributed protocol or application code."
+
+  - id: PM.SYS.0006
+    type: SYSTEM
+    name: "Bots (Telegram / Discord)"
+    definition: "Chat bot applications on messaging platforms such as Telegram and Discord."
+    families: [FAM.BACKEND]
+    aliases: ["chatbots", "Telegram bots", "Discord bots"]
+    evidence_rules:
+      OBSERVED_USAGE: "Own repos tagged telegram-bot/discord-bot/telegram/discord/bot."
+      CONTRIBUTOR_USAGE: "Attributed bot application code."
+
+  - id: PM.SYS.0007
+    type: SYSTEM
+    name: "Solana"
+    definition: "High-throughput L1 blockchain with the SVM runtime (Anchor programs)."
+    families: [FAM.WEB3]
+    aliases: ["SVM"]
+    evidence_rules:
+      OBSERVED_USAGE: "Own repos tagged solana/anchor."
+      CONTRIBUTOR_USAGE: "Attributed program or client code."
+
+  - id: PM.SYS.0008
+    type: SYSTEM
+    name: "Wallets"
+    definition: "Cryptocurrency wallet software: key management, signing, transaction UX."
+    families: [FAM.WEB3]
+    aliases: ["crypto wallets"]
+    evidence_rules:
+      OBSERVED_USAGE: "Own repos tagged wallet/crypto-wallet."
+      CONTRIBUTOR_USAGE: "Attributed wallet code."
+
+  - id: PM.SYS.0009
+    type: SYSTEM
+    name: "Chrome Extensions"
+    definition: "Browser extensions for Chrome and Chromium-based browsers."
+    families: [FAM.FRONTEND]
+    aliases: ["browser extensions"]
+    evidence_rules:
+      OBSERVED_USAGE: "Own repos tagged chrome-extension/browser-extension."
+      CONTRIBUTOR_USAGE: "Attributed extension code."
+
+  - id: PM.SYS.0010
+    type: SYSTEM
+    name: "Nostr"
+    definition: "Decentralized social protocol over relays (notes and other stuff transported by relays)."
+    families: [FAM.WEB3]
+    evidence_rules:
+      OBSERVED_USAGE: "Own repos tagged nostr."
+      CONTRIBUTOR_USAGE: "Attributed client or relay code."
 
 relations:
   # Capability → tool associations (USES: technical association, not attribution)
