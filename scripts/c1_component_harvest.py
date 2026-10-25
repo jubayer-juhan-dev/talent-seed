@@ -143,7 +143,10 @@ def main():
     d = duckdb.connect(str(ROOT / "data" / "talent_seed.duckdb"), read_only=True)
     import csv as _csv
     cohort = set()
-    for name in ("p1_cohort.csv", "p1_rest_cohort.csv"):
+    cohort_files = os.environ.get(
+        "C1_COHORT_FILES", "p1_cohort.csv,p1_rest_cohort.csv").split(",")
+    cohort_files = [n.strip() for n in cohort_files if n.strip()]
+    for name in cohort_files:
         with open(ROOT / "exports" / name) as f:
             cohort |= {r["person_id"] for r in _csv.DictReader(f)}
     rows = d.execute(
@@ -158,7 +161,7 @@ def main():
     talents = [t for t in rows if t[0] in cohort]
     import csv as _csv2
     login_by_id = {}
-    for name in ("p1_cohort.csv", "p1_rest_cohort.csv"):
+    for name in cohort_files:
         with open(ROOT / "exports" / name) as f:
             for r in _csv2.DictReader(f):
                 login_by_id[r["person_id"]] = r.get("github_login") or ""
