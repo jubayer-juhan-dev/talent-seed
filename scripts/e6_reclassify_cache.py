@@ -25,6 +25,7 @@ from collections import Counter, defaultdict
 from pathlib import Path
 
 import psycopg2
+from psycopg2.extras import execute_values
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
@@ -46,7 +47,7 @@ CACHE = ROOT / "data" / "tier1_github.sqlite"
 UPSERT = """INSERT INTO talent_evidence
            (evidence_id, talent_id, concept_id, concept_name, concept_type,
             status, usage_level, confidence, source, note, enriched_at)
-           VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+           VALUES %s
            ON CONFLICT (evidence_id) DO UPDATE SET
              confidence=EXCLUDED.confidence, note=EXCLUDED.note,
              enriched_at=EXCLUDED.enriched_at, loaded_at=now()"""
@@ -128,7 +129,7 @@ def main():
                         e["usage"], e["confidence"], e["source"],
                         e.get("note"), fetched_at))
         if batch:
-            cur.executemany(UPSERT, batch)
+            execute_values(cur, UPSERT, batch, page_size=1000)
             batch.clear()
 
     if a.dry_run:
