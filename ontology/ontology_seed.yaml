@@ -507,6 +507,26 @@ concepts:
       OBSERVED_USAGE: "Own repos tagged wasm/webassembly."
       CONTRIBUTOR_USAGE: "Attributed Wasm modules or runtime code."
 
+  - id: PM.SKILL.0037
+    type: SKILL
+    name: "Move (Sui / Aptos)"
+    definition: "Smart-contract language for the Sui and Aptos chains."
+    families: [FAM.WEB3]
+    aliases: ["Move"]
+    evidence_rules:
+      OBSERVED_USAGE: "Move primary language or own repos tagged sui/aptos."
+      CONTRIBUTOR_USAGE: "Attributed substantial Move modules."
+
+  - id: PM.SKILL.0038
+    type: SKILL
+    name: "Cairo (Starknet)"
+    definition: "Smart-contract language for Starknet's validity rollup."
+    families: [FAM.WEB3]
+    aliases: ["Cairo"]
+    evidence_rules:
+      OBSERVED_USAGE: "Cairo primary language or own repos tagged starknet."
+      CONTRIBUTOR_USAGE: "Attributed substantial Cairo contracts."
+
   # ---------------- Knowledge domains ----------------
   - id: PM.KNOW.0001
     type: KNOWLEDGE
@@ -534,6 +554,26 @@ concepts:
     aliases: ["a11y"]
     evidence_rules:
       CONTRIBUTOR_USAGE: "Accessibility tests, fixes, ARIA work in attributed PRs."
+
+  - id: PM.KNOW.0004
+    type: KNOWLEDGE
+    name: "Formal Verification"
+    definition: "Proving correctness of programs and protocols with formal methods (Lean, Coq, Certora)."
+    families: [FAM.WEB3, FAM.APPSEC]
+    aliases: ["formal methods"]
+    evidence_rules:
+      OBSERVED_USAGE: "Lean or Coq primary language, or own repos tagged formal-verification/certora."
+      CONTRIBUTOR_USAGE: "Attributed proofs or verified contracts."
+
+  - id: PM.KNOW.0005
+    type: KNOWLEDGE
+    name: "MEV & Trading Infrastructure"
+    definition: "Maximal extractable value and on-chain trading systems: searchers, arbitrage, execution infrastructure."
+    families: [FAM.WEB3]
+    aliases: ["MEV"]
+    evidence_rules:
+      OBSERVED_USAGE: "Own repos tagged mev/flashbots/arbitrage/trading-bot."
+      CONTRIBUTOR_USAGE: "Attributed searcher or trading systems."
 
   # ---------------- Capabilities ----------------
   - id: PM.CAP.0001
@@ -867,6 +907,36 @@ concepts:
     evidence_rules:
       OBSERVED_USAGE: "Own repos tagged nostr."
       CONTRIBUTOR_USAGE: "Attributed client or relay code."
+
+  - id: PM.SYS.0011
+    type: SYSTEM
+    name: "Payments & Stablecoins"
+    definition: "Payment systems and stablecoin infrastructure (USDC, x402, processors)."
+    families: [FAM.WEB3]
+    aliases: ["payments", "stablecoins"]
+    evidence_rules:
+      OBSERVED_USAGE: "Own repos tagged payments/usdc/stablecoin/x402/stripe."
+      CONTRIBUTOR_USAGE: "Attributed payment integrations."
+
+  - id: PM.SYS.0012
+    type: SYSTEM
+    name: "Oracles"
+    definition: "Oracle networks bringing off-chain data on-chain (Chainlink, Pyth)."
+    families: [FAM.WEB3]
+    aliases: ["oracle networks"]
+    evidence_rules:
+      OBSERVED_USAGE: "Own repos tagged oracle/chainlink/pyth."
+      CONTRIBUTOR_USAGE: "Attributed oracle integrations or data feeds."
+
+  - id: PM.SYS.0013
+    type: SYSTEM
+    name: "Cross-chain / Bridges"
+    definition: "Cross-chain messaging and bridge infrastructure (IBC, LayerZero)."
+    families: [FAM.WEB3]
+    aliases: ["bridges", "cross-chain"]
+    evidence_rules:
+      OBSERVED_USAGE: "Own repos tagged bridge/cross-chain/ibc/layerzero."
+      CONTRIBUTOR_USAGE: "Attributed bridge or messaging code."
 
 relations:
   # Capability → tool associations (USES: technical association, not attribution)
