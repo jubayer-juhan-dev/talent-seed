@@ -281,7 +281,20 @@ class JobRow(BaseModel):
     location_country: str | None = None
     source: str
     posted_at: str | None = None
+    created_at: str | None = None
     requirements_count: int = 0
+    required_count: int = 0
+    nice_to_have_count: int = 0
+    matches_count: int = 0
+
+
+class Concept(BaseModel):
+    concept_id: str
+    name: str
+    type: str
+    definition: str | None = None
+    aliases: list[str] = []
+    talents: int = 0
 
 
 class JobRequirement(BaseModel):
@@ -332,6 +345,9 @@ class MatchRow(BaseModel):
     talent_id: str
     name: str | None = None
     github_login: str | None = None
+    github_user_id: int | None = None
+    priority_cohort: str | None = None
+    country: str | None = None
     score: float
     contributor_concepts: int = 0
     breakdown: list[MatchConcept] = []
@@ -340,4 +356,5 @@ class MatchRow(BaseModel):
 class JobMatches(BaseModel):
     total: int
     pool: int
+    offset: int = 0
     items: list[MatchRow] = []

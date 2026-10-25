@@ -159,16 +159,18 @@ def person_github_profile(person_id: Annotated[str, Query(alias="id", descriptio
     return out
 
 
+@app.get("/api/concepts", response_model=list[models.Concept], responses=ERRORS)
+def concepts_list():
+    """Talent Ontology: every active concept (roles, skills, tools, systems, knowledge, capabilities)."""
+    from . import jobs as jobmod
+    return jobmod.list_concepts()
+
+
 @app.get("/api/jobs", response_model=list[models.JobRow], responses=ERRORS)
 def jobs_list():
-    """Job Graph: all active jobs with requirement counts."""
+    """Job Graph: all active jobs with requirement and match counts."""
     from . import jobs as jobmod
-    out = []
-    for j in jobmod.list_jobs():
-        j = dict(j)
-        j["requirements_count"] = j.pop("count", 0) if "count" in j else 0
-        out.append(j)
-    return out
+    return jobmod.list_jobs()
 
 
 @app.get("/api/jobs/{job_id}", response_model=models.JobDetail,
@@ -183,18 +185,26 @@ def job_detail(job_id: str):
 
 @app.get("/api/jobs/{job_id}/matches", response_model=models.JobMatches,
          responses={**ERRORS, 404: {"model": models.Error}})
-def job_matches(job_id: str, con: Con, pool: str = "all", limit: int = 50):
+def job_matches(job_id: str, con: Con, pool: str = "all",
+                limit: Annotated[int, Query(ge=1, le=200)] = 50,
+                offset: Annotated[int, Query(ge=0)] = 0):
     """j3 matching: ranked talents with per-concept evidence breakdown."""
     from . import jobs as jobmod
     if jobmod.get_job(job_id) is None:
         raise HTTPException(404, "job not found")
-    out = jobmod.match(job_id, pool=pool, limit=limit)
+    out = jobmod.match(job_id, pool=pool, limit=limit, offset=offset)
+    out["offset"] = offset
+    ids = [r["talent_id"] for r in out["items"]]
+    people = {}
+    if ids:
+        # one batched lookup: per-row queries cost ~50ms each on talent_seed
+        people = {row[0]: row[1:] for row in con.execute(
+            "SELECT person_id, display_name, github_login, github_user_id, priority_cohort, country"
+            f" FROM talent_seed WHERE person_id IN ({','.join('?' * len(ids))})", ids).fetchall()}
     for r in out["items"]:
-        row = con.execute(
-            "SELECT display_name, github_login FROM talent_seed WHERE person_id = ?",
-            [r["talent_id"]]).fetchone()
-        if row:
-            r["name"], r["github_login"] = row[0], row[1]
+        if r["talent_id"] in people:
+            (r["name"], r["github_login"], r["github_user_id"],
+             r["priority_cohort"], r["country"]) = people[r["talent_id"]]
     return out
 
 
@@ -218,19 +228,28 @@ def job_edit_requirements(job_id: str, body: list[JobRequirementEdit]):
         cur.execute("SELECT 1 FROM jobs WHERE job_id = %s", (job_id,))
         if not cur.fetchone():
             raise HTTPException(404, "job not found")
-        cur.execute("SELECT concept_id, canonical_name FROM concepts")
-        known = {name: cid for cid, name in cur.fetchall()}
+        cur.execute("SELECT concept_id, canonical_name, concept_type FROM concepts")
+        concepts = cur.fetchall()
+        by_id = {cid: (name, ctype) for cid, name, ctype in concepts}
+        by_name = {name: cid for cid, name, _ in concepts}
+        # a kept concept keeps its extraction provenance (quote, status, source);
+        # only concepts the recruiter added are marked as manual edits
+        cur.execute("SELECT concept_id, status, confidence, evidence_text, source"
+                    " FROM job_requirements WHERE job_id = %s", (job_id,))
+        prior = {row[0]: row[1:] for row in cur.fetchall() if row[0]}
         cur.execute("DELETE FROM job_requirements WHERE job_id = %s", (job_id,))
         for r in body:
+            cid = r.concept_id if r.concept_id in by_id else by_name.get(r.concept_name)
+            name, ctype = by_id.get(cid, (r.concept_name, r.concept_type))
+            status, conf, quote, source = prior.get(cid, ("FACT", 1.0, "recruiter edit", "manual:edit"))
             cur.execute(
                 "INSERT INTO job_requirements (job_id, concept_id, concept_name,"
                 " concept_type, requirement, status, confidence, evidence_text, source)"
-                " VALUES (%s,%s,%s,%s,%s,'FACT',1.0,'recruiter edit','manual:edit')"
+                " VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s)"
                 " ON CONFLICT DO NOTHING",
-                (job_id, known.get(r.concept_name, r.concept_id), r.concept_name,
-                 r.concept_type,
+                (job_id, cid, name, ctype,
                  r.requirement if r.requirement in ("required", "nice_to_have")
-                 else "required"))
+                 else "required", status, conf, quote, source))
     finally:
         conn.close()
     from . import jobs as jobmod

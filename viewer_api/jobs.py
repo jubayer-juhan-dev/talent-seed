@@ -12,6 +12,9 @@ from . import settings
 
 REQ_WEIGHT = {"required": 1.0, "nice_to_have": 0.4}
 
+# evidence that gives a concept coverage > 0 in match() (UNKNOWN and zero-confidence rows don't)
+POSITIVE_EVIDENCE = "(e.status = 'FACT' OR (e.status = 'INFERENCE' AND COALESCE(e.confidence, 0) > 0))"
+
 
 def _conn():
     import psycopg2
@@ -32,14 +35,50 @@ def list_jobs():
     conn = _conn()
     try:
         cur = conn.cursor()
+        # matches_count mirrors match(): talents in the evidence pool with any
+        # evidence of positive coverage on one of the job's concepts.
         cur.execute(
             """SELECT j.job_id, j.title, j.company, j.location_text, j.location_country,
-                      j.source, j.posted_at,
+                      j.source, j.posted_at, j.fetched_at,
                       (SELECT COUNT(*) FROM job_requirements r WHERE r.job_id = j.job_id)
+                          AS requirements_count,
+                      (SELECT COUNT(*) FROM job_requirements r
+                        WHERE r.job_id = j.job_id AND r.requirement = 'required') AS required_count,
+                      (SELECT COUNT(*) FROM job_requirements r
+                        WHERE r.job_id = j.job_id AND r.requirement = 'nice_to_have')
+                          AS nice_to_have_count,
+                      (SELECT COUNT(DISTINCT e.talent_id) FROM job_requirements r
+                         JOIN talent_evidence e ON e.concept_id = r.concept_id
+                        WHERE r.job_id = j.job_id
+                          AND """ + POSITIVE_EVIDENCE + """)
+                          AS matches_count
                FROM jobs j WHERE j.active ORDER BY j.fetched_at DESC""")
         cols = [d.name for d in cur.description]
-        return [dict(zip(cols, row)) | {"posted_at": str(row[6])[:10] if row[6] else None}
-                for row in cur.fetchall()]
+        out = []
+        for row in cur.fetchall():
+            j = dict(zip(cols, row))
+            j["posted_at"] = str(j["posted_at"])[:10] if j["posted_at"] else None
+            j["created_at"] = str(j.pop("fetched_at"))[:10] if j.get("fetched_at") else None
+            out.append(j)
+        return out
+    finally:
+        conn.close()
+
+
+def list_concepts():
+    conn = _conn()
+    try:
+        cur = conn.cursor()
+        cur.execute(
+            """SELECT k.concept_id, k.canonical_name AS name, k.concept_type AS type, k.definition,
+                      COALESCE(k.aliases, ARRAY[]::text[]) AS aliases,
+                      COUNT(DISTINCT e.talent_id) AS talents
+               FROM concepts k LEFT JOIN talent_evidence e ON e.concept_id = k.concept_id
+                    AND """ + POSITIVE_EVIDENCE + """
+               WHERE k.status = 'ACTIVE'
+               GROUP BY 1, 2, 3, 4, 5 ORDER BY k.concept_type, k.canonical_name""")
+        cols = [d.name for d in cur.description]
+        return [dict(zip(cols, row)) for row in cur.fetchall()]
     finally:
         conn.close()
 
@@ -78,7 +117,7 @@ def _pool_ids(cur, pool):
     return [r[0] for r in cur.fetchall()]
 
 
-def match(job_id, pool="ai", limit=50):
+def match(job_id, pool="ai", limit=50, offset=0):
     conn = _conn()
     try:
         cur = conn.cursor()
@@ -108,7 +147,10 @@ def match(job_id, pool="ai", limit=50):
             if (key not in best or cov > best[key][0]
                     or (cov == best[key][0] and cur_rank > LEVEL_RANK.get(best[key][3] or "", 0))):
                 best[key] = (cov, status, conf, usage)
-        denom = sum(REQ_WEIGHT[r[2]] for r in reqs)
+        # A requirement no talent in the pool has any evidence for can't separate anyone; it is
+        # shown as "unscored" and left out of the denominator instead of capping every score.
+        scorable = {cid for (_, cid), v in best.items() if v[0] > 0}
+        denom = sum(REQ_WEIGHT[r[2]] for r in reqs if r[0] in scorable)
         results = []
         for tid in pool_ids:
             breakdown = []
@@ -116,6 +158,12 @@ def match(job_id, pool="ai", limit=50):
             contrib = 0
             for cid, cname, reqtype in reqs:
                 cov, status, conf, usage = best.get((tid, cid), (0.0, None, None, None))
+                if cid not in scorable:
+                    breakdown.append({
+                        "concept_id": cid, "concept_name": cname, "requirement": reqtype,
+                        "coverage": 0.0, "state": "unscored", "evidence_status": None,
+                        "confidence": None, "usage_level": None})
+                    continue
                 total += REQ_WEIGHT[reqtype] * cov
                 if usage in ("CONTRIBUTOR_USAGE", "ADVANCED_USAGE") and cov >= 0.8:
                     contrib += 1
@@ -134,6 +182,6 @@ def match(job_id, pool="ai", limit=50):
         # contributor-backed coverage wins ties (boost is display-invisible)
         results.sort(key=lambda r: (-r["score"], -r["contributor_concepts"]))
         return {"total": len(results), "pool": len(pool_ids),
-                "items": results[:limit]}
+                "items": results[offset:offset + limit]}
     finally:
         conn.close()
