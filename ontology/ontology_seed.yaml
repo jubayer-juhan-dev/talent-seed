@@ -253,6 +253,17 @@ concepts:
     evidence_rules:
       CONTRIBUTOR_USAGE: "Attributed pipeline definitions with real delivery outcomes."
 
+  - id: PM.SKILL.0013
+    type: SKILL
+    name: "Responsive UI & CSS"
+    definition: "Styling and laying out web interfaces that work across screen sizes and browsers: responsive/mobile-first layout, CSS and its tooling (SASS/SCSS, Tailwind, CSS-in-JS)."
+    families: [FAM.FRONTEND]
+    aliases: ["responsive design", "responsive web design", "cross-browser compatibility", "CSS", "HTML/CSS", "SASS", "Tailwind"]
+    evidence_rules:
+      OBSERVED_USAGE: "Own repos tagged css/tailwindcss/sass/bootstrap/responsive, or with CSS/SCSS as primary language."
+      CONTRIBUTOR_USAGE: "Attributed layout/styling PRs; styling libraries (tailwindcss, sass, styled-components) found in own code."
+      ADVANCED_USAGE: "Maintains a responsive component library or design tokens used across products."
+
   # ---------------- Knowledge domains ----------------
   - id: PM.KNOW.0001
     type: KNOWLEDGE
