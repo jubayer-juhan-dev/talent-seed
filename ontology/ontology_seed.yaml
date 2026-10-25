@@ -142,6 +142,16 @@ concepts:
       CONTRIBUTOR_USAGE: "Attributed LLM or agent application code with evaluation or safeguard work."
       ADVANCED_USAGE: "Owns production AI systems with measured quality or reliability outcomes."
 
+  - id: PM.ROLE.0011
+    type: ROLE
+    name: "Mobile Engineer"
+    definition: "Builds native and cross-platform mobile applications: lifecycle, offline, sync and performance."
+    families: [FAM.MOBILE]
+    aliases: ["mobile developer"]
+    evidence_rules:
+      CONTRIBUTOR_USAGE: "Attributed iOS or Android application code."
+      ADVANCED_USAGE: "Owns mobile architecture, release quality or store operations at scale."
+
   # ---------------- Skills ----------------
   - id: PM.SKILL.0001
     type: SKILL
@@ -333,6 +343,103 @@ concepts:
       OBSERVED_USAGE: "Own repos tagged llm/openai/claude/anthropic/chatgpt/gemini/prompt-engineering/langchain/ollama."
       CONTRIBUTOR_USAGE: "Attributed LLM integration code."
 
+  - id: PM.SKILL.0020
+    type: SKILL
+    name: "Shell Scripting / Linux"
+    definition: "Automating systems with shell scripts and working in Linux environments."
+    families: [FAM.DEVOPS, FAM.SYSTEMS]
+    aliases: ["bash", "shell scripting", "Linux"]
+    evidence_rules:
+      OBSERVED_USAGE: "Shell primary language or bash/linux/zsh topics on own repos."
+      CONTRIBUTOR_USAGE: "Attributed substantial shell scripts or system automation."
+
+  - id: PM.SKILL.0021
+    type: SKILL
+    name: "Machine Learning"
+    definition: "Training and evaluating models on data: features, validation, optimization, inference."
+    families: [FAM.MLENG, FAM.MLRES]
+    aliases: ["ML"]
+    evidence_rules:
+      OBSERVED_USAGE: "Jupyter Notebook primary language or machine-learning/deep-learning/tensorflow/scikit-learn/data-science topics on own repos."
+      CONTRIBUTOR_USAGE: "Attributed training, evaluation or inference pipelines."
+
+  - id: PM.SKILL.0022
+    type: SKILL
+    name: "Ruby"
+    definition: "Dynamic language for web services, dominant with Ruby on Rails."
+    families: [FAM.BACKEND]
+    aliases: ["RoR"]
+    evidence_rules:
+      OBSERVED_USAGE: "Ruby primary language or rails/ruby-on-rails topics on own repos."
+      CONTRIBUTOR_USAGE: "Attributed substantial Ruby modifications."
+
+  - id: PM.SKILL.0023
+    type: SKILL
+    name: "C#"
+    definition: "Managed language for services, desktop applications and Unity games."
+    families: [FAM.BACKEND, FAM.GAMES]
+    aliases: ["csharp", ".NET"]
+    evidence_rules:
+      OBSERVED_USAGE: "C# primary language or csharp/dotnet topics on own repos."
+      CONTRIBUTOR_USAGE: "Attributed substantial C# modifications."
+
+  - id: PM.SKILL.0024
+    type: SKILL
+    name: "PHP"
+    definition: "Server-side scripting language for web backends (Laravel, WordPress)."
+    families: [FAM.BACKEND]
+    evidence_rules:
+      OBSERVED_USAGE: "PHP primary language or laravel/wordpress topics on own repos."
+      CONTRIBUTOR_USAGE: "Attributed substantial PHP modifications."
+
+  - id: PM.SKILL.0025
+    type: SKILL
+    name: "Swift"
+    definition: "Apple-platform language for iOS and macOS applications."
+    families: [FAM.MOBILE]
+    evidence_rules:
+      OBSERVED_USAGE: "Swift primary language or swift/swiftui topics on own repos."
+      CONTRIBUTOR_USAGE: "Attributed substantial Swift modifications."
+
+  - id: PM.SKILL.0026
+    type: SKILL
+    name: "Kotlin"
+    definition: "JVM language, preferred for Android and also used for services."
+    families: [FAM.MOBILE, FAM.BACKEND]
+    evidence_rules:
+      OBSERVED_USAGE: "Kotlin primary language on own repos."
+      CONTRIBUTOR_USAGE: "Attributed substantial Kotlin modifications."
+
+  - id: PM.SKILL.0027
+    type: SKILL
+    name: "Android Development"
+    definition: "Building Android applications: activities, Jetpack libraries, Play releases."
+    families: [FAM.MOBILE]
+    aliases: ["Android"]
+    evidence_rules:
+      OBSERVED_USAGE: "Own repos tagged android/jetpack-compose."
+      CONTRIBUTOR_USAGE: "Attributed Android application code."
+
+  - id: PM.SKILL.0028
+    type: SKILL
+    name: "Automated Testing"
+    definition: "Writing and running automated tests: unit, integration and end-to-end."
+    families: [FAM.QA]
+    aliases: ["test automation", "QA automation"]
+    evidence_rules:
+      OBSERVED_USAGE: "Own repos tagged testing/jest/pytest/e2e/playwright/cypress/vitest."
+      CONTRIBUTOR_USAGE: "Attributed test suites wired into CI."
+
+  - id: PM.SKILL.0029
+    type: SKILL
+    name: "iOS Development"
+    definition: "Building iOS applications: Swift or Objective-C, Xcode, App Store releases."
+    families: [FAM.MOBILE]
+    aliases: ["iOS"]
+    evidence_rules:
+      OBSERVED_USAGE: "Own repos tagged ios/swiftui/xcode, or Objective-C primary language."
+      CONTRIBUTOR_USAGE: "Attributed iOS application code."
+
   # ---------------- Knowledge domains ----------------
   - id: PM.KNOW.0001
     type: KNOWLEDGE
@@ -404,6 +511,16 @@ concepts:
     families: [FAM.DATAENG]
     evidence_rules:
       CONTRIBUTOR_USAGE: "Attributed pipeline with orchestration and quality checks."
+
+  - id: PM.CAP.0006
+    type: CAPABILITY
+    name: "RAG / Retrieval"
+    definition: "Retrieval-augmented generation: indexing, embeddings and vector search feeding LLM context."
+    families: [FAM.AIAPP]
+    aliases: ["RAG", "retrieval-augmented generation"]
+    evidence_rules:
+      OBSERVED_USAGE: "Own repos tagged rag/vector-database/embeddings/semantic-search/knowledge-graph."
+      CONTRIBUTOR_USAGE: "Attributed retrieval pipeline code."
 
   # ---------------- Tools ----------------
   - id: PM.TOOL.0001
@@ -523,6 +640,82 @@ concepts:
     evidence_rules:
       OBSERVED_USAGE: "Own repos tagged angular/angularjs/rxjs."
       CONTRIBUTOR_USAGE: "Attributed substantial application code."
+
+  - id: PM.TOOL.0013
+    type: TOOL
+    name: "Flutter (Dart)"
+    definition: "Cross-platform UI toolkit using the Dart language."
+    families: [FAM.MOBILE]
+    aliases: ["Flutter", "Dart"]
+    evidence_rules:
+      OBSERVED_USAGE: "Dart primary language or flutter topic on own repos."
+      CONTRIBUTOR_USAGE: "Attributed Flutter application code."
+
+  - id: PM.TOOL.0014
+    type: TOOL
+    name: "MongoDB"
+    definition: "Document-oriented NoSQL database."
+    families: [FAM.DATA, FAM.BACKEND]
+    aliases: ["mongo"]
+    evidence_rules:
+      OBSERVED_USAGE: "Own repos tagged mongodb/mongoose."
+      CONTRIBUTOR_USAGE: "Attributed data-layer code."
+
+  - id: PM.TOOL.0015
+    type: TOOL
+    name: "React Native"
+    definition: "Framework for native mobile apps written in React (incl. Expo)."
+    families: [FAM.MOBILE]
+    aliases: ["RN", "Expo"]
+    evidence_rules:
+      OBSERVED_USAGE: "Own repos tagged react-native/expo."
+      CONTRIBUTOR_USAGE: "Attributed mobile application code."
+
+  - id: PM.TOOL.0016
+    type: TOOL
+    name: "FastAPI"
+    definition: "Python web framework for APIs built on type hints."
+    families: [FAM.BACKEND]
+    evidence_rules:
+      OBSERVED_USAGE: "Own repos tagged fastapi."
+      CONTRIBUTOR_USAGE: "Attributed API services."
+
+  - id: PM.TOOL.0017
+    type: TOOL
+    name: "AWS"
+    definition: "Amazon Web Services cloud platform."
+    families: [FAM.CLOUD]
+    aliases: ["Amazon Web Services"]
+    evidence_rules:
+      OBSERVED_USAGE: "Own repos tagged aws/aws-lambda."
+      CONTRIBUTOR_USAGE: "Attributed infrastructure or service code running on AWS."
+
+  - id: PM.TOOL.0018
+    type: TOOL
+    name: "Redis"
+    definition: "In-memory data store for caching, queues and pub/sub."
+    families: [FAM.DATA, FAM.BACKEND]
+    evidence_rules:
+      OBSERVED_USAGE: "Own repos tagged redis."
+      CONTRIBUTOR_USAGE: "Attributed cache or queue integration code."
+
+  - id: PM.TOOL.0019
+    type: TOOL
+    name: "Flask"
+    definition: "Lightweight Python web framework."
+    families: [FAM.BACKEND]
+    evidence_rules:
+      OBSERVED_USAGE: "Own repos tagged flask."
+      CONTRIBUTOR_USAGE: "Attributed web services."
+
+  - id: PM.TOOL.0020
+    type: TOOL
+    name: "Django"
+    definition: "Batteries-included Python web framework."
+    families: [FAM.BACKEND]
+    evidence_rules:
+      OBSERVED_USAGE: "Own repos tagged django."
+      CONTRIBUTOR_USAGE: "Attributed web applications."
 
   # ---------------- Systems ----------------
   - id: PM.SYS.0001
