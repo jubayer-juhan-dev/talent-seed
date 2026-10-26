@@ -215,6 +215,47 @@ function ShortlistPanel() {
   );
 }
 
+function OntologyPanel() {
+  const { data } = $api.useQuery("get", "/api/concepts", {}, { staleTime: 5 * 60_000 });
+  const top = data ? [...data].sort((a, b) => b.talents - a.talents).slice(0, 8) : [];
+  const max = Math.max(1, ...top.map((c) => c.talents));
+  return (
+    <Panel
+      title="Skills Graph"
+      sub={data ? `${data.length} ontology concepts behind every match` : "Loading…"}
+      aside={
+        <Link to="/ontology" className="text-[13px] text-primary hover:text-brand-400">
+          View all concepts
+        </Link>
+      }
+    >
+      {data ? (
+        <ul className="flex flex-col">
+          {top.map((c) => (
+            <li
+              key={c.concept_id}
+              className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 border-b border-foreground/8 py-2 last:border-b-0"
+            >
+              <div className="min-w-0">
+                <div className="truncate text-sm">{c.name}</div>
+                <div className="mt-1 h-1 overflow-hidden rounded-full bg-foreground/10">
+                  <div
+                    className="h-full rounded-full bg-brand-500"
+                    style={{ width: `${Math.max(3, Math.round((c.talents / max) * 100))}%` }}
+                  />
+                </div>
+              </div>
+              <span className="text-sm tabular-nums">{fmt(c.talents)}</span>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <Skeleton className="h-[260px]" />
+      )}
+    </Panel>
+  );
+}
+
 export function OverviewPage() {
   const { data, error } = $api.useQuery("get", "/api/overview", {}, { staleTime: 5 * 60_000 });
   const counts = data && Object.fromEntries(data.cohorts.map((c) => [c.k, c.n]));
@@ -347,6 +388,8 @@ export function OverviewPage() {
               </Panel>
             </div>
           </div>
+
+          <OntologyPanel />
 
           <div className="grid grid-cols-1 items-start gap-6 md:grid-cols-2 xl:grid-cols-3">
             <MostActive />

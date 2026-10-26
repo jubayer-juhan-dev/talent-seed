@@ -4,6 +4,7 @@ import { ExplorePage } from "@/features/explore/explore-page";
 import { validateExploreSearch } from "@/features/explore/search";
 import { JobDetailPage } from "@/features/jobs/job-detail-page";
 import { JobsPage } from "@/features/jobs/jobs-page";
+import { OntologyPage } from "@/features/ontology/ontology-page";
 import { OverviewPage } from "@/features/overview/overview-page";
 
 /** `key` (the access key) is kept on every navigation, so reloads work even when cookies are blocked. */
@@ -49,6 +50,12 @@ const jobDetailRoute = createRoute({
   component: JobDetailRoute,
 });
 
+const ontologyRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/ontology",
+  component: OntologyPage,
+});
+
 const exploreRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/explore",
@@ -61,7 +68,7 @@ const exploreRoute = createRoute({
 });
 
 export const router = createRouter({
-  routeTree: rootRoute.addChildren([overviewRoute, exploreRoute, jobsRoute, jobDetailRoute]),
+  routeTree: rootRoute.addChildren([overviewRoute, exploreRoute, jobsRoute, jobDetailRoute, ontologyRoute]),
   basepath: import.meta.env.BASE_URL.replace(/\/$/, "") || "/",
   defaultPreload: "intent",
   scrollRestoration: true,

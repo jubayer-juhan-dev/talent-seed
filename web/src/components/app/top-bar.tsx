@@ -35,6 +35,14 @@ function NavLinks({ className }: { className: string }) {
       >
         Jobs
       </Link>
+      <Link
+        to="/ontology"
+        className={link}
+        activeProps={{ className: active, "aria-current": "page" }}
+        activeOptions={{ includeSearch: false }}
+      >
+        Ontology
+      </Link>
     </nav>
   );
 }
