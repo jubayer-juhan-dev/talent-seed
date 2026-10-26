@@ -13,6 +13,7 @@ talent_evidence with concept FACTs at the found level. Clones are cached
 under data/component_cache/ and scanned once per repo.
 
   uv run --with duckdb --with psycopg2-binary python scripts/c1_component_harvest.py --limit 200
+  ... --components lib:a,lib:b   # only these components (re-scans repos that declare them)
 """
 from __future__ import annotations
 
@@ -103,6 +104,13 @@ def scan_repo(clone: Path) -> dict:
     return {"packages": {k: sorted(v) for k, v in packages.items()}, "imports": hits}
 
 
+def declares(comp: dict, pkgs: dict) -> bool:
+    """True when a repo's manifest packages ({eco: set}) include one of the component's packages."""
+    return any(
+        pkg in pkgs.get(eco, set()) or any(p.startswith(pkg + "/") for p in pkgs.get(eco, set()))
+        for eco, plist in comp["packages"].items() for pkg in plist)
+
+
 def ensure_clone(full_name: str, cache: sqlite3.Connection) -> Path | None:
     dest = CLONES / full_name.replace("/", "__")
     if dest.exists():
@@ -128,7 +136,15 @@ def main():
     ap.add_argument("--limit", type=int, default=200)
     ap.add_argument("--offset", type=int, default=0)
     ap.add_argument("--own-repos", type=int, default=3)
+    ap.add_argument("--components", default="",
+                    help="comma-separated component ids: harvest and write only these, and re-scan "
+                         "cached repos whose manifests declare them (cached import hits predate them)")
     a = ap.parse_args()
+    only = {c.strip() for c in a.components.split(",") if c.strip()}
+    unknown = only - set(BY_ID)
+    if unknown:
+        sys.exit(f"unknown component ids: {sorted(unknown)}")
+    targets = [c for c in COMPONENTS if not only or c["id"] in only]
 
     import duckdb
     import psycopg2
@@ -139,6 +155,17 @@ def main():
     cache.execute("CREATE TABLE IF NOT EXISTS scanned (repo TEXT PRIMARY KEY, result TEXT)")
     cache.execute("CREATE TABLE IF NOT EXISTS repo_scan (repo TEXT PRIMARY KEY, json TEXT)")
     cache.commit()
+    if only:
+        # A cached scan only holds import hits for the components registered when it ran, so
+        # repos that declare a target component are dropped from the cache and cloned again.
+        stale = []
+        for repo, js in cache.execute("SELECT repo, json FROM repo_scan").fetchall():
+            pkgs = {eco: set(names) for eco, names in json.loads(js)["packages"].items()}
+            if any(declares(c, pkgs) for c in targets):
+                stale.append(repo)
+        cache.executemany("DELETE FROM repo_scan WHERE repo = ?", [(r,) for r in stale])
+        cache.commit()
+        print(f"components: {sorted(only)}; cached repos to re-scan: {len(stale)}")
 
     d = duckdb.connect(str(ROOT / "data" / "talent_seed.duckdb"), read_only=True)
     import csv as _csv
@@ -176,6 +203,8 @@ def main():
     results = {}  # (talent_id, comp_id) -> (level, proof)
 
     def bump(tid, cid, level, proof):
+        if only and cid not in only:
+            return
         key = (tid, cid)
         if key not in results or LEVEL_RANK[level] > LEVEL_RANK[results[key][0]]:
             results[key] = (level, proof)
@@ -224,11 +253,8 @@ def main():
                 cache.execute("INSERT OR REPLACE INTO scanned VALUES (?, 'ok')", (full,))
                 cache.commit()
             pkgs = {eco: set(names) for eco, names in scan["packages"].items()}
-            for comp in COMPONENTS:
-                declared = any(
-                    pkg in pkgs.get(eco, set()) or
-                    any(p.startswith(pkg + "/") for p in pkgs.get(eco, set()))
-                    for eco, plist in comp["packages"].items() for pkg in plist)
+            for comp in targets:
+                declared = declares(comp, pkgs)
                 if comp["id"] in scan["imports"]:
                     bump(tid, comp["id"], "OBSERVED_USAGE",
                          f"import in {full}:{scan['imports'][comp['id']]}")
@@ -247,7 +273,7 @@ def main():
     for cid, nm, tp in cur.fetchall():
         concept_names[cid] = (nm, tp)
     today = date.today().isoformat()
-    for comp in COMPONENTS:
+    for comp in targets:
         repo = comp["repos"][0] if comp["repos"] else ""
         cur.execute(
             """INSERT INTO code_components (component_id, repository_id, revision, path, languages)

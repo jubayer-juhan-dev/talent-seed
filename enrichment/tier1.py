@@ -182,7 +182,7 @@ TOPIC_MAP = {
     "base": [("PM.SYS.0003", "OBSERVED_USAGE", "topic")],
     "binance": [("PM.SYS.0003", "OBSERVED_USAGE", "topic")],
     "starknet": [("PM.SYS.0003", "OBSERVED_USAGE", "topic"), ("PM.SKILL.0038", "OBSERVED_USAGE", "topic")],
-    "stellar": [("PM.SYS.0003", "OBSERVED_USAGE", "topic")],
+    "stellar": [("PM.SYS.0003", "OBSERVED_USAGE", "topic"), ("PM.SKILL.0051", "OBSERVED_USAGE", "topic")],
     "defi": [("PM.SYS.0004", "OBSERVED_USAGE", "topic")],
     "trading": [("PM.SYS.0004", "OBSERVED_USAGE", "topic")],
     "dex": [("PM.SYS.0004", "OBSERVED_USAGE", "topic")],
@@ -419,6 +419,19 @@ TOPIC_MAP = {
     "zustand": [("PM.SKILL.0050", "OBSERVED_USAGE", "topic")],
     "mobx": [("PM.SKILL.0050", "OBSERVED_USAGE", "topic")],
     "xstate": [("PM.SKILL.0050", "OBSERVED_USAGE", "topic")],
+    # --- deferred concepts unlocked by code-scan evidence: Stellar/Soroban, Indexing/Subgraphs ---
+    "soroban": [("PM.SKILL.0051", "OBSERVED_USAGE", "topic")],
+    "soroban-sdk": [("PM.SKILL.0051", "OBSERVED_USAGE", "topic")],
+    "stellar-soroban": [("PM.SKILL.0051", "OBSERVED_USAGE", "topic")],
+    "subgraph": [("PM.SYS.0014", "OBSERVED_USAGE", "topic")],
+    "subgraphs": [("PM.SYS.0014", "OBSERVED_USAGE", "topic")],
+    "thegraph": [("PM.SYS.0014", "OBSERVED_USAGE", "topic")],
+    "the-graph": [("PM.SYS.0014", "OBSERVED_USAGE", "topic")],
+    "graphprotocol": [("PM.SYS.0014", "OBSERVED_USAGE", "topic")],
+    "graph-protocol": [("PM.SYS.0014", "OBSERVED_USAGE", "topic")],
+    "subsquid": [("PM.SYS.0014", "OBSERVED_USAGE", "topic")],
+    "blockchain-indexer": [("PM.SYS.0014", "OBSERVED_USAGE", "topic")],
+    "blockchain-indexing": [("PM.SYS.0014", "OBSERVED_USAGE", "topic")],
 }
 
 LANGUAGE_MAP = {  # repo primary language -> (concept, note)
