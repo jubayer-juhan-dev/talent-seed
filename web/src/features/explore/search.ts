@@ -2,13 +2,37 @@
  *  lists are comma-separated, except `eco` which uses "|" (project names can contain commas). */
 
 export const SORTS = [
-  { key: "active_days", dir: "desc", label: "Most active", hint: "Days with commits in the last 84 days" },
-  { key: "last_activity", dir: "desc", label: "Recently active", hint: "Latest commit date" },
-  { key: "first_commit", dir: "asc", label: "Longest history", hint: "Earliest first commit" },
-  { key: "ecosystems", dir: "desc", label: "Most ecosystems", hint: "Chains and projects worked on" },
-  { key: "repos", dir: "desc", label: "Most repos", hint: "Includes forks" },
-  { key: "commits", dir: "desc", label: "Most commits", hint: "Inflated by forks and copied history" },
-  { key: "name", dir: "asc", label: "Name A–Z", hint: "" },
+  {
+    key: "active_days",
+    dir: "desc",
+    label: "Most active",
+    hint: "Days with commits in the last 84 days",
+    phrase: "days active in the last 84",
+  },
+  { key: "last_activity", dir: "desc", label: "Recently active", hint: "Latest commit date", phrase: "latest commit" },
+  {
+    key: "first_commit",
+    dir: "asc",
+    label: "Longest history",
+    hint: "Earliest first commit",
+    phrase: "earliest first commit",
+  },
+  {
+    key: "ecosystems",
+    dir: "desc",
+    label: "Most ecosystems",
+    hint: "Chains and projects worked on",
+    phrase: "chains and projects",
+  },
+  { key: "repos", dir: "desc", label: "Most repos", hint: "Includes forks", phrase: "repo count" },
+  {
+    key: "commits",
+    dir: "desc",
+    label: "Most commits",
+    hint: "Inflated by forks and copied history",
+    phrase: "commit count",
+  },
+  { key: "name", dir: "asc", label: "Name A–Z", hint: "", phrase: "name" },
 ] as const;
 export type SortKey = (typeof SORTS)[number]["key"];
 export type Dir = "asc" | "desc";

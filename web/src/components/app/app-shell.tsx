@@ -27,16 +27,16 @@ export function AppShell() {
   }, [navigate]);
 
   return (
-    <div className="flex min-h-svh flex-col">
+    <div className="page-glow flex min-h-svh flex-col">
       <TopBar />
-      <main className="mx-auto w-full max-w-[1320px] flex-1 px-4 pt-6 pb-10 sm:px-5">
+      <main className="mx-auto w-full max-w-[1240px] flex-1 px-4 pt-8 pb-14 sm:px-8 sm:pt-10">
         <Outlet />
       </main>
-      <footer className="mx-auto flex w-full max-w-[1320px] flex-wrap gap-x-5 gap-y-1.5 px-4 pb-8 text-xs text-faint sm:px-5">
+      <footer className="mx-auto flex w-full max-w-[1240px] flex-wrap gap-x-6 gap-y-2 px-4 pb-10 text-xs leading-relaxed text-muted-foreground sm:px-8">
         <span>
           Data from Electric Capital{" "}
           <a
-            className="text-muted-foreground hover:underline"
+            className="text-primary hover:text-brand-400"
             href="https://opendevdata.org"
             target="_blank"
             rel="noopener"

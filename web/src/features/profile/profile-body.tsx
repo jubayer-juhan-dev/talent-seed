@@ -2,25 +2,21 @@ import {
   Activity,
   Blocks,
   CalendarDays,
-  ChevronLeft,
-  ChevronRight,
+  ChevronDown,
+  ChevronUp,
   Clock,
   Copy,
-  Database,
-  FolderGit2,
   FolderX,
   GitFork,
   Hexagon,
   Hourglass,
   Lightbulb,
-  Mail,
   MailQuestion,
   MailX,
   MapPin,
   ShieldCheck,
   Star,
   TriangleAlert,
-  User,
   Users,
   X,
 } from "lucide-react";
@@ -47,6 +43,8 @@ type Props = {
   d: PersonDetail;
   prev?: string;
   next?: string;
+  /** "3 of 50": where this person sits in the list ←/→ step through */
+  pos?: string;
   onNavigate: (id: string) => void;
   onClose: () => void;
 };
@@ -56,6 +54,12 @@ const CALLOUT: Record<string, string> = {
   P2: "bg-p2-soft text-p2",
   P3: "bg-p3-soft text-p3",
   HOLD: "bg-hold-soft text-hold",
+};
+const CALLOUT_BORDER: Record<string, string> = {
+  P1: "border-[color-mix(in_srgb,var(--p1-mark)_35%,transparent)]",
+  P2: "border-[color-mix(in_srgb,var(--p2-mark)_35%,transparent)]",
+  P3: "border-[color-mix(in_srgb,var(--p3-mark)_35%,transparent)]",
+  HOLD: "border-[color-mix(in_srgb,var(--hold-mark)_35%,transparent)]",
 };
 
 function Tip({ tip, children }: { tip: ReactNode; children: ReactNode }) {
@@ -79,7 +83,7 @@ function IconButton({
   );
 }
 
-export function ProfileBody({ d, prev, next, onNavigate, onClose }: Props) {
+export function ProfileBody({ d, prev, next, pos, onNavigate, onClose }: Props) {
   const p = d.person;
   const enr = $api.useQuery("get", "/api/person/enrichment", {
     params: { query: { id: p.person_id } },
@@ -92,102 +96,110 @@ export function ProfileBody({ d, prev, next, onNavigate, onClose }: Props) {
   return (
     <div className="flex min-h-0 flex-1 flex-col animate-in fade-in duration-200">
       {/* header */}
-      <div className="flex shrink-0 flex-wrap items-start gap-3.5 border-b bg-card px-4 pt-3 pb-4 sm:flex-nowrap sm:px-[22px] sm:pt-5">
-        <div className="order-first flex w-full justify-end gap-1 sm:order-last sm:w-auto">
-          <StarButton person={p} className="size-9" />
-          <IconButton
-            label="Previous person"
-            tip="Previous (←)"
-            disabled={!prev}
-            onClick={() => prev && onNavigate(prev)}
-          >
-            <ChevronLeft className="size-4" />
-          </IconButton>
-          <IconButton label="Next person" tip="Next (→)" disabled={!next} onClick={() => next && onNavigate(next)}>
-            <ChevronRight className="size-4" />
-          </IconButton>
-          <IconButton label="Close" tip="Close (Esc)" onClick={onClose}>
-            <X className="size-4" />
-          </IconButton>
+      <div className="flex shrink-0 flex-col gap-5 px-5 pt-5 sm:px-7 sm:pt-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-1">
+            <IconButton
+              label="Previous person"
+              tip="Previous (←)"
+              disabled={!prev}
+              onClick={() => prev && onNavigate(prev)}
+            >
+              <ChevronUp className="size-4" />
+            </IconButton>
+            <IconButton label="Next person" tip="Next (→)" disabled={!next} onClick={() => next && onNavigate(next)}>
+              <ChevronDown className="size-4" />
+            </IconButton>
+            {pos && <span className="ml-1.5 text-xs text-muted-foreground tabular-nums">{pos}</span>}
+          </div>
+          <div className="flex items-center gap-1">
+            <StarButton person={p} />
+            <IconButton label="Close" tip="Close (Esc)" onClick={onClose}>
+              <X className="size-[17px]" />
+            </IconButton>
+          </div>
         </div>
-        <PersonAvatar person={p} className="size-[60px] text-xl" />
-        <div className="min-w-0 flex-1">
-          <h2 className="flex flex-wrap items-center gap-2.5 text-xl font-bold tracking-tight">
-            {p.display_name || "(no name)"} <CohortBadge cohort={p.priority_cohort} /> <AiBadge person={p} />
-          </h2>
-          <div className="mt-1 flex flex-wrap gap-x-3.5 gap-y-1.5 text-[13px] text-muted-foreground [&_svg]:size-3.5">
-            {p.github_login ? (
-              <Tip
-                tip={
-                  apiLogin
-                    ? `Login looked up via the GitHub API on ${day(p.github_login_looked_up_at)}`
-                    : "Open GitHub profile"
-                }
-              >
-                <a
-                  href={`https://github.com/${encodeURIComponent(p.github_login)}`}
-                  target="_blank"
-                  rel="noopener"
-                  className="inline-flex items-center gap-1.5 text-primary hover:underline"
+        <div className="flex items-center gap-4">
+          <PersonAvatar person={p} className="size-14 text-[22px]" />
+          <div className="min-w-0">
+            <h2 className="flex flex-wrap items-center gap-2 text-[22px] font-medium tracking-[-0.01em]">
+              {p.display_name || "(no name)"} <CohortBadge cohort={p.priority_cohort} /> <AiBadge person={p} />
+            </h2>
+            <div className="mt-1 flex flex-wrap gap-x-3.5 gap-y-1.5 text-[13px] text-muted-foreground [&_svg]:size-3.5">
+              {p.github_login ? (
+                <Tip
+                  tip={
+                    apiLogin
+                      ? `Login looked up via the GitHub API on ${day(p.github_login_looked_up_at)}`
+                      : "Open GitHub profile"
+                  }
                 >
-                  <GithubIcon />@{p.github_login}
-                </a>
-              </Tip>
-            ) : p.github_user_id != null ? (
-              <Tip tip={`GitHub account id ${p.github_user_id} is known, but its login hasn't been looked up yet.`}>
-                <span className="inline-flex items-center gap-1.5">
+                  <a
+                    href={`https://github.com/${encodeURIComponent(p.github_login)}`}
+                    target="_blank"
+                    rel="noopener"
+                    className="inline-flex items-center gap-1 text-primary hover:text-brand-400"
+                  >
+                    <GithubIcon />
+                    {p.github_login}
+                  </a>
+                </Tip>
+              ) : p.github_user_id != null ? (
+                <Tip tip={`GitHub account id ${p.github_user_id} is known, but its login hasn't been looked up yet.`}>
+                  <span className="inline-flex items-center gap-1">
+                    <GithubIcon />
+                    Login not looked up yet
+                  </span>
+                </Tip>
+              ) : (
+                <span className="inline-flex items-center gap-1">
                   <GithubIcon />
-                  Login not looked up yet
+                  No GitHub match
+                </span>
+              )}
+              <span className="inline-flex items-center gap-1">
+                <MapPin />
+                {p.location || p.country || aiLocation || "Location unknown"}
+              </span>
+              <Tip tip="How sure we are this is the right GitHub account">
+                <span className="inline-flex items-center gap-1">
+                  <ShieldCheck />
+                  Identity match: {label(p.github_confidence)}
                 </span>
               </Tip>
-            ) : (
-              <span className="inline-flex items-center gap-1.5">
-                <GithubIcon />
-                No GitHub match
-              </span>
-            )}
-            <span className="inline-flex items-center gap-1.5">
-              <MapPin />
-              {p.location || p.country || aiLocation || "Location unknown"}
-            </span>
-            <Tip tip="How sure we are this is the right GitHub account">
-              <span className="inline-flex items-center gap-1.5">
-                <ShieldCheck />
-                Match: {label(p.github_confidence)}
-              </span>
-            </Tip>
+            </div>
           </div>
         </div>
       </div>
 
       <Tabs defaultValue="overview" className="flex min-h-0 flex-1 flex-col gap-0">
-        <div className="shrink-0 overflow-x-auto border-b bg-card px-2 sm:px-4">
-          <TabsList variant="line" className="h-11">
-            <TabsTrigger value="overview">
-              <User /> Overview
+        <div className="mx-5 mt-5 shrink-0 overflow-x-auto border-b border-divider sm:mx-7">
+          <TabsList variant="line" className="h-11 gap-1 p-0">
+            <TabsTrigger value="overview" className={tabClass}>
+              Overview
             </TabsTrigger>
-            <TabsTrigger value="contact">
-              <Mail /> Contact <span className="text-faint">{d.contacts.length}</span>
+            <TabsTrigger value="contact" className={tabClass}>
+              Contact <span className="text-xs text-muted-foreground">{d.contacts.length}</span>
             </TabsTrigger>
-            <TabsTrigger value="repos">
-              <FolderGit2 /> Repos <span className="text-faint">{fmt(d.repo_total)}</span>
+            <TabsTrigger value="repos" className={tabClass}>
+              Repos <span className="text-xs text-muted-foreground">{fmt(d.repo_total)}</span>
             </TabsTrigger>
-            <TabsTrigger value="details">
-              <Database /> Data details
+            <TabsTrigger value="details" className={tabClass}>
+              Data details
             </TabsTrigger>
           </TabsList>
         </div>
         <div className="min-h-0 flex-1 overflow-y-auto">
-          <TabsContent value="overview" className="flex flex-col gap-4 p-4 sm:p-[22px]">
+          <TabsContent value="overview" className="flex flex-col gap-7 px-5 pt-6 pb-10 sm:px-7">
             <Overview d={d} tops={tops} subs={subs} />
           </TabsContent>
-          <TabsContent value="contact" className="flex flex-col gap-4 p-4 sm:p-[22px]">
+          <TabsContent value="contact" className="flex flex-col gap-5 px-5 pt-6 pb-10 sm:px-7">
             <Contact d={d} />
           </TabsContent>
-          <TabsContent value="repos" className="flex flex-col gap-3 p-4 sm:p-[22px]">
+          <TabsContent value="repos" className="flex flex-col gap-3 px-5 pt-6 pb-10 sm:px-7">
             <Repos d={d} />
           </TabsContent>
-          <TabsContent value="details" className="flex flex-col gap-4 p-4 sm:p-[22px]">
+          <TabsContent value="details" className="flex flex-col gap-5 px-5 pt-6 pb-10 sm:px-7">
             <Details d={d} />
           </TabsContent>
         </div>
@@ -210,12 +222,10 @@ function Callout({
   iconClass?: string;
 }) {
   return (
-    <div className={cn("flex gap-3 rounded-xl border bg-card px-4 py-3.5", className)}>
-      <div className={cn("grid size-8 shrink-0 place-items-center rounded-[9px] [&_svg]:size-4", iconClass)}>
-        {icon}
-      </div>
-      <div className="min-w-0 text-[13px] text-muted-foreground">
-        <h4 className="mb-0.5 text-[13.5px] font-semibold text-foreground">{title}</h4>
+    <div className={cn("grid grid-cols-[32px_minmax(0,1fr)] gap-3 rounded-lg border border-divider p-4", className)}>
+      <div className={cn("grid size-8 shrink-0 place-items-center rounded-lg [&_svg]:size-4", iconClass)}>{icon}</div>
+      <div className="min-w-0 text-[13px]">
+        <h4 className="mb-0.5 text-sm font-medium text-foreground">{title}</h4>
         {children}
       </div>
     </div>
@@ -236,12 +246,12 @@ function Stat({
   children?: ReactNode;
 }) {
   return (
-    <div className="flex min-w-0 flex-col gap-1 rounded-xl border bg-card px-3.5 py-3">
+    <div className="flex min-w-0 flex-col gap-1 rounded-lg bg-background p-4">
       <span className="flex items-center gap-1.5 text-xs text-muted-foreground [&_svg]:size-3.5">
         {icon}
         {k}
       </span>
-      <span className="text-lg font-bold tracking-tight tabular-nums">{v}</span>
+      <span className="mt-0.5 text-2xl font-medium tracking-[-0.02em] tabular-nums">{v}</span>
       {children}
       <span className="text-xs text-muted-foreground">{s}</span>
     </div>
@@ -251,13 +261,18 @@ function Stat({
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
     <section>
-      <h3 className="mb-2 text-xs font-semibold tracking-wider text-faint uppercase">{title}</h3>
+      <h3 className="mb-2.5 text-[15px] font-medium">{title}</h3>
       {children}
     </section>
   );
 }
 
-const tagClass = "inline-flex items-center gap-1.5 rounded-md border bg-card px-2 py-0.5 text-xs whitespace-nowrap";
+const capitalize = (t: string | null | undefined) => (t ? t.charAt(0).toUpperCase() + t.slice(1) : "");
+
+const tagClass =
+  "inline-flex items-center gap-1.5 rounded-full bg-background px-2.5 py-[5px] text-xs whitespace-nowrap";
+const tabClass =
+  "h-full flex-none rounded-none px-3 font-medium after:bottom-[-1px]! after:bg-primary! data-active:bg-transparent! data-active:text-foreground";
 
 function Overview({
   d,
@@ -276,37 +291,16 @@ function Overview({
     `${e.repo_count} repos · ${fmt(e.commits)} commits · last active ${day(e.last_active_date)}`;
   return (
     <>
-      <Callout icon={<Lightbulb />} iconClass={CALLOUT[p.priority_cohort ?? "HOLD"]} title={`Why ${p.priority_cohort}`}>
-        <p>{p.priority_cohort_reason}.</p>
-        <p className="mt-1 text-xs text-faint">
-          Rule {p.priority_cohort_rule ?? "–"} · draft assumption, not yet confirmed by the client
-        </p>
-      </Callout>
-      {flags.length > 0 && (
-        <Callout
-          icon={<TriangleAlert />}
-          iconClass="bg-card text-warn"
-          title="Check before contacting"
-          className="border-transparent bg-warn-soft"
-        >
-          <ul className="mt-1 list-disc pl-4">
-            {flags.map((f) => (
-              <li key={f}>{FLAG_INFO[f]}</li>
-            ))}
-          </ul>
-        </Callout>
-      )}
-      <EnrichmentGate id={p.person_id} aiEnriched={!!p.ai_enriched} />
-      <div className="grid grid-cols-2 gap-2.5 md:grid-cols-4">
+      <div className="grid grid-cols-1 gap-3 min-[420px]:grid-cols-2">
         <Stat
           icon={<Activity />}
           k="Active days, last 84"
           v={fmt(p.active_days_in_window)}
           s={`${label(p.activity_segment)} · max ${fmt(p.max_active_days_in_28d)} in 28 days`}
         >
-          <div className="h-1.5 overflow-hidden rounded-full bg-bar-track">
+          <div className="my-1 h-1 overflow-hidden rounded-sm bg-neutral-800">
             <div
-              className="h-full origin-left animate-grow-x rounded-full bg-gradient-to-r from-bar-light to-bar-strong"
+              className="h-full origin-left animate-grow-x rounded-sm bg-primary"
               style={{ width: `${Math.min(100, ((p.active_days_in_window ?? 0) / 84) * 100)}%` }}
             />
           </div>
@@ -326,10 +320,36 @@ function Overview({
         <Stat
           icon={<Clock />}
           k="Last crypto activity"
-          v={<span className="text-base">{day(p.last_crypto_activity_date)}</span>}
+          v={<span className="text-xl">{day(p.last_crypto_activity_date)}</span>}
           s={`${fmt(p.commit_count_excluding_inherited)} original commits`}
         />
       </div>
+      <Callout
+        icon={<Lightbulb />}
+        iconClass={CALLOUT[p.priority_cohort ?? "HOLD"]}
+        className={CALLOUT_BORDER[p.priority_cohort ?? "HOLD"]}
+        title={`Why ${p.priority_cohort}`}
+      >
+        <p>{capitalize(p.priority_cohort_reason)}.</p>
+        <p className="mt-1 text-xs text-muted-foreground">
+          Rule {p.priority_cohort_rule ?? "–"} · draft assumption, not yet confirmed by the client
+        </p>
+      </Callout>
+      {flags.length > 0 && (
+        <Callout
+          icon={<TriangleAlert />}
+          iconClass="bg-warn-soft text-warn"
+          title="Check before contacting"
+          className="border-[color-mix(in_srgb,var(--p3-mark)_35%,transparent)]"
+        >
+          <ul className="mt-1 list-disc pl-4 text-muted-foreground">
+            {flags.map((f) => (
+              <li key={f}>{FLAG_INFO[f]}</li>
+            ))}
+          </ul>
+        </Callout>
+      )}
+      <EnrichmentGate id={p.person_id} aiEnriched={!!p.ai_enriched} />
       <Section title="Chains">
         <div className="flex flex-wrap gap-1.5">
           {tops.length ? (
@@ -359,14 +379,14 @@ function Overview({
         </Section>
       )}
       <Section title="Top original crypto repos">
-        <div className="overflow-hidden rounded-xl border bg-card">
+        <div className="overflow-hidden rounded-lg bg-background">
           {d.top_repos.length ? (
             d.top_repos.map((r) => {
               const live = !!window && !!r.last_original_date && r.last_original_date >= window;
               return (
                 <div
                   key={r.repo_name}
-                  className="flex flex-wrap items-center gap-3 border-b px-3.5 py-2.5 last:border-0 sm:flex-nowrap"
+                  className="flex flex-wrap items-center gap-3 border-b border-divider px-3.5 py-3 last:border-0 sm:flex-nowrap"
                 >
                   <Tip tip={live ? "Active in the last 84 days" : "Not active in the last 84 days"}>
                     <span
@@ -378,7 +398,7 @@ function Overview({
                   </Tip>
                   <span className="min-w-0 flex-1 truncate font-medium">
                     {r.repo_url ? (
-                      <a href={r.repo_url} target="_blank" rel="noopener" className="text-primary hover:underline">
+                      <a href={r.repo_url} target="_blank" rel="noopener" className="text-primary hover:text-brand-400">
                         {r.repo_name}
                       </a>
                     ) : (
@@ -428,19 +448,19 @@ function Contact({ d }: { d: PersonDetail }) {
       <GithubProfileSection id={d.person.person_id} />
       <Callout
         icon={<MailQuestion />}
-        iconClass="bg-card text-warn"
+        iconClass="bg-warn-soft text-warn"
         title="Unverified emails"
-        className="border-transparent bg-warn-soft"
+        className="border-[color-mix(in_srgb,var(--p3-mark)_35%,transparent)] text-muted-foreground"
       >
         These are commit-author addresses, not confirmed contact details. Don't infer an employer from the domain.{" "}
         {!usable && <b className="text-foreground">No usable address: only GitHub noreply or shared placeholders.</b>}
       </Callout>
-      <div className="overflow-hidden rounded-xl border bg-card">
+      <div className="overflow-hidden rounded-lg bg-background">
         {d.contacts.length ? (
           d.contacts.map((c) => (
             <div
               key={c.value}
-              className="flex flex-wrap items-center gap-2.5 border-b px-3.5 py-2.5 last:border-0 sm:flex-nowrap"
+              className="flex flex-wrap items-center gap-2.5 border-b border-divider px-3.5 py-3 last:border-0 sm:flex-nowrap"
             >
               <span className="w-full font-mono text-[13px] break-all sm:w-auto sm:min-w-0 sm:flex-1">{c.value}</span>
               {c.is_github_noreply && (
@@ -450,7 +470,7 @@ function Contact({ d }: { d: PersonDetail }) {
               )}
               {c.is_placeholder && (
                 <Tip tip={`Used by ${fmt(c.shared_by_n_developers)} different developers`}>
-                  <span className={cn(tagClass, "border-transparent bg-warn-soft text-warn")}>
+                  <span className={cn(tagClass, "bg-warn-soft text-warn")}>
                     <Users className="size-3" /> shared
                   </span>
                 </Tip>
@@ -476,10 +496,10 @@ function Contact({ d }: { d: PersonDetail }) {
 function Repos({ d }: { d: PersonDetail }) {
   return (
     <>
-      <div className="overflow-x-auto rounded-xl border bg-card">
+      <div className="overflow-x-auto rounded-lg bg-background">
         <table className="w-full border-collapse text-[13px]">
           <thead>
-            <tr className="[&>th]:border-b [&>th]:bg-muted [&>th]:px-3 [&>th]:py-2.5 [&>th]:text-left [&>th]:text-xs [&>th]:font-semibold [&>th]:whitespace-nowrap [&>th]:text-muted-foreground">
+            <tr className="[&>th]:border-b [&>th]:border-divider [&>th]:px-3 [&>th]:py-3 [&>th]:text-left [&>th]:text-xs [&>th]:font-normal [&>th]:whitespace-nowrap [&>th]:text-muted-foreground">
               <th>Repo</th>
               <th className="text-right!">Commits</th>
               <th className="text-right!">Active days</th>
@@ -491,11 +511,11 @@ function Repos({ d }: { d: PersonDetail }) {
             {d.repos.map((r) => (
               <tr
                 key={r.repo_name}
-                className="[&>td]:border-b [&>td]:px-3 [&>td]:py-2.5 [&>td]:whitespace-nowrap last:[&>td]:border-0"
+                className="[&>td]:border-b [&>td]:border-divider [&>td]:px-3 [&>td]:py-2.5 [&>td]:whitespace-nowrap last:[&>td]:border-0"
               >
                 <td>
                   {r.repo_url ? (
-                    <a href={r.repo_url} target="_blank" rel="noopener" className="text-primary hover:underline">
+                    <a href={r.repo_url} target="_blank" rel="noopener" className="text-primary hover:text-brand-400">
                       {r.repo_name}
                     </a>
                   ) : (
@@ -503,7 +523,7 @@ function Repos({ d }: { d: PersonDetail }) {
                   )}
                   {r.inherited_history && (
                     <Tip tip="Fork or copied history: commits may not be theirs">
-                      <span className={cn(tagClass, "ml-2 border-transparent bg-warn-soft text-warn")}>
+                      <span className={cn(tagClass, "ml-2 bg-warn-soft text-warn")}>
                         <GitFork className="size-3" />
                         fork
                       </span>
@@ -576,7 +596,7 @@ function Details({ d }: { d: PersonDetail }) {
   ];
   return (
     <>
-      <dl className="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-x-[18px] gap-y-3.5 rounded-xl border bg-card p-4">
+      <dl className="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-x-[18px] gap-y-3.5 rounded-lg bg-background p-4">
         {rows.map(([k, v]) => (
           <div key={k} className="flex min-w-0 flex-col gap-0.5">
             <dt className="text-xs text-muted-foreground">{k}</dt>

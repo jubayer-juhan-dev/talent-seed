@@ -14,14 +14,13 @@ import { useExplore } from "./use-explore";
 type Col = ColumnDef<PersonRow> & { meta?: { sort?: SortKey; align?: "right" } };
 
 const columns: Col[] = [
-  { id: "star", header: "", cell: ({ row }) => <StarButton person={row.original} /> },
   {
     id: "name",
     header: "Person",
     meta: { sort: "name" },
     cell: ({ row: { original: p } }) => (
       <div className="flex items-center gap-2.5">
-        <PersonAvatar person={p} className="size-[30px] text-xs" />
+        <PersonAvatar person={p} className="size-8 text-[13px]" />
         <div className="min-w-0">
           <div className="max-w-[220px] truncate font-medium">{p.display_name || "(no name)"}</div>
           <div className="flex max-w-[220px] text-xs text-muted-foreground">
@@ -55,8 +54,8 @@ const columns: Col[] = [
     meta: { sort: "active_days" },
     cell: ({ row: { original: p } }) => (
       <span className="flex items-center gap-2">
-        <span className="inline-block h-1.5 w-16 overflow-hidden rounded-full bg-bar-track">
-          <span className="block h-full rounded-full bg-bar-strong" style={{ width: `${activeShare(p)}%` }} />
+        <span className="inline-block h-1 w-20 overflow-hidden rounded-sm bg-neutral-800">
+          <span className="block h-full rounded-sm bg-primary" style={{ width: `${activeShare(p)}%` }} />
         </span>
         <span className="tabular-nums">{fmt(p.active_days_in_window)}</span>
       </span>
@@ -94,6 +93,7 @@ const columns: Col[] = [
     meta: { sort: "commits", align: "right" },
     cell: ({ row }) => <span className="tabular-nums">{fmt(row.original.commit_count)}</span>,
   },
+  { id: "star", header: "", cell: ({ row }) => <StarButton person={row.original} /> },
 ];
 
 export function PeopleTable({ rows, onOpen }: { rows: PersonRow[]; onOpen: (id: string) => void }) {
@@ -114,7 +114,7 @@ export function PeopleTable({ rows, onOpen }: { rows: PersonRow[]; onOpen: (id: 
   };
 
   return (
-    <div className="overflow-x-auto rounded-xl border bg-card shadow-xs">
+    <div className="overflow-x-auto rounded-[14px] bg-card elev-sm">
       <table className="w-full border-collapse text-[13px]">
         <thead>
           {table.getHeaderGroups().map((g) => (
@@ -127,7 +127,7 @@ export function PeopleTable({ rows, onOpen }: { rows: PersonRow[]; onOpen: (id: 
                     key={h.id}
                     aria-sort={active ? (dir === "asc" ? "ascending" : "descending") : undefined}
                     className={cn(
-                      "border-b bg-muted px-3 py-2.5 text-left text-xs font-semibold whitespace-nowrap text-muted-foreground",
+                      "border-b border-divider px-4 py-3.5 text-left text-xs font-normal whitespace-nowrap text-muted-foreground",
                       meta?.align === "right" && "text-right",
                     )}
                   >
@@ -156,13 +156,13 @@ export function PeopleTable({ rows, onOpen }: { rows: PersonRow[]; onOpen: (id: 
               tabIndex={0}
               onClick={() => onOpen(r.id)}
               onKeyDown={(e) => e.key === "Enter" && onOpen(r.id)}
-              className="cursor-pointer transition-colors last:[&>td]:border-0 hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring"
+              className="cursor-pointer transition-colors last:[&>td]:border-0 hover:bg-foreground/4 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring"
             >
               {r.getVisibleCells().map((c) => (
                 <td
                   key={c.id}
                   className={cn(
-                    "border-b px-3 py-2.5 whitespace-nowrap",
+                    "border-b border-divider px-4 py-3 whitespace-nowrap",
                     (c.column.columnDef as Col).meta?.align === "right" && "text-right",
                   )}
                 >

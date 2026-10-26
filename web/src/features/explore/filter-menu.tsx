@@ -79,9 +79,9 @@ export function FilterMenu() {
       }}
     >
       <PopoverTrigger asChild>
-        <Button variant="outline" className="gap-2">
+        <Button variant="outline" className="h-[42px] gap-2 px-3.5">
           <ListFilterIcon className="size-4" />
-          Filter
+          Filters
         </Button>
       </PopoverTrigger>
       <PopoverContent align="start" className="w-[min(340px,calc(100vw-24px))] p-0">

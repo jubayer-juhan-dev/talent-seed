@@ -17,7 +17,7 @@ export function SortMenu() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" className="gap-2">
+        <Button variant="outline" className="h-[42px] gap-2 px-3.5">
           <ArrowDownWideNarrow className="size-4" />
           {current.label}
           {reversed && (dirOf(search) === "asc" ? " ↑" : " ↓")}

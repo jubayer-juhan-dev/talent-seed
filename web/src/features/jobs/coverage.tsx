@@ -28,7 +28,7 @@ export function CoverageIcon({ state, className }: { state: string; className?: 
     );
   if (state === "partial")
     return (
-      <svg viewBox="0 0 16 16" className={cn(cls, "text-primary/75")} aria-hidden>
+      <svg viewBox="0 0 16 16" className={cn(cls, "text-brand-400")} aria-hidden>
         <circle cx="8" cy="8" r="6.75" fill="none" stroke="currentColor" strokeWidth="1.5" />
         <path d="M8 1.25a6.75 6.75 0 0 0 0 13.5z" fill="currentColor" />
       </svg>

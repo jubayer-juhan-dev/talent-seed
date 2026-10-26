@@ -6,6 +6,8 @@ test.beforeEach(async ({ page }) => {
 
 test("shows cohort cards, chain bars, heatmap and countries", async ({ page }) => {
   await expect(page.locator("[data-tour=cohort-cards] a")).toHaveCount(4);
+  await expect(page.locator("[data-tour=chains] li")).toHaveCount(12);
+  await page.getByRole("button", { name: "Show all 20 chains" }).click();
   await expect(page.locator("[data-tour=chains] li")).toHaveCount(20);
   await expect(page.locator("[data-tour=heatmap] td a")).toHaveCount(9);
   await expect(page.getByText("How to read this data")).toBeVisible();

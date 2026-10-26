@@ -27,13 +27,12 @@ export function ShortlistSheet() {
         <Button
           data-tour="shortlist"
           variant="outline"
-          size="sm"
-          className="gap-2"
+          className="h-9 gap-2 px-3"
           aria-label={`Shortlist, ${list.length} ${list.length === 1 ? "person" : "people"}`}
         >
           <Star className="size-4" />
           <span className="hidden sm:inline">Shortlist</span>
-          <span className="grid h-[18px] min-w-[18px] place-items-center rounded-full bg-primary px-1.5 text-[11px] font-bold text-primary-foreground">
+          <span className="grid h-[18px] min-w-[22px] place-items-center rounded-md bg-brand-800 px-1.5 text-[11px] text-brand-100 tabular-nums">
             {list.length}
           </span>
         </Button>

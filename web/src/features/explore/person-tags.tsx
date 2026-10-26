@@ -28,9 +28,9 @@ function Tag({
   const el = (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-md border bg-muted px-2 py-0.5 text-xs whitespace-nowrap [&_svg]:size-3 [&_svg]:text-muted-foreground",
-        tone === "warn" && "border-transparent bg-warn-soft text-warn [&_svg]:text-warn",
-        tone === "bad" && "border-transparent bg-destructive/10 text-destructive [&_svg]:text-destructive",
+        "inline-flex items-center gap-1.5 rounded-md bg-neutral-800 px-2.5 py-[3px] text-[11px] tracking-wide whitespace-nowrap text-neutral-100 [&_svg]:size-3 [&_svg]:text-neutral-400",
+        tone === "warn" && "bg-warn-soft text-warn [&_svg]:text-warn",
+        tone === "bad" && "bg-destructive/12 text-destructive [&_svg]:text-destructive",
       )}
     >
       {icon}
@@ -46,10 +46,10 @@ function Tag({
   );
 }
 
-/** Segments and data-quality flags as small tags. */
+/** Segments and data-quality flags as small tags, for a flex-wrap row the caller provides. */
 export function PersonTags({ p }: { p: PersonRow }) {
   return (
-    <div className="flex flex-wrap gap-1.5">
+    <>
       <AiBadge person={p} />
       <Tag icon={<Activity />}>{label(p.activity_segment)}</Tag>
       <Tag icon={<Hourglass />}>{label(p.tenure_segment)}</Tag>
@@ -74,6 +74,6 @@ export function PersonTags({ p }: { p: PersonRow }) {
           Data gap
         </Tag>
       )}
-    </div>
+    </>
   );
 }

@@ -12,7 +12,7 @@ export function CohortBadge({ cohort, className }: { cohort: string | null | und
   return (
     <span
       className={cn(
-        "inline-flex items-center rounded-md px-2 py-0.5 font-mono text-[11.5px] font-bold tracking-wide",
+        "inline-flex items-center rounded-full px-2.5 py-[3px] text-[11px] font-medium tracking-wide",
         STYLE[cohort] ?? STYLE.HOLD,
         className,
       )}

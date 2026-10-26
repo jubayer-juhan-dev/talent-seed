@@ -24,7 +24,7 @@ import { markProfilePushed, takeProfilePushed } from "@/features/profile/profile
 import { fmt } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { CoverageIcon, CoverageLegend, coverageLabel } from "./coverage";
-import { JobsBackdrop, jobPlace } from "./jobs-page";
+import { jobPlace } from "./jobs-page";
 import { type JobRequirement, RequirementGroups, RequirementsEditor } from "./requirements";
 
 type MatchRow = Schemas["MatchRow"];
@@ -67,7 +67,7 @@ function MatchCard({ m, rank, onOpen }: { m: MatchRow; rank: number; onOpen: (id
     (a, b) => Number(a.requirement !== "required") - Number(b.requirement !== "required"),
   );
   return (
-    <div className="grid grid-cols-[28px_minmax(0,1fr)_36px] items-center gap-x-4 gap-y-3 rounded-[14px] bg-card px-4 py-4 ring-1 ring-border transition-shadow hover:shadow-lg hover:ring-border-strong sm:px-6 sm:py-5 lg:grid-cols-[36px_minmax(200px,1fr)_minmax(0,2.4fr)_170px_40px] lg:gap-5">
+    <div className="grid grid-cols-[28px_minmax(0,1fr)_36px] items-center gap-x-4 gap-y-3 rounded-[14px] bg-card px-4 py-4 elev-sm transition-shadow hover:elev-md sm:px-6 sm:py-5 lg:grid-cols-[36px_minmax(200px,1fr)_minmax(0,2.4fr)_170px_40px] lg:gap-5">
       <div className="text-[13px] text-muted-foreground tabular-nums">{String(rank).padStart(2, "0")}</div>
       <div className="flex min-w-0 items-center gap-3">
         <PersonAvatar
@@ -78,7 +78,7 @@ function MatchCard({ m, rank, onOpen }: { m: MatchRow; rank: number; onOpen: (id
           <button
             type="button"
             onClick={() => onOpen(m.talent_id)}
-            className="block max-w-full truncate text-left text-[15px] font-medium hover:text-primary"
+            className="block max-w-full truncate text-left text-[15px] font-medium transition-colors hover:text-primary"
           >
             {m.name ?? m.github_login ?? m.talent_id}
           </button>
@@ -86,7 +86,7 @@ function MatchCard({ m, rank, onOpen }: { m: MatchRow; rank: number; onOpen: (id
             {m.github_login && <span className="truncate text-muted-foreground">@{m.github_login}</span>}
             {m.contributor_concepts > 0 && (
               <span
-                className="rounded-md bg-accent-soft px-1.5 py-px text-[10px] whitespace-nowrap text-primary"
+                className="rounded-md bg-brand-800 px-1.5 py-px text-[10px] whitespace-nowrap text-brand-100"
                 title="Requirements backed by contributor-level code evidence"
               >
                 Contributor ×{m.contributor_concepts}
@@ -113,9 +113,9 @@ function MatchCard({ m, rank, onOpen }: { m: MatchRow; rank: number; onOpen: (id
         ))}
       </div>
       <div className="col-span-3 flex items-center gap-3 lg:col-span-1">
-        <span className="h-1 flex-1 overflow-hidden rounded-full bg-muted">
+        <span className="h-1 flex-1 overflow-hidden rounded-sm bg-neutral-800">
           <span
-            className="block h-full origin-left animate-grow-x rounded-full bg-primary shadow-[0_0_8px_var(--primary)]"
+            className="block h-full origin-left animate-grow-x rounded-sm bg-primary shadow-[0_0_8px_var(--primary)]"
             style={{ width: `${pct}%` }}
           />
         </span>
@@ -161,7 +161,7 @@ function Matches({ query, onOpen }: { query: ReturnType<typeof useMatches>; onOp
     <section className="mt-14">
       <div className="mb-5 flex flex-wrap items-end justify-between gap-5">
         <div>
-          <h2 className="mb-1.5 text-2xl font-semibold tracking-tight">Matches</h2>
+          <h2 className="mb-1.5 text-2xl font-medium">Matches</h2>
           <p className="text-[13px] text-muted-foreground">
             {query.isLoading
               ? "Ranking talents…"
@@ -170,7 +170,10 @@ function Matches({ query, onOpen }: { query: ReturnType<typeof useMatches>; onOp
                 : `${fmt(ranked.length)} filtered from top ${fmt(all.length)}`}
           </p>
         </div>
-        <fieldset aria-label="Filter matches" className="m-0 inline-flex min-w-0 gap-[3px] rounded-lg border p-[3px]">
+        <fieldset
+          aria-label="Filter matches"
+          className="m-0 inline-flex min-w-0 gap-[3px] rounded-lg border border-divider p-[3px]"
+        >
           {FILTERS.map((f) => (
             <button
               key={f.id}
@@ -179,8 +182,8 @@ function Matches({ query, onOpen }: { query: ReturnType<typeof useMatches>; onOp
               title={f.hint}
               onClick={() => setFilter(f.id)}
               className={cn(
-                "rounded-md px-3.5 py-1.5 text-[13px] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground",
-                filter === f.id && "text-primary ring-1 ring-primary hover:bg-transparent hover:text-primary",
+                "rounded-[4px] px-3.5 py-1.5 text-[13px] transition-colors hover:bg-foreground/7",
+                filter === f.id && "text-primary shadow-[inset_0_0_0_1px_var(--primary)] hover:bg-transparent",
               )}
             >
               {f.label}
@@ -214,13 +217,7 @@ function Matches({ query, onOpen }: { query: ReturnType<typeof useMatches>; onOp
       {total > 0 && (
         <div className="mt-6 flex flex-wrap items-center gap-4">
           {query.hasNextPage && (
-            <Button
-              variant="outline"
-              size="lg"
-              className="h-10 border-primary px-4 text-primary hover:bg-primary/10 hover:text-primary"
-              onClick={() => query.fetchNextPage()}
-              disabled={query.isFetchingNextPage}
-            >
+            <Button size="lg" onClick={() => query.fetchNextPage()} disabled={query.isFetchingNextPage}>
               {query.isFetchingNextPage ? <Loader2 className="animate-spin" /> : <ArrowDown />}
               {query.isFetchingNextPage ? "Loading…" : `Load ${Math.min(PAGE, total - all.length)} more`}
             </Button>
@@ -267,12 +264,7 @@ function RequirementsPanel({ jobId, requirements }: { jobId: string; requirement
   if (!draft)
     return (
       <div className="relative">
-        <Button
-          variant="ghost"
-          size="sm"
-          className="absolute -top-1 right-0 text-primary hover:text-primary"
-          onClick={() => setDraft(requirements)}
-        >
+        <Button variant="accent" size="sm" className="absolute -top-1 right-0" onClick={() => setDraft(requirements)}>
           <Pencil /> Edit
         </Button>
         <RequirementGroups requirements={requirements} />
@@ -321,9 +313,8 @@ export function JobDetailPage({ jobId }: { jobId: string }) {
   const place = j ? jobPlace(j) : null;
 
   return (
-    <div className="pt-2 pb-10">
-      <JobsBackdrop />
-      <Button asChild variant="ghost" className="-ml-2 text-primary hover:text-primary">
+    <div>
+      <Button asChild variant="accent" className="-ml-2 px-2">
         <Link to="/jobs">
           <ArrowLeft /> All jobs
         </Link>
@@ -341,15 +332,21 @@ export function JobDetailPage({ jobId }: { jobId: string }) {
           <header className="mt-7 mb-10 flex flex-wrap items-end justify-between gap-x-10 gap-y-6">
             <div className="max-w-[640px]">
               <div className="mb-3.5 flex flex-wrap gap-2">
-                <span className="rounded-md border border-primary px-2.5 py-0.5 text-[11px] text-primary capitalize">
+                <span className="rounded-md border border-primary px-2.5 py-[3px] text-[11px] tracking-wide text-primary capitalize">
                   {j.source}
                 </span>
-                {j.remote && <span className="rounded-md bg-muted px-2.5 py-0.5 text-[11px]">Remote</span>}
+                {j.remote && (
+                  <span className="rounded-md bg-neutral-800 px-2.5 py-[3px] text-[11px] tracking-wide text-neutral-100">
+                    Remote
+                  </span>
+                )}
                 {j.posted_at && (
-                  <span className="rounded-md bg-muted px-2.5 py-0.5 text-[11px]">Posted {j.posted_at}</span>
+                  <span className="rounded-md bg-neutral-800 px-2.5 py-[3px] text-[11px] tracking-wide text-neutral-100">
+                    Posted {j.posted_at}
+                  </span>
                 )}
               </div>
-              <h1 className="mb-2.5 text-3xl font-semibold tracking-[-0.025em] text-pretty sm:text-[40px] sm:leading-[1.1]">
+              <h1 className="mb-2.5 text-3xl font-medium tracking-[-0.025em] text-pretty sm:text-[40px] sm:leading-[1.1]">
                 {j.title}
               </h1>
               <div className="flex flex-wrap gap-4 text-[15px] text-muted-foreground">
@@ -369,7 +366,7 @@ export function JobDetailPage({ jobId }: { jobId: string }) {
             </div>
             <div className="flex gap-10">
               <div>
-                <div className="text-[32px] font-medium tracking-tight text-primary tabular-nums">
+                <div className="text-[32px] font-medium tracking-tight text-brand-300 tabular-nums">
                   {first ? fmt(first.total) : "–"}
                 </div>
                 <div className="text-xs text-muted-foreground">talents matched</div>
@@ -383,14 +380,14 @@ export function JobDetailPage({ jobId }: { jobId: string }) {
             </div>
           </header>
 
-          <section className="flex flex-col gap-6 rounded-[14px] bg-card p-5 ring-1 ring-border sm:p-7">
+          <section className="flex flex-col gap-6 rounded-[14px] bg-card p-5 elev-sm sm:p-7">
             <RequirementsPanel jobId={jobId} requirements={j.requirements} />
-            <div className="h-px bg-gradient-to-r from-transparent via-border-strong to-transparent" />
+            <div className="hr-fade" />
             <div>
               <Button
-                variant="ghost"
+                variant="accent"
                 size="sm"
-                className="-ml-1.5 text-primary hover:text-primary"
+                className="-ml-1.5"
                 aria-expanded={descOpen}
                 onClick={() => setDescOpen((v) => !v)}
               >

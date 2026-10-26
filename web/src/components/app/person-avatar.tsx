@@ -24,7 +24,7 @@ export function PersonAvatar({
     <div
       aria-hidden
       className={cn(
-        "relative grid size-10 shrink-0 place-items-center overflow-hidden rounded-full bg-accent-soft text-sm font-semibold text-primary",
+        "relative grid size-10 shrink-0 place-items-center overflow-hidden rounded-full bg-brand-900 text-sm font-medium text-brand-300",
         className,
       )}
     >

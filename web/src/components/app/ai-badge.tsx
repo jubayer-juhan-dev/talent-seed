@@ -18,8 +18,8 @@ export function AiBadge({ person, compact, className }: { person: Enriched; comp
           role="img"
           aria-label={aiTip(person)}
           className={cn(
-            "inline-flex items-center gap-1 rounded-md bg-ai-soft font-medium whitespace-nowrap text-ai",
-            compact ? "size-6 justify-center" : "px-2 py-0.5 text-xs",
+            "inline-flex items-center gap-1 rounded-md bg-brand-800 tracking-wide whitespace-nowrap text-brand-100",
+            compact ? "size-6 justify-center" : "px-2.5 py-[3px] text-[11px]",
             className,
           )}
         >

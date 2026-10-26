@@ -35,10 +35,10 @@ export function RequirementChip({ req, talents }: { req: JobRequirement; talents
       title={req.evidence_text ? `“${req.evidence_text}”` : undefined}
       className={cn(
         "flex items-center gap-2.5 rounded-lg px-3.5 py-2.5",
-        required ? "bg-background ring-1 ring-border" : "border border-dashed border-border-strong",
+        required ? "bg-background elev-sm" : "border border-dashed border-divider",
       )}
     >
-      <Icon className={cn("size-4 shrink-0", required ? "text-primary" : "text-faint")} />
+      <Icon className={cn("size-4 shrink-0", required ? "text-primary" : "text-neutral-500")} />
       <span className={cn("text-sm", required && "font-medium")}>{req.concept_name}</span>
       <span className="text-[11px] text-muted-foreground">{typeLabel(req.concept_type)}</span>
       {noData && (

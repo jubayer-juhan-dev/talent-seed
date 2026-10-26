@@ -1,9 +1,10 @@
-import { Blocks, Lightbulb, MapPin } from "lucide-react";
+import { Link2, MapPin } from "lucide-react";
 import type { PersonRow } from "@/api/client";
 import { CohortBadge } from "@/components/app/cohort-badge";
 import { GithubIcon as Github } from "@/components/app/github-icon";
 import { PersonAvatar } from "@/components/app/person-avatar";
 import { StarButton } from "@/components/app/star-button";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { fmt } from "@/lib/format";
 import { PersonTags } from "./person-tags";
 
@@ -13,7 +14,8 @@ export function GithubLine({ p }: { p: PersonRow }) {
   if (p.github_login)
     return (
       <span className="flex items-center gap-1.5 truncate">
-        <Github className="size-3.5 shrink-0" />@{p.github_login}
+        <Github className="size-3.5 shrink-0" />
+        {p.github_login}
       </span>
     );
   if (p.github_user_id != null)
@@ -47,46 +49,52 @@ export function PersonCard({ p, index, onOpen }: { p: PersonRow; index: number; 
       onKeyDown={(e) => e.key === "Enter" && onOpen()}
       aria-label={`Open ${p.display_name || "person"}`}
       style={{ animationDelay: `${Math.min(index % 50, 20) * 25}ms` }}
-      className="flex min-w-0 animate-in cursor-pointer flex-col gap-3 rounded-xl border bg-card p-4 shadow-xs transition-[transform,box-shadow,border-color] duration-200 fade-in fill-mode-both slide-in-from-bottom-1.5 hover:-translate-y-0.5 hover:border-border-strong hover:shadow-md focus-visible:outline-2 focus-visible:outline-ring"
+      className="flex min-w-0 animate-in cursor-pointer flex-col gap-4 rounded-[14px] bg-card p-5 elev-sm transition-shadow duration-200 fade-in fill-mode-both slide-in-from-bottom-1.5 hover:elev-md focus-visible:outline-2 focus-visible:outline-ring"
     >
       <div className="flex min-w-0 items-start gap-3">
-        <PersonAvatar person={p} />
+        <PersonAvatar person={p} className="text-[15px]" />
         <div className="min-w-0 flex-1">
-          <div className="truncate text-[14.5px] font-semibold">{p.display_name || "(no name)"}</div>
-          <div className="flex text-[12.5px] text-muted-foreground">
+          <div className="truncate text-[15px] font-medium">{p.display_name || "(no name)"}</div>
+          <div className="mt-0.5 flex text-xs text-muted-foreground">
             <GithubLine p={p} />
           </div>
         </div>
-        <CohortBadge cohort={p.priority_cohort} />
-        <StarButton person={p} className="-mt-1 -mr-1" />
+        <StarButton person={p} className="-mt-1 -mr-1.5" />
       </div>
-      <div className="flex items-start gap-1.5 text-[12.5px] text-muted-foreground">
-        <Lightbulb className="mt-0.5 size-3.5 shrink-0 text-faint" />
-        <span>{p.priority_cohort_reason}</span>
-      </div>
-      <div className="flex flex-col gap-1.5">
-        <div className="flex justify-between text-xs text-muted-foreground">
-          <span>Active days, last 84</span>
-          <b className="font-semibold text-foreground tabular-nums">{fmt(p.active_days_in_window)}</b>
+      <div>
+        <div className="mb-2 flex justify-between text-xs">
+          <span className="text-muted-foreground">Active days, last 84</span>
+          <span className="font-medium tabular-nums">{fmt(p.active_days_in_window)}</span>
         </div>
-        <div className="h-1.5 overflow-hidden rounded-full bg-bar-track">
+        <div className="h-1 overflow-hidden rounded-sm bg-neutral-800">
           <div
-            className="h-full origin-left animate-grow-x rounded-full bg-gradient-to-r from-bar-light to-bar-strong"
+            className="h-full origin-left animate-grow-x rounded-sm bg-primary"
             style={{ width: `${activeShare(p)}%` }}
           />
         </div>
       </div>
-      <PersonTags p={p} />
-      <div className="mt-auto flex justify-between gap-2 border-t pt-2.5 text-xs text-muted-foreground">
-        <span className="flex min-w-0 items-center gap-1.5 truncate">
-          <Blocks className="size-3.5 shrink-0" />
+      <div className="flex flex-wrap gap-1.5">
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span>
+              <CohortBadge cohort={p.priority_cohort} />
+            </span>
+          </TooltipTrigger>
+          <TooltipContent>{p.priority_cohort_reason}</TooltipContent>
+        </Tooltip>
+        <PersonTags p={p} />
+      </div>
+      <div className="hr-fade mt-auto" />
+      <div className="flex justify-between gap-3 text-xs text-muted-foreground">
+        <span className="flex min-w-0 items-center gap-1.5">
+          <Link2 className="size-3.5 shrink-0" />
           <span className="truncate">
             <ChainsLine p={p} />
           </span>
         </span>
-        <span className="flex shrink-0 items-center gap-1.5">
+        <span className="flex shrink-0 items-center gap-1">
           <MapPin className="size-3.5" />
-          {p.location || p.country || "–"}
+          {p.location || p.country || "Unknown"}
         </span>
       </div>
     </div>

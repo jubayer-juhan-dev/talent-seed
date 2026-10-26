@@ -29,8 +29,8 @@ export function FilterChips() {
 
   if (!chips.length)
     return (
-      <span className="text-[13px] text-faint">
-        No filters. Use <b className="text-muted-foreground">Filter</b> to narrow by chain, project, activity or
+      <span className="text-[13px] text-muted-foreground">
+        No filters. Use <b className="text-muted-foreground">Filters</b> to narrow by chain, project, activity or
         country.
       </span>
     );
@@ -39,15 +39,15 @@ export function FilterChips() {
       {chips.map((c) => (
         <span
           key={c.key}
-          className="inline-flex h-7 animate-in items-center gap-1.5 rounded-full bg-accent-soft pr-1 pl-2.5 text-[12.5px] font-medium text-primary zoom-in-90 fade-in"
+          className="inline-flex h-7 animate-in items-center gap-1.5 rounded-full bg-brand-900 pr-1 pl-3 text-[12.5px] text-brand-200 ring-1 ring-brand-800 zoom-in-90 fade-in"
         >
           {c.text && `${c.text}: `}
-          <b className="font-semibold">{c.value}</b>
+          <b className="font-medium text-brand-100">{c.value}</b>
           <button
             type="button"
             onClick={c.remove}
             aria-label={`Remove ${[c.text, c.value].filter(Boolean).join(" ")}`}
-            className="grid size-5 place-items-center rounded-full hover:bg-primary/15"
+            className="grid size-5 place-items-center rounded-full hover:bg-primary/20"
           >
             <X className="size-3.5" />
           </button>

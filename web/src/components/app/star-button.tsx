@@ -26,12 +26,11 @@ export function StarButton({ person, className }: { person: ShortlistEntry; clas
       }}
       onKeyDown={(e) => e.stopPropagation()}
       className={cn(
-        "grid size-8 shrink-0 place-items-center rounded-lg text-faint transition-[color,background,transform] hover:bg-muted hover:text-foreground active:scale-90 focus-visible:outline-2 focus-visible:outline-ring",
-        on && "text-amber-500 hover:text-amber-500",
+        "grid size-8 shrink-0 place-items-center rounded-lg text-primary transition-[color,background,transform] hover:bg-primary/10 active:scale-90 focus-visible:outline-2 focus-visible:outline-ring",
         className,
       )}
     >
-      <Star className={cn("size-4", on && "fill-amber-500")} />
+      <Star className={cn("size-[17px]", on && "fill-primary")} />
     </button>
   );
 }

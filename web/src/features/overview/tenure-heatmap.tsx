@@ -14,23 +14,23 @@ export function cohortOf(tenure: string, activity: string) {
 }
 
 const cellClass =
-  "flex h-[62px] flex-col items-center justify-center rounded-lg font-semibold tabular-nums transition-[transform,box-shadow] duration-150 hover:scale-[1.04] hover:shadow-[0_0_0_2px_var(--card),0_0_0_4px_var(--ring)] focus-visible:scale-[1.04] focus-visible:shadow-[0_0_0_2px_var(--card),0_0_0_4px_var(--ring)] focus-visible:outline-none";
+  "flex h-16 flex-col items-center justify-center gap-0.5 rounded-lg border border-primary/25 text-[15px] font-medium tabular-nums transition-colors duration-150 hover:border-primary focus-visible:border-primary focus-visible:outline-none";
 
-/** 3×3 heatmap of P1–P3 people, as a real table. One-hue sequential ramp; the value is printed in every cell. */
+/** 3×3 heatmap of P1–P3 people, as a real table. The accent mixed into the surface; the value is printed in every cell. */
 export function TenureHeatmap({ mix }: { mix: Overview["mix"] }) {
   const cell = (t: string, a: string) => mix.find((m) => m.tenure === t && m.activity === a)?.n ?? 0;
   const values = TENURE.flatMap((t) => ACTIVITY.map((a) => cell(t, a)));
-  const lo = Math.min(...values);
-  const hi = Math.max(...values);
-  const step = (n: number) => Math.min(5, Math.floor(((n - lo) / (hi - lo + 1)) * 6));
+  const hi = Math.max(1, ...values);
+  // the accent mixed into the surface: brighter cells hold more people
+  const share = (n: number) => Math.round(12 + (n / hi) * 78);
   return (
-    <table className="w-full table-fixed border-separate border-spacing-1 text-[12.5px]">
+    <table className="w-full table-fixed border-separate border-spacing-1.5 text-xs">
       <caption className="sr-only">P1–P3 people by tenure (rows) and activity (columns)</caption>
       <thead>
         <tr>
-          <td className="w-[84px]" />
+          <td className="w-[88px]" />
           {ACTIVITY.map((a) => (
-            <th key={a} scope="col" className="pb-0.5 text-center text-xs font-normal text-muted-foreground">
+            <th key={a} scope="col" className="pb-1 text-center text-xs font-normal text-muted-foreground">
               {label(a)}
             </th>
           ))}
@@ -44,7 +44,7 @@ export function TenureHeatmap({ mix }: { mix: Overview["mix"] }) {
             </th>
             {ACTIVITY.map((a) => {
               const n = cell(t, a);
-              const s = step(n);
+              const pct = share(n);
               const cohort = cohortOf(t, a);
               return (
                 <td key={a} className="p-0">
@@ -56,12 +56,12 @@ export function TenureHeatmap({ mix }: { mix: Overview["mix"] }) {
                         aria-label={`${label(t)}, ${label(a)}: ${fmt(n)} people, cohort ${cohort}`}
                         className={cellClass}
                         style={{
-                          background: `var(--heat-${s})`,
-                          color: s >= 3 ? "var(--heat-text-hi)" : "var(--heat-text-lo)",
+                          background: `color-mix(in srgb, var(--primary) ${pct}%, var(--card))`,
+                          color: pct > 55 ? "var(--background)" : "var(--foreground)",
                         }}
                       >
                         {fmt(n)}
-                        <small className="text-[11px] font-medium opacity-85">{cohort}</small>
+                        <small className="text-[10px] font-normal tracking-[0.04em] opacity-75">{cohort}</small>
                       </Link>
                     </TooltipTrigger>
                     <TooltipContent>

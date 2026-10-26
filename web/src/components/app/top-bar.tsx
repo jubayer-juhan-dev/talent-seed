@@ -1,75 +1,79 @@
 import { Link } from "@tanstack/react-router";
-import { Briefcase, CircleHelp, LayoutDashboard, Moon, Sprout, Sun, Users } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { CircleHelp, Sprout } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { tour } from "@/features/tour/tour-store";
-import { useTheme } from "@/hooks/use-theme";
 import { DataNotes } from "./data-notes";
 import { ShortlistSheet } from "./shortlist-sheet";
 
-const tab =
-  "flex items-center gap-1.5 rounded-md px-3 py-1.5 text-[13.5px] font-medium text-muted-foreground transition-colors hover:text-foreground";
-const active = "bg-card text-foreground shadow-sm";
+const link = "text-[15px] text-foreground transition-colors hover:text-primary sm:text-sm";
+const active = "text-primary!";
+
+function NavLinks({ className }: { className: string }) {
+  return (
+    <nav className={className} aria-label="Views">
+      <Link
+        to="/"
+        className={link}
+        activeProps={{ className: active, "aria-current": "page" }}
+        activeOptions={{ exact: true, includeSearch: false }}
+      >
+        Overview
+      </Link>
+      <Link
+        to="/explore"
+        className={link}
+        activeProps={{ className: active, "aria-current": "page" }}
+        activeOptions={{ includeSearch: false }}
+      >
+        Explore
+      </Link>
+      <Link
+        to="/jobs"
+        className={link}
+        activeProps={{ className: active, "aria-current": "page" }}
+        activeOptions={{ includeSearch: false }}
+      >
+        Jobs
+      </Link>
+    </nav>
+  );
+}
 
 export function TopBar() {
-  const { theme, toggle } = useTheme();
   return (
-    <header className="sticky top-0 z-30 border-b bg-background/80 backdrop-blur-md backdrop-saturate-150">
-      <div className="mx-auto flex max-w-[1320px] items-center gap-1 px-3 py-2.5 sm:gap-4 sm:px-5">
-        <Link to="/" className="flex items-center gap-2.5 font-bold tracking-tight">
-          <span className="grid size-[30px] place-items-center rounded-[9px] bg-gradient-to-br from-indigo-500 to-green-500 text-white">
-            <Sprout className="size-[17px]" />
-          </span>
-          <span className="hidden text-[15.5px] md:inline">Talent Seed</span>
-        </Link>
-        <nav className="flex gap-0.5 rounded-lg border bg-muted p-[3px]" aria-label="Views">
-          <Link
-            to="/"
-            className={tab}
-            activeProps={{ className: active }}
-            activeOptions={{ exact: true, includeSearch: false }}
-          >
-            <LayoutDashboard className="size-4" />
-            <span className="hidden sm:inline">Overview</span>
+    <header className="sticky top-0 z-30 bg-background/80 backdrop-blur-md">
+      {/* Phones: logo and actions on the first row, the page links on a second row. sm and up: one row. */}
+      <div className="mx-auto flex max-w-[1240px] flex-wrap items-center gap-x-3 gap-y-3.5 px-4 pt-3.5 pb-3 sm:flex-nowrap sm:gap-8 sm:px-8 sm:py-5">
+        <div className="mr-auto flex min-w-0 items-center gap-8">
+          <Link to="/" className="flex shrink-0 items-center gap-2.5 text-[17px] font-medium">
+            <span className="grid size-7 place-items-center rounded-lg border border-primary text-primary shadow-[0_0_16px_color-mix(in_srgb,var(--primary)_35%,transparent)]">
+              <Sprout className="size-4" />
+            </span>
+            <span className="max-[379px]:hidden sm:hidden md:inline">Talent Seed</span>
           </Link>
-          <Link
-            to="/explore"
-            className={tab}
-            activeProps={{ className: active }}
-            activeOptions={{ includeSearch: false }}
-          >
-            <Users className="size-4" />
-            <span className="hidden sm:inline">Explore</span>
-          </Link>
-          <Link to="/jobs" className={tab} activeProps={{ className: active }} activeOptions={{ includeSearch: false }}>
-            <Briefcase className="size-4" />
-            <span className="hidden sm:inline">Jobs</span>
-          </Link>
-        </nav>
-        <div className="flex-1" />
-        <DataNotes />
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button variant="ghost" size="icon" onClick={tour.start} aria-label="Take the tour">
-              <CircleHelp className="size-4" />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>Take the tour</TooltipContent>
-        </Tooltip>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={toggle}
-              aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} theme`}
-            >
-              {theme === "dark" ? <Sun className="size-4" /> : <Moon className="size-4" />}
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>{theme === "dark" ? "Light theme" : "Dark theme"}</TooltipContent>
-        </Tooltip>
-        <ShortlistSheet />
+          <NavLinks className="hidden gap-6 sm:flex" />
+        </div>
+        <div className="flex shrink-0 items-center gap-2 text-[13px] sm:gap-3">
+          <DataNotes />
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                type="button"
+                onClick={tour.start}
+                aria-label="Take the tour"
+                className="grid size-8 place-items-center rounded-lg text-muted-foreground transition-colors hover:bg-foreground/7 hover:text-foreground"
+              >
+                <CircleHelp className="size-4" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent>Take the tour</TooltipContent>
+          </Tooltip>
+          <ShortlistSheet />
+        </div>
+        <NavLinks className="flex w-full gap-6 sm:hidden" />
+      </div>
+      <div className="mx-auto max-w-[1240px] px-4 sm:px-8">
+        <div className="hr-fade" />
       </div>
     </header>
   );

@@ -8,7 +8,7 @@ test.beforeEach(async ({ page }) => {
 test("starts on P1, 50 cards, and loads more", async ({ page }) => {
   await expect(page.locator("[aria-label^='Open ']")).toHaveCount(50);
   await page.getByLabel("Table view").click();
-  await page.getByRole("button", { name: /Load more/ }).click();
+  await page.getByRole("button", { name: /^Load \d+ more/ }).click();
   await expect(page.locator("tbody tr")).toHaveCount(100);
 });
 
@@ -20,7 +20,7 @@ test("cohort switcher changes results and URL", async ({ page }) => {
 });
 
 test("filter by project via the menu, as a chip, kept on reload", async ({ page }) => {
-  await page.getByRole("button", { name: "Filter" }).click();
+  await page.getByRole("button", { name: "Filters" }).click();
   await page.getByText("Chain or project", { exact: true }).click();
   await page.keyboard.type("uniswap");
   await page.locator("[cmdk-item]", { hasText: "Uniswap" }).first().click();

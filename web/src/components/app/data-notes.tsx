@@ -1,4 +1,4 @@
-import { ChevronDown, Database, FlaskConical } from "lucide-react";
+import { ChevronDown, Database } from "lucide-react";
 import { $api } from "@/api/client";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -11,15 +11,14 @@ export function DataNotes() {
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button data-tour="notes" variant="ghost" size="sm" className="gap-2 text-muted-foreground">
-          <span className="inline-flex items-center gap-1 rounded-full bg-warn-soft px-2 py-0.5 text-[11.5px] font-semibold text-warn">
-            <FlaskConical className="size-3.5" />
+        <Button data-tour="notes" variant="ghost" size="sm" className="gap-2 px-1.5 font-normal text-muted-foreground">
+          <span className="inline-flex items-center rounded-md border border-primary px-2.5 py-0.5 text-[11px] tracking-wide text-primary">
             Draft
           </span>
-          <span className="hidden md:inline">
+          <span className="hidden text-[13px] lg:inline">
             {run ? `Activity through ${day(run.as_of_activity_date)}` : "Loading…"}
           </span>
-          <ChevronDown className="hidden size-4 md:block" />
+          <ChevronDown className="hidden size-3.5 lg:block" />
         </Button>
       </PopoverTrigger>
       <PopoverContent align="end" className="w-80 text-[13px]">

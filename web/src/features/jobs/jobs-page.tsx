@@ -15,16 +15,6 @@ import { type JobRequirement, RequirementsEditor } from "./requirements";
 type JobDetail = Schemas["JobDetail"];
 type JobRow = Schemas["JobRow"];
 
-/** Soft accent glow behind the Jobs screens (top-left), as in the design. */
-export function JobsBackdrop() {
-  return (
-    <div
-      aria-hidden
-      className="pointer-events-none fixed inset-x-0 top-0 -z-10 h-[560px] bg-[radial-gradient(1200px_500px_at_0%_-10%,color-mix(in_srgb,var(--primary)_10%,transparent),transparent_70%)]"
-    />
-  );
-}
-
 export const jobPlace = (j: { location_text?: string | null; location_country?: string | null }) =>
   j.location_text || j.location_country || null;
 
@@ -123,11 +113,11 @@ function NewJobDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v:
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-h-[calc(100svh-2rem)] gap-6 overflow-y-auto p-6 sm:max-w-[620px] sm:p-8">
+      <DialogContent className="max-h-[calc(100svh-2rem)] gap-6 overflow-y-auto rounded-[14px] p-6 shadow-[var(--elev-lg)] ring-0 sm:max-w-[620px] sm:p-8">
         {!extracted ? (
           <form onSubmit={runExtraction} className="contents">
             <div className="pr-6">
-              <DialogTitle className="mb-1.5 text-[22px] font-semibold tracking-tight">New job</DialogTitle>
+              <DialogTitle className="mb-1.5 text-[22px] font-medium">New job</DialogTitle>
               <DialogDescription className="text-sm">
                 Paste a job posting. We'll pull out the requirements for you to review.
               </DialogDescription>
@@ -190,7 +180,7 @@ function NewJobDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v:
         ) : (
           <>
             <div className="pr-6">
-              <DialogTitle className="mb-1.5 text-[22px] font-semibold tracking-tight">Review requirements</DialogTitle>
+              <DialogTitle className="mb-1.5 text-[22px] font-medium">Review requirements</DialogTitle>
               <DialogDescription className="text-sm">
                 {edited.length} requirements found in the posting, each with its quote. The job is already saved — fix
                 anything that looks wrong, or keep it as is.
@@ -220,7 +210,7 @@ function JobCard({ job }: { job: JobRow }) {
     <Link
       to="/jobs/$jobId"
       params={{ jobId: job.job_id }}
-      className="group flex flex-col gap-5 rounded-[14px] bg-card p-6 ring-1 ring-border transition-shadow hover:shadow-lg hover:ring-border-strong focus-visible:outline-2 focus-visible:outline-ring"
+      className="group flex flex-col gap-5 rounded-[14px] bg-card p-6 elev-sm transition-shadow hover:elev-md focus-visible:outline-2 focus-visible:outline-ring"
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
@@ -239,10 +229,14 @@ function JobCard({ job }: { job: JobRow }) {
         <ArrowUpRight className="size-[18px] shrink-0 text-primary transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
       </div>
       <div className="flex flex-wrap gap-1.5">
-        <span className="rounded-md bg-muted px-2.5 py-0.5 text-[11px]">{job.required_count} required</span>
-        <span className="rounded-md bg-muted px-2.5 py-0.5 text-[11px]">{job.nice_to_have_count} nice to have</span>
+        <span className="rounded-md bg-neutral-800 px-2.5 py-[3px] text-[11px] tracking-wide text-neutral-100">
+          {job.required_count} required
+        </span>
+        <span className="rounded-md bg-neutral-800 px-2.5 py-[3px] text-[11px] tracking-wide text-neutral-100">
+          {job.nice_to_have_count} nice to have
+        </span>
       </div>
-      <div className="mt-auto h-px bg-gradient-to-r from-transparent via-border-strong to-transparent" />
+      <div className="hr-fade mt-auto" />
       <div className="flex items-end justify-between gap-3">
         <div>
           <div className="text-[26px] font-medium tracking-tight tabular-nums">{fmt(job.matches_count)}</div>
@@ -259,16 +253,15 @@ export function JobsPage() {
   const [dialog, setDialog] = useState(false);
 
   return (
-    <div className="pt-4 pb-10 sm:pt-8">
-      <JobsBackdrop />
+    <div className="pt-2 sm:pt-4">
       <div className="flex flex-wrap items-end justify-between gap-6">
         <div>
-          <h1 className="mb-2 text-3xl font-semibold tracking-[-0.025em] sm:text-[40px]">Jobs</h1>
+          <h1 className="mb-2 text-3xl font-medium tracking-[-0.025em] sm:text-[40px] sm:leading-[1.1]">Jobs</h1>
           <p className="text-[15px] text-muted-foreground">
             Paste a posting, and Talent Seed ranks talents by evidence for each requirement.
           </p>
         </div>
-        <Button size="lg" className="h-10 px-4 text-sm" onClick={() => setDialog(true)}>
+        <Button size="lg" onClick={() => setDialog(true)}>
           <Plus /> New job
         </Button>
       </div>

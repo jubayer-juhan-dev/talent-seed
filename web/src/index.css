@@ -6,116 +6,91 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/* Design tokens, carried over from the first viewer (scripts/seed_viewer/index.html).
-   shadcn's variable names are kept so its components pick them up; app-specific tokens follow.
-   Chart and heatmap blues are the validated sequential ramp from the dataviz palette. */
+/* Nocturne design system (claude.ai/design project "Talent Seed", _ds/nocturne): a quiet, compact dark interface,
+   Inter at medium weight, an accent used as a line and a glow rather than a flood. Dark only.
+   shadcn's variable names are kept so its components pick the tokens up; app-specific tokens follow. */
 :root {
-  --background: #f7f7f8;
-  --foreground: #18181b;
-  --card: #ffffff;
-  --card-foreground: #18181b;
-  --popover: #ffffff;
-  --popover-foreground: #18181b;
-  --primary: #4f46e5;
-  --primary-foreground: #ffffff;
-  --secondary: #f3f3f5;
-  --secondary-foreground: #18181b;
-  --muted: #f3f3f5;
-  --muted-foreground: #5f5f69;
-  --faint: #8a8a94;
-  --accent: #f3f3f5;
-  --accent-foreground: #18181b;
-  --accent-soft: #eef0ff;
-  --destructive: #b91c1c;
-  --border: #e7e7eb;
-  --border-strong: #d5d5dc;
-  --input: #e7e7eb;
-  --ring: #4f46e5;
-  --radius: 0.75rem;
+  --background: #161826;
+  --foreground: #e9e9ed;
+  --card: #232532;
+  --card-foreground: #e9e9ed;
+  --popover: #232532;
+  --popover-foreground: #e9e9ed;
+  --primary: #9184d9;
+  --primary-foreground: #161826;
+  --secondary: #2a2c39;
+  --secondary-foreground: #e9e9ed;
+  --muted: #2a2c39;
+  --muted-foreground: #9597a3;
+  --faint: #6f7280;
+  --accent: #2a2c39;
+  --accent-foreground: #e9e9ed;
+  --accent-soft: #2b2741;
+  --destructive: #f2878c;
+  --border: #393a47;
+  --border-strong: #595d6c;
+  --input: #393a47;
+  --ring: #9184d9;
+  --radius: 0.5rem;
 
-  /* cohorts: text colour and soft background */
-  --p1: #15803d;
-  --p1-soft: #e6f6ec;
-  --p2: #1d4ed8;
-  --p2-soft: #e8effe;
-  --p3: #b45309;
-  --p3-soft: #fdf2e2;
-  --hold: #62626b;
-  --hold-soft: #efeff2;
-  --warn: #a15c07;
-  --warn-soft: #fdf3e1;
-  --ai: #6d28d9;
-  --ai-soft: #f1eafe;
-  --good: #15803d;
+  /* Nocturne tonal ramps (OKLCH, shared lightness scale) */
+  --brand-100: #f5f4ff;
+  --brand-200: #e7e5fe;
+  --brand-300: #d2cefd;
+  --brand-400: #b5abfc;
+  --brand-500: #968ae0;
+  --brand-600: #796cbf;
+  --brand-700: #5d5294;
+  --brand-800: #423a6a;
+  --brand-900: #2b2741;
+  --divider: color-mix(in srgb, #e9e9ed 16%, transparent);
+
+  /* elevation: a hairline edge plus ambient darkness */
+  --elev-sm: 0 0 0 1px #3f424d;
+  --elev-md: 0 0 0 1px #595d6c, 0 6px 18px rgba(0, 0, 0, 0.55);
+  --elev-lg: 0 0 0 1px #9397ab, 0 16px 40px rgba(0, 0, 0, 0.65);
+
+  /* cohorts: mark colour (dots, bars), text colour and soft background */
+  --p1-mark: oklch(0.72 0.15 150);
+  --p1: oklch(0.8 0.13 150);
+  --p1-soft: color-mix(in srgb, oklch(0.72 0.15 150) 15%, transparent);
+  --p2-mark: oklch(0.7 0.13 255);
+  --p2: oklch(0.8 0.11 255);
+  --p2-soft: color-mix(in srgb, oklch(0.7 0.13 255) 15%, transparent);
+  --p3-mark: oklch(0.8 0.13 75);
+  --p3: oklch(0.85 0.11 75);
+  --p3-soft: color-mix(in srgb, oklch(0.8 0.13 75) 15%, transparent);
+  --hold-mark: oklch(0.6 0.01 260);
+  --hold: oklch(0.75 0.01 260);
+  --hold-soft: color-mix(in srgb, oklch(0.6 0.01 260) 18%, transparent);
+  --warn: oklch(0.85 0.11 75);
+  --warn-soft: color-mix(in srgb, oklch(0.8 0.13 75) 12%, transparent);
+  --ai: #d2cefd;
+  --ai-soft: #423a6a;
+  --good: oklch(0.72 0.15 150);
 
   /* charts */
-  --bar-strong: #1c5cab;
-  --bar-light: #86b6ef;
-  --bar-track: #eef1f6;
-  --heat-0: #cde2fb;
-  --heat-1: #9ec5f4;
-  --heat-2: #6da7ec;
-  --heat-3: #3987e5;
-  --heat-4: #256abf;
-  --heat-5: #184f95;
-  --heat-text-lo: #0d366b;
-  --heat-text-hi: #ffffff;
+  --bar-strong: #9184d9;
+  --bar-light: #5d5294;
+  --bar-track: #3f424d;
   --chart-1: var(--bar-strong);
   --chart-2: var(--bar-light);
-  --chart-3: #3987e5;
-  --chart-4: #184f95;
-  --chart-5: #b7d3f6;
+  --chart-3: #b5abfc;
+  --chart-4: #423a6a;
+  --chart-5: #d2cefd;
 }
 
-.dark {
-  --background: #0f0f12;
-  --foreground: #ececf1;
-  --card: #17171c;
-  --card-foreground: #ececf1;
-  --popover: #17171c;
-  --popover-foreground: #ececf1;
-  --primary: #818cf8;
-  --primary-foreground: #0f0f12;
-  --secondary: #1e1e24;
-  --secondary-foreground: #ececf1;
-  --muted: #1e1e24;
-  --muted-foreground: #a3a3ad;
-  --faint: #7a7a85;
-  --accent: #1e1e24;
-  --accent-foreground: #ececf1;
-  --accent-soft: #23234a;
-  --destructive: #f87171;
-  --border: #2a2a32;
-  --border-strong: #3a3a44;
-  --input: #2a2a32;
-  --ring: #818cf8;
-
-  --p1: #4ade80;
-  --p1-soft: #14301f;
-  --p2: #7aa2ff;
-  --p2-soft: #1a2547;
-  --p3: #f5b453;
-  --p3-soft: #3a2a12;
-  --hold: #a3a3ad;
-  --hold-soft: #26262d;
-  --warn: #f5b453;
-  --warn-soft: #3a2a12;
-  --ai: #c4b5fd;
-  --ai-soft: #2a1f4a;
-  --good: #4ade80;
-
-  /* dark mode: its own steps of the same ramp, lighter = more */
-  --bar-strong: #86b6ef;
-  --bar-light: #256abf;
-  --bar-track: #22232b;
-  --heat-0: #184f95;
-  --heat-1: #1c5cab;
-  --heat-2: #2a78d6;
-  --heat-3: #5598e7;
-  --heat-4: #86b6ef;
-  --heat-5: #b7d3f6;
-  --heat-text-lo: #ffffff;
-  --heat-text-hi: #0d366b;
+/* Nocturne's neutral ramp replaces Tailwind's neutral palette. */
+@theme {
+  --color-neutral-100: #f3f5fe;
+  --color-neutral-200: #e4e7f5;
+  --color-neutral-300: #cfd3e5;
+  --color-neutral-400: #b2b6ca;
+  --color-neutral-500: #9397ab;
+  --color-neutral-600: #75798c;
+  --color-neutral-700: #595d6c;
+  --color-neutral-800: #3f424d;
+  --color-neutral-900: #292b31;
 }
 
 @theme inline {
@@ -168,6 +143,22 @@
   --color-chart-4: var(--chart-4);
   --color-chart-5: var(--chart-5);
 
+  --color-p1-mark: var(--p1-mark);
+  --color-p2-mark: var(--p2-mark);
+  --color-p3-mark: var(--p3-mark);
+  --color-hold-mark: var(--hold-mark);
+  --color-brand: var(--primary);
+  --color-brand-100: var(--brand-100);
+  --color-brand-200: var(--brand-200);
+  --color-brand-300: var(--brand-300);
+  --color-brand-400: var(--brand-400);
+  --color-brand-500: var(--brand-500);
+  --color-brand-600: var(--brand-600);
+  --color-brand-700: var(--brand-700);
+  --color-brand-800: var(--brand-800);
+  --color-brand-900: var(--brand-900);
+  --color-divider: var(--divider);
+
   --animate-grow-x: grow-x 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) both;
   @keyframes grow-x {
     from {
@@ -188,18 +179,45 @@
   }
   html {
     @apply font-sans antialiased;
-    color-scheme: light;
-  }
-  html.dark {
     color-scheme: dark;
   }
   body {
     @apply bg-background text-foreground text-sm;
   }
+  ::selection {
+    background: color-mix(in srgb, var(--primary) 30%, transparent);
+  }
   button:not(:disabled),
   [role="button"]:not(:disabled) {
     cursor: pointer;
   }
+}
+
+/* Nocturne surfaces: hairline-edged cards, and rules that fade out over 48px at each end. */
+@utility elev-sm {
+  box-shadow: var(--elev-sm);
+}
+@utility elev-md {
+  box-shadow: var(--elev-md);
+}
+@utility elev-lg {
+  box-shadow: var(--elev-lg);
+}
+@utility hr-fade {
+  height: 1px;
+  background: linear-gradient(
+    to right,
+    transparent,
+    var(--divider) 48px,
+    var(--divider) calc(100% - 48px),
+    transparent
+  );
+}
+/* The soft accent glow behind every page (top-left). */
+@utility page-glow {
+  background:
+    radial-gradient(1200px 500px at 0% -10%, color-mix(in srgb, var(--primary) 10%, transparent), transparent 70%),
+    var(--background);
 }
 
 @media (prefers-reduced-motion: reduce) {
