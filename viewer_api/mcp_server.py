@@ -132,6 +132,67 @@ def get_person(person_id: Annotated[str, Field(description="gh:… or odd:…")]
     return queries.jsonable(out)
 
 
+@mcp.tool(annotations=READ)
+def get_person_enrichment(person_id: Annotated[str, Field(description="gh:… or odd:…")]) -> dict[str, Any]:
+    """AI enrichment for one person: LLM summary, inferred roles and the evidence rows behind them."""
+    from . import neon_enrichment
+    out = neon_enrichment.fetch(person_id)
+    if out is None:
+        raise ToolError("No AI enrichment for this person.")
+    return queries.jsonable(out)
+
+
+@mcp.tool(annotations=READ)
+def get_github_profile(person_id: Annotated[str, Field(description="gh:… or odd:…")]) -> dict[str, Any]:
+    """GitHub profile details: name, bio, company, location, website, X and LinkedIn (for outreach)."""
+    from . import github_profile
+    out = github_profile.fetch(person_id)
+    if out is None:
+        raise ToolError("GitHub profile not fetched yet for this person.")
+    return queries.jsonable(out)
+
+
+@mcp.tool(annotations=READ)
+def list_concepts() -> list[dict[str, Any]]:
+    """Talent Ontology: every active concept (roles, skills, tools, systems, knowledge, capabilities) with its id."""
+    from . import jobs as jobmod
+    return queries.jsonable(jobmod.list_concepts())
+
+
+@mcp.tool(annotations=READ)
+def list_jobs() -> list[dict[str, Any]]:
+    """All active jobs with requirement and match counts. Use get_job for one job, match_job for its candidates."""
+    from . import jobs as jobmod
+    return queries.jsonable(jobmod.list_jobs())
+
+
+@mcp.tool(annotations=READ)
+def get_job(job_id: Annotated[str, Field(description="job id from list_jobs")]) -> dict[str, Any]:
+    """One job: title, company, description and its required / nice-to-have ontology concepts."""
+    from . import jobs as jobmod
+    out = jobmod.get_job(job_id)
+    if out is None:
+        raise ToolError("Job not found.")
+    return queries.jsonable(out)
+
+
+@mcp.tool(annotations=READ)
+def match_job(
+    job_id: Annotated[str, Field(description="job id from list_jobs")],
+    pool: Annotated[Literal["all", "ai"], Field(description="all = everyone with evidence, ai = AI-enriched only")] = "all",
+    limit: Annotated[int, Field(ge=1, le=50)] = 20,
+    offset: Annotated[int, Field(ge=0)] = 0,
+) -> dict[str, Any]:
+    """Ranked candidates for a job, best first, with a per-concept evidence breakdown for each."""
+    from . import jobs as jobmod
+    if jobmod.get_job(job_id) is None:
+        raise ToolError("Job not found.")
+    out = jobmod.match(job_id, pool=pool, limit=limit, offset=offset)
+    out["offset"] = offset
+    with db() as con:
+        return queries.jsonable(jobmod.add_people(con, out))
+
+
 @mcp.tool(annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False, openWorldHint=False))
 def export_csv(
     filename: Annotated[str, Field(description="file name for exports/, e.g. 'eth_p1.csv'")],
@@ -193,7 +254,8 @@ def set_ai_enriched(
 # connector URL, or X-Access-Key). Read-only: no set_ai_enriched, and export_csv returns a download link instead of
 # writing on this machine.
 remote = MCPServer("talent-seed", instructions=mcp.instructions)
-for tool in (meta, overview, search_ecosystems, search_people, get_person):
+for tool in (meta, overview, search_ecosystems, search_people, get_person, get_person_enrichment, get_github_profile,
+             list_concepts, list_jobs, get_job, match_job):
     remote.add_tool(tool, annotations=READ)
 
 

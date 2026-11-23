@@ -117,6 +117,22 @@ def _pool_ids(cur, pool):
     return [r[0] for r in cur.fetchall()]
 
 
+def add_people(con, out):
+    """Fill name, login, cohort and country on match() items from talent_seed (DuckDB connection `con`)."""
+    ids = [r["talent_id"] for r in out["items"]]
+    people = {}
+    if ids:
+        # one batched lookup: per-row queries cost ~50ms each on talent_seed
+        people = {row[0]: row[1:] for row in con.execute(
+            "SELECT person_id, display_name, github_login, github_user_id, priority_cohort, country"
+            f" FROM talent_seed WHERE person_id IN ({','.join('?' * len(ids))})", ids).fetchall()}
+    for r in out["items"]:
+        if r["talent_id"] in people:
+            (r["name"], r["github_login"], r["github_user_id"],
+             r["priority_cohort"], r["country"]) = people[r["talent_id"]]
+    return out
+
+
 def match(job_id, pool="ai", limit=50, offset=0):
     conn = _conn()
     try:

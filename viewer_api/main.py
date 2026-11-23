@@ -194,18 +194,7 @@ def job_matches(job_id: str, con: Con, pool: str = "all",
         raise HTTPException(404, "job not found")
     out = jobmod.match(job_id, pool=pool, limit=limit, offset=offset)
     out["offset"] = offset
-    ids = [r["talent_id"] for r in out["items"]]
-    people = {}
-    if ids:
-        # one batched lookup: per-row queries cost ~50ms each on talent_seed
-        people = {row[0]: row[1:] for row in con.execute(
-            "SELECT person_id, display_name, github_login, github_user_id, priority_cohort, country"
-            f" FROM talent_seed WHERE person_id IN ({','.join('?' * len(ids))})", ids).fetchall()}
-    for r in out["items"]:
-        if r["talent_id"] in people:
-            (r["name"], r["github_login"], r["github_user_id"],
-             r["priority_cohort"], r["country"]) = people[r["talent_id"]]
-    return out
+    return jobmod.add_people(con, out)
 
 
 class JobRequirementEdit(BaseModel):

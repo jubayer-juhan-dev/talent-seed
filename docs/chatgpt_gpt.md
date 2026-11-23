@@ -13,14 +13,15 @@ the access key in the `X-Access-Key` header.
 4. **Create new action**:
    - Authentication → **API Key**, Auth type **Custom**, header name `X-Access-Key`,
      key = the value in `/etc/talent-seed-viewer.env` (after `TALENT_SEED_KEY=`).
-   - Schema: paste the whole of `scratch/gpt_action.json`. Five actions should appear:
-     getFilterValues, getOverview, searchEcosystems, searchPeople, getPerson.
+   - Schema: paste the whole of `scratch/gpt_action.json`. Eleven actions should appear:
+     getFilterValues, getOverview, searchEcosystems, searchPeople, getPerson, getPersonEnrichment, getGithubProfile,
+     listConcepts, listJobs, getJob, matchJob.
    - Use **Test** on getOverview; ChatGPT asks to allow the call once.
 5. If it asks for a privacy policy URL (needed to share), give one you control.
 6. **Create** → share as **Anyone with the link** (not the GPT Store) and send that link.
 
-When the tunnel URL changes (VM reboot, tunnel restart), every user's GPT breaks until you re-run step 1 and paste
-the new schema into the action. Changing the key: update it in the action's authentication.
+The schema points at the permanent domain (talent.jubayerjuhan.site), so tunnel restarts don't break it. When the API
+gains endpoints, re-run step 1 and paste the new schema into the action; the GPT doesn't pick them up by itself. Changing the key: update it in the action's authentication.
 
 ## Name
 
