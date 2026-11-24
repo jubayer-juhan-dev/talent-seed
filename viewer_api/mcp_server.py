@@ -132,6 +132,11 @@ def get_person(person_id: Annotated[str, Field(description="gh:… or odd:…")]
         out = queries.api_person(con, {"id": [person_id]})
     if "error" in out:
         raise ToolError(out["error"])
+    from . import enrichment as _enr
+    _found = _enr.lookup([person_id])
+    out["ai_enriched"] = person_id in _found
+    if person_id in _found:
+        out["ai_enriched_by"] = _found[person_id][1]
     return queries.jsonable(out)
 
 
@@ -193,7 +198,7 @@ def match_job(
     out = jobmod.match(job_id, pool=pool, limit=limit, offset=offset)
     out["offset"] = offset
     with db() as con:
-        return queries.jsonable(jobmod.add_readiness(con, jobmod.add_people(con, out)))
+        return queries.jsonable(jobmod.add_readiness(con, jobmod.add_enrichment_flag(jobmod.add_people(con, out))))
 
 
 @mcp.tool(annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False, idempotentHint=True, openWorldHint=True))
@@ -213,7 +218,7 @@ def match_job_text(
         raise ToolError(f"Extraction or matching failed: {type(e).__name__}: {e}")
     out["offset"] = 0
     with db() as con:
-        return queries.jsonable(jobmod.add_readiness(con, jobmod.add_people(con, out)))
+        return queries.jsonable(jobmod.add_readiness(con, jobmod.add_enrichment_flag(jobmod.add_people(con, out))))
 
 
 class ConceptRequirement(BaseModel):
@@ -244,7 +249,7 @@ def match_by_concepts(
     out["offset"] = 0
     out["requirements"] = reqs
     with db() as con:
-        return queries.jsonable(jobmod.add_readiness(con, jobmod.add_people(con, out)))
+        return queries.jsonable(jobmod.add_readiness(con, jobmod.add_enrichment_flag(jobmod.add_people(con, out))))
 
 
 @mcp.tool(annotations=READ)

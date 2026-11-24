@@ -134,6 +134,21 @@ def add_people(con, out):
              r["priority_cohort"], r["country"]) = people[r["talent_id"]]
     return out
 
+def add_enrichment_flag(out):
+    """Set ai_enriched (+ ai_enriched_by) on match() items from the ai_enrichment flag table.
+
+    The flag is the formal AI-enrichment mark (set via set_ai_enriched / submit_enrichment).
+    Most talents have evidence but are NOT flagged, so this must come from the table,
+    never inferred from evidence."""
+    from . import enrichment
+    ids = [r['talent_id'] for r in out['items']]
+    found = enrichment.lookup(ids)
+    for r in out['items']:
+        hit = found.get(r['talent_id'])
+        r['ai_enriched'] = hit is not None
+        if hit:
+            r['ai_enriched_by'] = hit[1]
+    return out
 
 def add_readiness(con, out):
     """Add item["readiness"] (email yes/no + count, x_handle, linkedin_url, telegram yes/no) to match() items.
