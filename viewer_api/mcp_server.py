@@ -298,6 +298,61 @@ def submit_enrichment(
         raise ToolError(str(e))
 
 
+
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False, idempotentHint=True, openWorldHint=False))
+def get_social_profiles(
+    person_ids: Annotated[list[str], Field(min_length=1, max_length=25, description="gh:... or odd:... person ids")],
+) -> dict[str, Any]:
+    """Social profiles for prospects — LinkedIn first, then X, then Telegram: the channels outreach needs.
+
+    Returns what is already stored for each person, plus fresh deterministic finds from their GitHub
+    cache (linked social accounts, Twitter username, and linkedin / x.com / t.me links in their bio or
+    website), which are stored as they are found. A field that is not found stays null — never guessed."""
+    from . import socials
+    out = []
+    for pid in person_ids:
+        if not PERSON_ID.fullmatch(pid):
+            out.append({"person_id": pid, "error": "not a person id"})
+            continue
+        stored = socials.lookup([pid]).get(pid, {})
+        merged = {f: stored.get(f) for f in socials.FIELDS}
+        if not all(merged.values()):
+            found = socials.extract(pid)
+            missing = {f: v for f, v in found.items() if not merged.get(f)}
+            if missing:
+                res = socials.store(pid, missing, source="github-cache", found_by="get_social_profiles")
+                merged = {f: res["stored"].get(f) for f in socials.FIELDS}
+                stored = socials.lookup([pid]).get(pid, stored)
+        out.append({"person_id": pid, "linkedin_url": merged.get("linkedin_url"), "x_handle": merged.get("x_handle"),
+                    "telegram": merged.get("telegram"), "source": stored.get("source"), "found_by": stored.get("found_by")})
+    return {"count": len(out), "profiles": out}
+
+
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False, idempotentHint=True, openWorldHint=False))
+def submit_social_profiles(
+    person_id: Annotated[str, Field(description="gh:... or odd:...")],
+    linkedin_url: Annotated[str | None, Field(description="their LinkedIn profile URL, if you found it")] = None,
+    x_handle: Annotated[str | None, Field(description="their X handle (@name) or profile URL, if you found it")] = None,
+    telegram: Annotated[str | None, Field(description="their Telegram @handle or t.me link, if you found it")] = None,
+    found_by: Annotated[str | None, Field(description="who found it, e.g. 'claude via MCP client (bulk run)'", max_length=60)] = None,
+) -> dict[str, Any]:
+    """Store social profiles you found for a prospect — only from their own GitHub bio/website/links, never guessed.
+
+    Values are normalised (URLs canonicalised, handles get their @). A field that is already stored is
+    kept (first writer wins); the result shows what is stored now and what your submission added."""
+    from . import socials
+    if not PERSON_ID.fullmatch(person_id):
+        raise ToolError(f"Not a person id: {person_id}")
+    with db() as con:
+        if not con.execute("SELECT 1 FROM talent_seed WHERE person_id = ?", [person_id]).fetchone():
+            raise ToolError(f"Unknown person_id: {person_id}")
+    fields = {"linkedin_url": linkedin_url, "x_handle": x_handle, "telegram": telegram}
+    if not any(fields.values()):
+        raise ToolError("Nothing to store: pass at least one of linkedin_url, x_handle, telegram.")
+    res = socials.store(person_id, fields, source="client-submitted", found_by=found_by)
+    return {"person_id": person_id, **res}
+
+
 WWW = Path(os.environ.get("TALENT_SEED_WWW", "/var/lib/docker/volumes/n8n_caddy_data/_data/www"))
 SHORTLIST_BASE = os.environ.get("TALENT_SEED_SHORTLIST_BASE", "https://talent.jubayerjuhan.site/s/")
 SHORTLIST_TEMPLATE = Path(__file__).with_name("shortlist_template.html")
@@ -432,10 +487,11 @@ remote = MCPServer("talent-seed", instructions=mcp.instructions)
 for tool in (meta, overview, search_ecosystems, search_people, get_person, get_person_enrichment, get_github_profile,
              list_concepts, list_jobs, get_job, match_job, match_by_concepts, get_enrichment_batch):
     remote.add_tool(tool, annotations=READ)
-# Writers: build_shortlist_page writes an HTML file to the web root, submit_enrichment writes client:-sourced evidence.
+# Writers: build_shortlist_page writes an HTML file to the web root, submit_enrichment writes client:-sourced evidence,
+# get_social_profiles stores the socials it extracts, submit_social_profiles stores client-found socials.
 # Not exposed: match_job_text (needs the OpenAI key and stores jobs) and set_ai_enriched.
 WRITE = ToolAnnotations(readOnlyHint=False, destructiveHint=False, idempotentHint=True, openWorldHint=False)
-for tool in (build_shortlist_page, submit_enrichment):
+for tool in (build_shortlist_page, submit_enrichment, get_social_profiles, submit_social_profiles):
     remote.add_tool(tool, annotations=WRITE)
 
 

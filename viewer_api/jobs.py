@@ -175,6 +175,8 @@ def add_readiness(con, out):
                     d = json.loads(line)
                     if d.get("person_id") in want:
                         e4[d["person_id"]] = d.get("channels") or []
+    from . import socials as _socials
+    social_found = _socials.lookup(ids)
     for r in out["items"]:
         tid = r["talent_id"]
         chans = {}
@@ -193,6 +195,13 @@ def add_readiness(con, out):
             "linkedin_url": chans.get("linkedin") or gh.get("linkedin_url"),
             "telegram": "yes" if chans.get("telegram") else "no",
         }
+        s = social_found.get(tid) or {}
+        if s.get("linkedin_url"):
+            r["readiness"]["linkedin_url"] = s["linkedin_url"]
+        if s.get("x_handle"):
+            r["readiness"]["x_handle"] = s["x_handle"]
+        if s.get("telegram"):
+            r["readiness"]["telegram"] = "yes"
     return out
 
 
