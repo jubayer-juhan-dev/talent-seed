@@ -309,7 +309,7 @@ def _slug(*parts: str) -> str:
 
 
 def _talent(rank: int, it: dict) -> dict:
-    bd = [b for b in it.get("breakdown") or [] if b.get("coverage", 0) > 0]
+    bd = [b for b in it.get("breakdown") or [] if (b.get("coverage") or 0) > 0]
     bd.sort(key=lambda b: (-b["coverage"], b.get("requirement") != "required", b.get("concept_name", "")))
     reasons = it.get("reasons") or [
         [b["concept_name"], ", ".join(x for x in (b.get("evidence_status"),
@@ -320,8 +320,8 @@ def _talent(rank: int, it: dict) -> dict:
     yn = lambda v: "yes" if v else "no"
     em = rd.get("email")
     em = em.get("has") == "yes" if isinstance(em, dict) else em == "yes"
-    score = it.get("score", 0)
-    return {"rank": rank, "id": it.get("talent_id") or "", "name": it.get("name") or it.get("github_login") or it.get("talent_id", ""),
+    score = it.get("score") or 0
+    return {"rank": rank, "id": it.get("talent_id") or it.get("person_id") or it.get("id") or "", "name": it.get("name") or it.get("github_login") or it.get("talent_id") or it.get("person_id") or "Unknown prospect",
             "github": it.get("github_login") or "", "score": round(score * 100) if score <= 1 else round(score),
             "reasons": [list(map(str, r[:2])) for r in reasons[:3]], "skills": [str(x) for x in skills[:6]],
             "location": it.get("country") or it.get("location") or "—",
