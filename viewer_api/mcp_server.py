@@ -325,6 +325,7 @@ def _talent(rank: int, it: dict) -> dict:
             "github": it.get("github_login") or "", "score": round(score * 100) if score <= 1 else round(score),
             "reasons": [list(map(str, r[:2])) for r in reasons[:3]], "skills": [str(x) for x in skills[:6]],
             "location": it.get("country") or it.get("location") or "—",
+            "ai_enriched": bool(it.get("ai_enriched")), "ai_enriched_by": it.get("ai_enriched_by"),
             "readiness": {"email": yn(em), "x": yn(rd.get("x_handle")), "linkedin": yn(rd.get("linkedin_url")),
                           "telegram": "yes" if rd.get("telegram") == "yes" else "no"}}
 
@@ -343,6 +344,13 @@ def build_shortlist_page(
         raise ToolError("items is empty.")
     slug = _slug(company, title)
     talents = [_talent(i + 1, it) for i, it in enumerate(items)]
+    from . import enrichment as _enr
+    _found = _enr.lookup([x["id"] for x in talents if x["id"]])
+    for x in talents:
+        _hit = _found.get(x["id"])
+        x["ai_enriched"] = _hit is not None
+        if _hit:
+            x["ai_enriched_by"] = _hit[1]
     safe = lambda o: json.dumps(o, ensure_ascii=False).replace("</", "<\\/")
     page = SHORTLIST_TEMPLATE.read_text(encoding="utf-8")
     for k, v in {"__TITLE__": title, "__COMPANY__": company, "__N__": str(len(talents)),
