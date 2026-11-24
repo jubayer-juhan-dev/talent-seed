@@ -315,7 +315,7 @@ def _talent(rank: int, it: dict) -> dict:
     em = rd.get("email")
     em = em.get("has") == "yes" if isinstance(em, dict) else em == "yes"
     score = it.get("score", 0)
-    return {"rank": rank, "name": it.get("name") or it.get("github_login") or it.get("talent_id", ""),
+    return {"rank": rank, "id": it.get("talent_id") or "", "name": it.get("name") or it.get("github_login") or it.get("talent_id", ""),
             "github": it.get("github_login") or "", "score": round(score * 100) if score <= 1 else round(score),
             "reasons": [list(map(str, r[:2])) for r in reasons[:3]], "skills": [str(x) for x in skills[:6]],
             "location": it.get("country") or it.get("location") or "—",

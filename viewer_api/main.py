@@ -17,7 +17,7 @@ from pathlib import Path
 
 from fastapi import Depends, FastAPI, HTTPException, Query, Request
 from fastapi.exceptions import RequestValidationError
-from fastapi.responses import FileResponse, JSONResponse, RedirectResponse, Response
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse, Response
 from mcp.server.transport_security import TransportSecuritySettings
 from pydantic import BaseModel
 
@@ -276,6 +276,18 @@ def export(con: Con, f: Annotated[Filters, Depends()]):
     name = "talent_seed_shortlist.csv" if f.values["ids"] else "talent_seed_export.csv"
     return Response(queries.export_csv(con, f.q()).encode("utf-8-sig"), media_type="text/csv; charset=utf-8",
                     headers={"Content-Disposition": f'attachment; filename="{name}"'})
+
+
+@app.get("/p/{person_id}", response_class=HTMLResponse, include_in_schema=False)
+def profile_page(person_id: str, con: Con):
+    """Public talent profile (see auth.PUBLIC_PAGE): the page the shortlist names link to. No emails, ever."""
+    from . import profile_page as pp
+    if not pp.PERSON_ID.fullmatch(person_id):
+        return HTMLResponse("<!doctype html><meta charset=utf-8><p style='font:15px system-ui;padding:2em'>Not a talent id.</p>", 404)
+    d = pp.data(con, person_id)
+    if d is None:
+        return HTMLResponse("<!doctype html><meta charset=utf-8><p style='font:15px system-ui;padding:2em'>No such talent.</p>", 404)
+    return HTMLResponse(pp.render(d))
 
 
 @app.get("/next", include_in_schema=False)

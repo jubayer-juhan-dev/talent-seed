@@ -17,7 +17,7 @@ h1{font-size:26px;margin:4px 0} .sub{color:#57534E;font-size:15px}
 .card{background:#fff;border:1px solid #E7E5E4;border-radius:16px;padding:18px;box-shadow:0 1px 3px rgba(0,0,0,.05)}
 .card.skipped{opacity:.45} .card.kept{border-color:#F59E0B;box-shadow:0 0 0 2px #FDE68A}
 .top{display:flex;justify-content:space-between;align-items:flex-start}
-.name{font-size:17px;font-weight:700} .gh{color:#78716C;font-size:13px}
+.name{font-size:17px;font-weight:700} a.name{color:inherit;text-decoration:none;display:block} a.name:hover{color:#B45309;text-decoration:underline} .gh{color:#78716C;font-size:13px}
 .score{background:#FEF3C7;color:#92400E;font-weight:800;border-radius:10px;padding:4px 10px;font-size:15px}
 ul{margin:10px 0;padding-left:18px;font-size:14px;color:#44403C}
 .tags{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
@@ -68,11 +68,12 @@ const JOB=__JOB__;
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 let kept=new Set(), filter='all';
 function chanIcons(r){const m={email:'📧 Email',x:'𝕏 X',linkedin:'in LinkedIn',telegram:'✈️ Telegram'};return Object.keys(m).map(k=>'<span class="'+(r[k]=='yes'?'':'no')+'">'+m[k]+(r[k]=='yes'?' ✓':' ✗')+'</span>').join(' · ')}
+function nameEl(t){return t.id?'<a class="name" href="/p/'+encodeURIComponent(t.id)+'" target="_blank" rel="noopener" title="Open full profile">'+esc(t.name)+' ↗</a>':'<div class="name">'+esc(t.name)+'</div>'}
 function render(){
  const g=document.getElementById('grid'); g.innerHTML='';
  TALENTS.filter(t=>filter=='all'||(filter=='high'?t.score>=85:t.readiness[filter]=='yes')).forEach(t=>{
   const d=document.createElement('div'); d.className='card'+(kept.has(t.rank)?' kept':'');
-  d.innerHTML='<div class="top"><div><div class="name">'+esc(t.name)+'</div><div class="gh">@'+esc(t.github)+' · '+esc(t.location)+'</div></div><div class="score">'+t.score+'%</div></div>'
+  d.innerHTML='<div class="top"><div>'+nameEl(t)+'<div class="gh">@'+esc(t.github)+' · '+esc(t.location)+'</div></div><div class="score">'+t.score+'%</div></div>'
    +'<ul>'+t.reasons.map(r=>'<li><b>'+esc(r[0])+'</b> — '+esc(r[1])+'</li>').join('')+'</ul>'
    +'<div class="tags">'+t.skills.map(s=>'<span class="tag">'+esc(s)+'</span>').join('')+'</div>'
    +'<div class="chan">'+chanIcons(t.readiness)+'</div>'

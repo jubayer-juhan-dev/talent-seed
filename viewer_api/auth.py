@@ -6,6 +6,7 @@ works in browsers that drop cookies. Without the key: 401. A stop-gap, not a rea
 """
 
 import hmac
+import re
 
 from fastapi import Request
 from fastapi.responses import HTMLResponse, JSONResponse
@@ -20,6 +21,8 @@ HEADERS = {"Cache-Control": "no-store", "X-Robots-Tag": "noindex, nofollow", "Re
 # are public. Their file names carry a content hash, so they can be cached forever.
 PUBLIC_ASSETS = ("/assets/",)
 PUBLIC_FILES = ("/favicon.svg",)
+# Talent profile pages linked from the public /s/ shortlists: same trust level, server-rendered, never show an email.
+PUBLIC_PAGE = re.compile(r"/p/(gh|odd):\d+")  # exactly one profile, nothing else under /p/
 JSON_PATHS = ("/api/", "/mcp")  # answered with JSON, and never given the cookie
 
 
@@ -29,6 +32,10 @@ def _ok(value: str) -> bool:
 
 async def access_gate(request: Request, call_next):
     path = request.url.path
+    if PUBLIC_PAGE.fullmatch(path):
+        resp = await call_next(request)
+        resp.headers.update(HEADERS)
+        return resp
     if (path.startswith(PUBLIC_ASSETS) and ".." not in path) or path in PUBLIC_FILES:
         resp = await call_next(request)
         if path.startswith(PUBLIC_ASSETS) and resp.status_code == 200:
