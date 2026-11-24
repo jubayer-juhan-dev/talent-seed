@@ -8,6 +8,7 @@ so no running viewer or access key is needed. The only write is set_ai_enriched,
 data/enrichment.sqlite the same way scripts/set_ai_enriched.py does.
 """
 
+import os
 import html
 import re
 import sqlite3
@@ -292,8 +293,8 @@ def submit_enrichment(
         raise ToolError(str(e))
 
 
-WWW = Path("/var/lib/docker/volumes/n8n_caddy_data/_data/www")
-SHORTLIST_BASE = "https://talent.jubayerjuhan.site/s/"
+WWW = Path(os.environ.get("TALENT_SEED_WWW", "/var/lib/docker/volumes/n8n_caddy_data/_data/www"))
+SHORTLIST_BASE = os.environ.get("TALENT_SEED_SHORTLIST_BASE", "https://talent.jubayerjuhan.site/s/")
 SHORTLIST_TEMPLATE = Path(__file__).with_name("shortlist_template.html")
 EMAIL_RE = re.compile(r"[\w.+-]+@[\w-]+(?:\.[\w-]+)+")
 
