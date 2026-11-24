@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>__COMPANY__ — Talent Shortlist · GoodHive</title>
+<style>
+*{box-sizing:border-box} body{margin:0;font-family:system-ui,-apple-system,'Segoe UI',sans-serif;background:#FFFBEB;color:#1C1917}
+header{background:#fff;border-bottom:3px solid #F59E0B;padding:28px 24px 20px}
+.wrap{max-width:1100px;margin:0 auto;padding:0 16px}
+h1{font-size:26px;margin:4px 0} .sub{color:#57534E;font-size:15px}
+.badge{display:inline-block;background:#FEF3C7;color:#92400E;border:1px solid #F59E0B;border-radius:999px;padding:2px 10px;font-size:13px;font-weight:600}
+.stats{display:flex;gap:12px;flex-wrap:wrap;margin:16px 0}
+.stat{background:#fff;border:1px solid #FDE68A;border-radius:12px;padding:10px 16px;font-size:14px}
+.stat b{font-size:18px;display:block}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0}
+.chip{border:1px solid #D6D3D1;background:#fff;border-radius:999px;padding:6px 14px;cursor:pointer;font-size:14px}
+.chip.on{background:#F59E0B;color:#fff;border-color:#F59E0B;font-weight:600}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px;padding-bottom:110px}
+.card{background:#fff;border:1px solid #E7E5E4;border-radius:16px;padding:18px;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.card.skipped{opacity:.45} .card.kept{border-color:#F59E0B;box-shadow:0 0 0 2px #FDE68A}
+.top{display:flex;justify-content:space-between;align-items:flex-start}
+.name{font-size:17px;font-weight:700} .gh{color:#78716C;font-size:13px}
+.score{background:#FEF3C7;color:#92400E;font-weight:800;border-radius:10px;padding:4px 10px;font-size:15px}
+ul{margin:10px 0;padding-left:18px;font-size:14px;color:#44403C}
+.tags{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+.tag{background:#F5F5F4;border-radius:6px;padding:2px 8px;font-size:12px}
+.chan{font-size:13px;color:#57534E;margin:8px 0}
+.chan .no{opacity:.35}
+.btns{display:flex;gap:8px;margin-top:10px}
+button.keep{flex:1;background:#F59E0B;color:#fff;border:0;border-radius:10px;padding:9px;font-weight:700;cursor:pointer;font-size:14px}
+button.skip{flex:1;background:#fff;border:1px solid #D6D3D1;border-radius:10px;padding:9px;cursor:pointer;font-size:14px}
+footer{position:fixed;bottom:0;left:0;right:0;background:#1C1917;color:#fff;padding:14px 24px;display:flex;justify-content:space-between;align-items:center}
+footer button{background:#F59E0B;color:#fff;border:0;border-radius:10px;padding:11px 22px;font-weight:800;cursor:pointer;font-size:15px}
+.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);align-items:center;justify-content:center;padding:16px}
+.modal.open{display:flex}
+.box{background:#fff;border-radius:16px;max-width:560px;width:100%;padding:24px;max-height:85vh;overflow:auto}
+.box h3{margin-top:16px} .msg{background:#FFFBEB;border:1px solid #FDE68A;border-radius:10px;padding:12px;font-size:14px;white-space:pre-wrap}
+.close{float:right;cursor:pointer;font-size:20px;border:0;background:none}
+</style></head><body>
+<header><div class="wrap">
+<span class="badge">🍯 GoodHive · Talent Shortlist</span>
+<h1>__TITLE__ — __COMPANY__</h1>
+<div class="sub">__TOTAL__ talents with a match · Top __N__ shown · __DATE__</div>
+<div class="stats">
+<div class="stat"><b>__COUNT_EMAIL__/__N__</b>with email</div>
+<div class="stat"><b>__COUNT_X__/__N__</b>on X</div>
+<div class="stat"><b>__COUNT_LI__/__N__</b>on LinkedIn</div>
+<div class="stat"><b>__COUNT_TG__/__N__</b>on Telegram</div>
+</div></div></header>
+<div class="wrap">
+<div class="chips" id="chips">
+<button class="chip on" data-f="all">All __N__</button>
+<button class="chip" data-f="email">Has Email</button>
+<button class="chip" data-f="x">Has X</button>
+<button class="chip" data-f="linkedin">Has LinkedIn</button>
+<button class="chip" data-f="high">85%+ match</button>
+</div>
+<div class="grid" id="grid"></div>
+</div>
+<footer><div>Kept: <b id="keptCount">0</b> talents</div><button onclick="openModal()">Review Outreach</button></footer>
+<div class="modal" id="modal"><div class="box"><button class="close" onclick="closeModal()">×</button>
+<h2 style="margin:0">Outreach preview</h2><div class="sub" id="modalFor"></div>
+<h3>📧 Email</h3><div class="msg" id="msgEmail"></div>
+<h3>✈️ Telegram / 𝕏 X (short)</h3><div class="msg" id="msgShort"></div>
+<p class="sub">Draft only — nothing is sent from this page. Launch happens in Lemlist after review.</p>
+</div></div>
+<script>
+const TALENTS=__TALENTS__;
+const JOB=__JOB__;
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+let kept=new Set(), filter='all';
+function chanIcons(r){const m={email:'📧 Email',x:'𝕏 X',linkedin:'in LinkedIn',telegram:'✈️ Telegram'};return Object.keys(m).map(k=>'<span class="'+(r[k]=='yes'?'':'no')+'">'+m[k]+(r[k]=='yes'?' ✓':' ✗')+'</span>').join(' · ')}
+function render(){
+ const g=document.getElementById('grid'); g.innerHTML='';
+ TALENTS.filter(t=>filter=='all'||(filter=='high'?t.score>=85:t.readiness[filter]=='yes')).forEach(t=>{
+  const d=document.createElement('div'); d.className='card'+(kept.has(t.rank)?' kept':'');
+  d.innerHTML='<div class="top"><div><div class="name">'+esc(t.name)+'</div><div class="gh">@'+esc(t.github)+' · '+esc(t.location)+'</div></div><div class="score">'+t.score+'%</div></div>'
+   +'<ul>'+t.reasons.map(r=>'<li><b>'+esc(r[0])+'</b> — '+esc(r[1])+'</li>').join('')+'</ul>'
+   +'<div class="tags">'+t.skills.map(s=>'<span class="tag">'+esc(s)+'</span>').join('')+'</div>'
+   +'<div class="chan">'+chanIcons(t.readiness)+'</div>'
+   +'<div class="btns"><button class="keep" onclick="toggleKeep('+t.rank+')">'+(kept.has(t.rank)?'✓ Kept':'Keep')+'</button><button class="skip" onclick="toggleSkip(this)">Skip</button></div>';
+  g.appendChild(d);});
+ document.getElementById('keptCount').textContent=kept.size;}
+function toggleKeep(r){kept.has(r)?kept.delete(r):kept.add(r);render()}
+function toggleSkip(el){el.closest('.card').classList.toggle('skipped')}
+document.getElementById('chips').addEventListener('click',e=>{if(!e.target.dataset.f)return;filter=e.target.dataset.f;document.querySelectorAll('.chip').forEach(c=>c.classList.toggle('on',c.dataset.f==filter));render()});
+function firstKept(){return TALENTS.find(t=>kept.has(t.rank))||TALENTS[0]}
+function openModal(){const t=firstKept();const first=t.name.split(' ')[0];
+ document.getElementById('modalFor').textContent='Personalised for '+t.name+' (@'+t.github+') — first kept talent';
+ document.getElementById('msgEmail').textContent='Hi '+first+',\n\nI saw your work on GitHub — your '+t.skills[0]+' experience stood out. GoodHive is working with '+JOB.company+', who are hiring a '+JOB.title+', and your profile is one of our top matches.\n\nWould you be open to a short intro call this week?\n\nBest,\nGoodHive team';
+ document.getElementById('msgShort').textContent='Hi '+first+' — GoodHive here. '+JOB.company+' is hiring a '+JOB.title+' and your GitHub work in '+t.skills[0]+' makes you a top match. Open to a quick chat?';
+ document.getElementById('modal').classList.add('open')}
+function closeModal(){document.getElementById('modal').classList.remove('open')}
+render();
+</script></body></html>
