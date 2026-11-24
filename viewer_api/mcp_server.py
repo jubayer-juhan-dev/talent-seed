@@ -412,12 +412,17 @@ def set_ai_enriched(
 
 # Remote server: the same data over Streamable HTTP at /mcp on the viewer (viewer_api/main.py mounts it), for people
 # who add it as a connector in claude.ai / Claude Desktop / Claude Code. The access gate checks the key (?key= on the
-# connector URL, or X-Access-Key). Read-only: no set_ai_enriched, and export_csv returns a download link instead of
-# writing on this machine.
+# connector URL, or X-Access-Key). Mostly read-only: no set_ai_enriched, and export_csv returns a download link instead
+# of writing on this machine; the only writers are the two WRITE tools below.
 remote = MCPServer("talent-seed", instructions=mcp.instructions)
 for tool in (meta, overview, search_ecosystems, search_people, get_person, get_person_enrichment, get_github_profile,
-             list_concepts, list_jobs, get_job, match_job):
+             list_concepts, list_jobs, get_job, match_job, match_by_concepts, get_enrichment_batch):
     remote.add_tool(tool, annotations=READ)
+# Writers: build_shortlist_page writes an HTML file to the web root, submit_enrichment writes client:-sourced evidence.
+# Not exposed: match_job_text (needs the OpenAI key and stores jobs) and set_ai_enriched.
+WRITE = ToolAnnotations(readOnlyHint=False, destructiveHint=False, idempotentHint=True, openWorldHint=False)
+for tool in (build_shortlist_page, submit_enrichment):
+    remote.add_tool(tool, annotations=WRITE)
 
 
 @remote.tool(annotations=READ)
