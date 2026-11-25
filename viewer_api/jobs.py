@@ -339,3 +339,129 @@ def score_requirements(cur, reqs, pool="ai", limit=50, offset=0):
     results.sort(key=lambda r: (-r["score"], -r["contributor_concepts"]))
     return {"total": len(results), "pool": len(pool_ids),
             "items": results[offset:offset + limit]}
+
+
+def score_talents(reqs, talent_ids, pool="all"):
+    """Score specific talents against reqs [(concept_id, concept_name, requirement)] with the
+    exact math of score_requirements (same pool-wide scorable set and denominator), without
+    ranking the whole pool. Returns {talent_id: {score, contributor_concepts, breakdown}}."""
+    conn = _conn()
+    try:
+        cur = conn.cursor()
+        if not reqs or not talent_ids:
+            return {}
+        concept_ids = [r[0] for r in reqs]
+        pool_ids = _pool_ids(cur, pool)
+        if not pool_ids:
+            return {}
+        cur.execute(
+            """SELECT talent_id, concept_id, status, usage_level, confidence
+               FROM talent_evidence
+               WHERE talent_id = ANY(%s) AND concept_id = ANY(%s)""",
+            (pool_ids, concept_ids))
+        LEVEL_RANK = {"CONTRIBUTOR_USAGE": 3, "ADVANCED_USAGE": 4,
+                      "OBSERVED_USAGE": 2, "DECLARED": 1, "DECLARED_USAGE": 1}
+        best = {}
+        for tid, cid, status, usage, conf in cur.fetchall():
+            conf = float(conf) if conf is not None else None
+            cov = _coverage(status, usage, conf)
+            key = (tid, cid)
+            cur_rank = LEVEL_RANK.get(usage or "", 0)
+            if (key not in best or cov > best[key][0]
+                    or (cov == best[key][0] and cur_rank > LEVEL_RANK.get(best[key][3] or "", 0))):
+                best[key] = (cov, status, conf, usage)
+        scorable = {cid for (_, cid), v in best.items() if v[0] > 0}
+        denom = sum(REQ_WEIGHT[r[2]] for r in reqs if r[0] in scorable)
+        out = {}
+        for tid in talent_ids:
+            breakdown = []
+            total = 0.0
+            contrib = 0
+            for cid, cname, reqtype in reqs:
+                cov, status, conf, usage = best.get((tid, cid), (0.0, None, None, None))
+                if cid not in scorable:
+                    breakdown.append({
+                        "concept_id": cid, "concept_name": cname, "requirement": reqtype,
+                        "coverage": 0.0, "state": "unscored", "evidence_status": None,
+                        "confidence": None, "usage_level": None})
+                    continue
+                total += REQ_WEIGHT[reqtype] * cov
+                if usage in ("CONTRIBUTOR_USAGE", "ADVANCED_USAGE") and cov >= 0.8:
+                    contrib += 1
+                breakdown.append({
+                    "concept_id": cid, "concept_name": cname, "requirement": reqtype,
+                    "coverage": round(cov, 2),
+                    "state": ("covered" if cov >= 0.8 else
+                              "partial" if cov > 0 else "missing"),
+                    "evidence_status": status, "confidence": conf,
+                    "usage_level": usage})
+            out[tid] = {"score": round(total / denom, 3) if denom else 0.0,
+                        "contributor_concepts": contrib, "breakdown": breakdown}
+        return out
+    finally:
+        conn.close()
+
+
+def top_evidence(talent_ids, per=6):
+    """A talent's strongest evidenced concepts (FACT, or INFERENCE with confidence):
+    {talent_id: [{concept_name, coverage, evidence_status, usage_level}]}, best first."""
+    conn = _conn()
+    try:
+        cur = conn.cursor()
+        if not talent_ids:
+            return {}
+        cur.execute(
+            """SELECT e.talent_id, c.canonical_name, e.status, e.usage_level, e.confidence
+               FROM talent_evidence e JOIN concepts c ON c.concept_id = e.concept_id
+               WHERE e.talent_id = ANY(%s)
+                 AND (e.status = 'FACT' OR (e.status = 'INFERENCE' AND COALESCE(e.confidence, 0) > 0))""",
+            (list(talent_ids),))
+        best = {}
+        for tid, name, status, usage, conf in cur.fetchall():
+            cov = _coverage(status, usage, float(conf) if conf is not None else None)
+            if cov <= 0:
+                continue
+            per_talent = best.setdefault(tid, {})
+            if name not in per_talent or cov > per_talent[name][0]:
+                per_talent[name] = (cov, status, usage)
+        return {tid: [{"concept_name": n, "coverage": round(v[0], 2),
+                       "evidence_status": v[1], "usage_level": v[2]}
+                      for n, v in sorted(d.items(), key=lambda kv: -kv[1][0])[:per]]
+                for tid, d in best.items()}
+    finally:
+        conn.close()
+
+
+def store_concepts_job(title, company, reqs):
+    """Persist an ad-hoc concept-picked job (from match_by_concepts) so its requirements can be
+    re-scored later, e.g. by build_shortlist_page. Idempotent: same title+company+requirements
+    returns the same job_id. reqs = [{concept_id, requirement}]."""
+    import hashlib
+    import json
+    key = json.dumps({"t": title or "", "c": company or "",
+                      "r": sorted((r["concept_id"], r["requirement"]) for r in reqs)},
+                     sort_keys=True)
+    job_id = "job:concepts-" + hashlib.sha256(key.encode()).hexdigest()[:16]
+    conn = _conn()
+    try:
+        cur = conn.cursor()
+        cur.execute("SELECT 1 FROM jobs WHERE job_id = %s", (job_id,))
+        if cur.fetchone():
+            return job_id
+        cur.execute("SELECT concept_id, canonical_name, concept_type FROM concepts WHERE concept_id = ANY(%s)",
+                    ([r["concept_id"] for r in reqs],))
+        meta = {r[0]: (r[1], r[2]) for r in cur.fetchall()}
+        cur.execute(
+            """INSERT INTO jobs (job_id, title, company, source, description, fetched_at, active)
+               VALUES (%s, %s, %s, 'concepts', '', now(), true)""",
+            (job_id, title or "Untitled role", company or None))
+        for r in reqs:
+            name, ctype = meta.get(r["concept_id"], (r["concept_id"], "SKILL"))
+            cur.execute(
+                """INSERT INTO job_requirements (job_id, concept_id, concept_name, concept_type,
+                       requirement, status, source) VALUES (%s, %s, %s, %s, %s, 'FACT', 'concepts')""",
+                (job_id, r["concept_id"], name, ctype, r["requirement"]))
+        conn.commit()
+        return job_id
+    finally:
+        conn.close()

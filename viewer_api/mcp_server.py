@@ -232,6 +232,8 @@ def match_by_concepts(
     requirements: Annotated[list[ConceptRequirement], Field(min_length=1, max_length=60,
                             description="[{concept_id, requirement}] you picked from list_concepts")],
     limit: Annotated[int, Field(ge=1, le=50)] = 20,
+    title: Annotated[str, Field(description="role title the concepts were picked for (stored with the job)")] = "",
+    company: Annotated[str, Field(description="company the concepts were picked for (stored with the job)")] = "",
 ) -> dict[str, Any]:
     """Rank the talent pool against ontology concepts YOU chose (read list_concepts, pick the concepts a job needs,
     mark each required / nice_to_have). Deterministic scoring only: the same code as match_job, no LLM call, no
@@ -248,6 +250,10 @@ def match_by_concepts(
         raise ToolError(f"Unknown concept_id(s): {', '.join(unknown)}. Use ids from list_concepts.")
     out["offset"] = 0
     out["requirements"] = reqs
+    try:
+        out["job_id"] = jobmod.store_concepts_job(title, company, reqs)
+    except Exception:
+        pass  # storing the ad-hoc job is best-effort; the match result stands without it
     with db() as con:
         return queries.jsonable(jobmod.add_readiness(con, jobmod.add_enrichment_flag(jobmod.add_people(con, out))))
 
@@ -385,19 +391,121 @@ def _talent(rank: int, it: dict) -> dict:
                           "telegram": "yes" if rd.get("telegram") == "yes" else "no"}}
 
 
+def _backfill_items(items, slug, job_id="", requirements=None):
+    """Fill missing fields on shortlist items from the server's own databases, by talent_id.
+
+    Name/country/readiness come from the same lookups the match tools use; score and breakdown
+    are recomputed with the exact match math when job requirements are known (job_id, explicit
+    requirements, or a stored job with the same company+title slug). When no requirements are
+    known, skills/reasons fall back to the person's strongest evidenced concepts and the score
+    is left as passed (with a warning). Returns (items, backfilled_counts, warnings)."""
+    from . import jobs as jobmod
+    filled = {"people": 0, "readiness": 0, "score": 0, "breakdown": 0, "skills_fallback": 0}
+    warnings = []
+    items = [dict(it) for it in items]
+    pairs = [(it, it.get("talent_id") or it.get("person_id") or it.get("id")) for it in items]
+    valid = [(it, tid) for it, tid in pairs if tid]
+    if not valid:
+        return items, filled, ["No talent_id on any item: nothing could be backfilled."]
+    # name / github / country / readiness (DuckDB lookups, same as the match tools)
+    wrapped = {"items": [dict(it, talent_id=tid) for it, tid in valid]}
+    with db() as con:
+        jobmod.add_people(con, wrapped)
+        jobmod.add_readiness(con, wrapped)
+    for (it, _tid), w in zip(valid, wrapped["items"]):
+        if not it.get("name") and w.get("name"):
+            it["name"] = w["name"]
+            filled["people"] += 1
+        if not it.get("github_login") and w.get("github_login"):
+            it["github_login"] = w["github_login"]
+        if not it.get("country") and w.get("country"):
+            it["country"] = w["country"]
+        if not it.get("readiness") and w.get("readiness"):
+            it["readiness"] = w["readiness"]
+            filled["readiness"] += 1
+    # resolve the job requirements for score backfill
+    reqs = None
+    if job_id:
+        job = jobmod.get_job(job_id)
+        if job:
+            reqs = [(r["concept_id"], r["concept_name"], r["requirement"])
+                    for r in job["requirements"] if r.get("concept_id")]
+    if reqs is None and requirements:
+        picked = [{"concept_id": r.concept_id.strip(),
+                   "requirement": "nice_to_have" if r.requirement == "preferred" else r.requirement}
+                  for r in requirements]
+        _out, unknown = jobmod.match_concepts(picked, pool="all", limit=1)
+        if unknown:
+            warnings.append(f"Unknown concept_id(s) in requirements: {', '.join(unknown)}; score backfill skipped.")
+        else:
+            conn = jobmod._conn()
+            try:
+                cur = conn.cursor()
+                cur.execute("SELECT concept_id, canonical_name FROM concepts WHERE concept_id = ANY(%s)",
+                            ([p["concept_id"] for p in picked],))
+                names = dict(cur.fetchall())
+            finally:
+                conn.close()
+            reqs = [(p["concept_id"], names.get(p["concept_id"], p["concept_id"]), p["requirement"])
+                    for p in picked]
+    if reqs is None:
+        for j in jobmod.list_jobs():
+            if _slug(j.get("company") or "", j.get("title") or "") == slug:
+                job = jobmod.get_job(j["job_id"])
+                if job:
+                    reqs = [(r["concept_id"], r["concept_name"], r["requirement"])
+                            for r in job["requirements"] if r.get("concept_id")]
+                break
+    if reqs:
+        scored = jobmod.score_talents(reqs, [tid for _it, tid in valid])
+        for it, tid in valid:
+            s = scored.get(tid)
+            if not s:
+                continue
+            if not it.get("breakdown"):
+                it["breakdown"] = s["breakdown"]
+                filled["breakdown"] += 1
+            if not it.get("score"):
+                it["score"] = s["score"]
+                if s["score"]:
+                    filled["score"] += 1
+    else:
+        warnings.append("No job requirements known (no job_id, no requirements, no stored job with "
+                        "this company+title): scores were not backfilled.")
+    # skills/reasons fallback: the person's own strongest evidenced concepts
+    missing = [(it, tid) for it, tid in valid
+               if not it.get("skills") and not it.get("breakdown")]
+    if missing:
+        tops = jobmod.top_evidence([tid for _it, tid in missing])
+        for it, tid in missing:
+            ev = tops.get(tid) or []
+            if ev:
+                it["skills"] = [e["concept_name"] for e in ev]
+                it["reasons"] = [[e["concept_name"], ", ".join(
+                    x for x in (e["evidence_status"],
+                                (e["usage_level"] or "").replace("_", " ").lower()) if x)]
+                    for e in ev[:3]]
+                filled["skills_fallback"] += 1
+    return items, filled, warnings
+
 @mcp.tool(annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False, idempotentHint=True, openWorldHint=False))
 def build_shortlist_page(
     title: Annotated[str, Field(description="role title, e.g. 'Full-Stack Software Engineer'")],
     company: str,
     items: Annotated[list[dict[str, Any]], Field(description="items from match_job / match_job_text (with readiness)")],
     total: Annotated[int | None, Field(description="matches in the pool, for the header (e.g. match_job_text total)")] = None,
+    job_id: Annotated[str, Field(description="job id from match_job / match_job_text / match_by_concepts; when given (or found by title+company), the server fills any missing score/breakdown itself")] = "",
+    requirements: Annotated[list[ConceptRequirement] | None, Field(description="[{concept_id, requirement}] the match used; alternative to job_id for server-side score backfill")] = None,
 ) -> dict[str, Any]:
     """Render a standalone HTML shortlist page (cards, filter chips, Keep/Skip, outreach preview; no email addresses)
-    to /s/<slug> on talent.jubayerjuhan.site and return its URL."""
+    to /s/<slug> and return its URL. Missing per-person fields (name, country, readiness channels,
+    score, skills, reasons) are filled in by the server from its own databases by talent_id, so a
+    thin item list still renders a complete page; values the caller did pass are never overwritten."""
     import json
     if not items:
         raise ToolError("items is empty.")
     slug = _slug(company, title)
+    items, backfilled, page_warnings = _backfill_items(items, slug, job_id, requirements)
     talents = [_talent(i + 1, it) for i, it in enumerate(items)]
     from . import enrichment as _enr
     _found = _enr.lookup([x["id"] for x in talents if x["id"]])
@@ -420,7 +528,8 @@ def build_shortlist_page(
     page = EMAIL_RE.sub("[redacted]", page)
     (WWW / "s").mkdir(parents=True, exist_ok=True)
     (WWW / "s" / f"{slug}.html").write_text(page, encoding="utf-8")
-    return {"url": SHORTLIST_BASE + slug, "slug": slug, "talents": len(talents)}
+    return {"url": SHORTLIST_BASE + slug, "slug": slug, "talents": len(talents),
+            "backfilled": backfilled, "warnings": page_warnings}
 
 
 @mcp.tool(annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False, openWorldHint=False))
