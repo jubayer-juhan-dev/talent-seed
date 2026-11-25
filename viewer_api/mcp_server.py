@@ -378,6 +378,22 @@ def _slug(*parts: str) -> str:
     return re.sub(r"[^a-z0-9]+", "-", " ".join(parts).lower()).strip("-")[:80] or "shortlist"
 
 
+
+def _reason_pair(r):
+    """Normalise one reason to a [title, detail] pair. Callers (Claude/ChatGPT via MCP)
+    sometimes pass reasons as plain strings; slicing a string like a pair turned
+    'Meets ...' into ['M', 'e'] on the rendered page, so handle strings explicitly."""
+    if isinstance(r, str):
+        return [r, ""]
+    if isinstance(r, dict):
+        return [str(r.get("concept_name") or r.get("title") or r.get("name") or ""),
+                str(r.get("detail") or r.get("evidence") or r.get("evidence_status") or "")]
+    try:
+        seq = [str(x) for x in list(r)[:2]]
+    except TypeError:
+        return [str(r), ""]
+    return (seq + ["", ""])[:2]
+
 def _talent(rank: int, it: dict) -> dict:
     bd = [b for b in it.get("breakdown") or [] if (b.get("coverage") or 0) > 0]
     bd.sort(key=lambda b: (-b["coverage"], b.get("requirement") != "required", b.get("concept_name", "")))
@@ -393,7 +409,7 @@ def _talent(rank: int, it: dict) -> dict:
     score = it.get("score") or 0
     return {"rank": rank, "id": it.get("talent_id") or it.get("person_id") or it.get("id") or "", "name": it.get("name") or it.get("github_login") or it.get("talent_id") or it.get("person_id") or "Unknown prospect",
             "github": it.get("github_login") or "", "score": round(score * 100) if score <= 1 else round(score),
-            "reasons": [list(map(str, r[:2])) for r in reasons[:3]], "skills": [str(x) for x in skills[:6]],
+            "reasons": [_reason_pair(r) for r in reasons[:3]], "skills": [str(x) for x in skills[:6]],
             "location": it.get("country") or it.get("location") or "—",
             "ai_enriched": bool(it.get("ai_enriched")), "ai_enriched_by": it.get("ai_enriched_by"),
             "readiness": {"email": yn(em), "x": yn(rd.get("x_handle")), "linkedin": yn(rd.get("linkedin_url")),
