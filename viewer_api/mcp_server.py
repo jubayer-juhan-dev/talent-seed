@@ -299,9 +299,14 @@ def submit_enrichment(
         if not con.execute("SELECT 1 FROM talent_seed WHERE person_id = ?", [talent_id]).fetchone():
             raise ToolError(f"Unknown talent_id: {talent_id}")
     try:
-        return client_enrichment.submit(talent_id, [c.model_dump() for c in concepts], source_note)
+        out = client_enrichment.submit(talent_id, [c.model_dump() for c in concepts], source_note)
     except ValueError as e:
         raise ToolError(str(e))
+    try:
+        out["pages_refreshed"] = _refresh_shortlist_pages([talent_id])
+    except Exception:
+        out["pages_refreshed"] = []
+    return out
 
 
 
@@ -356,7 +361,11 @@ def submit_social_profiles(
     if not any(fields.values()):
         raise ToolError("Nothing to store: pass at least one of linkedin_url, x_handle, telegram.")
     res = socials.store(person_id, fields, source="client-submitted", found_by=found_by)
-    return {"person_id": person_id, **res}
+    try:
+        refreshed = _refresh_shortlist_pages([person_id])
+    except Exception:
+        refreshed = []
+    return {"person_id": person_id, **res, "pages_refreshed": refreshed}
 
 
 WWW = Path(os.environ.get("TALENT_SEED_WWW", "/var/lib/docker/volumes/n8n_caddy_data/_data/www"))
@@ -524,12 +533,56 @@ def build_shortlist_page(
                  "__COUNT_LI__": str(sum(t["readiness"]["linkedin"] == "yes" for t in talents)),
                  "__COUNT_TG__": str(sum(t["readiness"]["telegram"] == "yes" for t in talents))}.items():
         page = page.replace(k, html.escape(v))
-    page = page.replace("__TALENTS__", safe(talents)).replace("__JOB__", safe({"title": title, "company": company}))
+    embed_job_id = job_id
+    if not embed_job_id:
+        try:
+            from . import jobs as _jm
+            for _j in _jm.list_jobs():
+                if _slug(_j.get("company") or "", _j.get("title") or "") == slug:
+                    embed_job_id = _j["job_id"]
+                    break
+        except Exception:
+            pass
+    page = page.replace("__TALENTS__", safe(talents)).replace(
+        "__JOB__", safe({"title": title, "company": company, "job_id": embed_job_id, "total": total}))
     page = EMAIL_RE.sub("[redacted]", page)
     (WWW / "s").mkdir(parents=True, exist_ok=True)
     (WWW / "s" / f"{slug}.html").write_text(page, encoding="utf-8")
     return {"url": SHORTLIST_BASE + slug, "slug": slug, "talents": len(talents),
             "backfilled": backfilled, "warnings": page_warnings}
+
+
+def _refresh_shortlist_pages(talent_ids):
+    """Rebuild every saved shortlist page that contains one of talent_ids, so a page
+    reloaded after enrichment or social updates shows current data (scores, enriched
+    flags, channels) instead of the data frozen when the page was first built."""
+    import json as _json
+    want = set(talent_ids)
+    refreshed = []
+    sdir = WWW / "s"
+    if not want or not sdir.exists():
+        return refreshed
+    for f in sorted(sdir.glob("*.html")):
+        try:
+            text = f.read_text(encoding="utf-8")
+            i = text.find("const TALENTS=")
+            if i < 0:
+                continue
+            talents, _end = _json.JSONDecoder().raw_decode(text[i + len("const TALENTS="):])
+            ids = [t.get("id") for t in talents if t.get("id")]
+            if not want.intersection(ids):
+                continue
+            job = {}
+            j = text.find("const JOB=")
+            if j >= 0:
+                job = _json.JSONDecoder().raw_decode(text[j + len("const JOB="):])[0]
+            build_shortlist_page(title=job.get("title") or "", company=job.get("company") or "",
+                                 items=[{"talent_id": t} for t in ids],
+                                 total=job.get("total"), job_id=job.get("job_id") or "")
+            refreshed.append(f.stem)
+        except Exception:
+            continue
+    return refreshed
 
 
 @mcp.tool(annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False, openWorldHint=False))
@@ -585,7 +638,14 @@ def set_ai_enriched(
         total = con.execute("SELECT count(*) FROM ai_enrichment WHERE ai_enriched = 1").fetchone()[0]
     finally:
         con.close()
-    return f"{'Cleared' if unset else 'Marked'} {len(person_ids)} people. AI-enriched now: {total}."
+    msg = f"{'Cleared' if unset else 'Marked'} {len(person_ids)} people. AI-enriched now: {total}."
+    try:
+        _refreshed = _refresh_shortlist_pages(person_ids)
+    except Exception:
+        _refreshed = []
+    if _refreshed:
+        msg += f" Refreshed shortlist pages: {', '.join(_refreshed)}."
+    return msg
 
 
 # Remote server: the same data over Streamable HTTP at /mcp on the viewer (viewer_api/main.py mounts it), for people
