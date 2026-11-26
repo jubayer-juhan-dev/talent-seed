@@ -368,6 +368,78 @@ def submit_social_profiles(
     return {"person_id": person_id, **res, "pages_refreshed": refreshed}
 
 
+
+class RecruitingFieldInput(BaseModel):
+    field: str = Field(description="one of the recruiting fields: open_to_work_status, employment_status, current_company, current_title, current_role_start_date, last_job_change_date, estimated_years_experience, seniority_level, hands_on_engineering, current_city, current_country, remote_preference, relocation_openness, relocation_locations, work_authorization_countries, estimated_current_salary, expected_salary, career_signals")
+    value: Any = Field(description="string for enums/text/dates, number for years, list for locations/signals, object {min, max, currency, basis, confidence} for salary estimates")
+    level: Literal["FACT", "INFERENCE"] = Field(description="FACT = publicly observed signal; INFERENCE = judged from evidence")
+    source_type: str = Field(description="where it came from, e.g. linkedin_profile, github_profile, web, direct_statement")
+    source_url: str | None = None
+    evidence_text: str = Field(description="the concrete evidence behind this value — required")
+    confidence: float | None = Field(default=None, description="0..1 — required for INFERENCE")
+    observed_at: str | None = Field(default=None, description="when the signal was observed, YYYY-MM-DD; defaults to today")
+
+
+@mcp.tool(annotations=READ)
+def get_recruiting_profile(
+    person_id: Annotated[str, Field(description="gh:... or odd:...")],
+) -> dict[str, Any]:
+    """Recruiting profile for one prospect: availability / open-to-work, current employment, seniority,
+    compensation estimates, location and mobility, and recent career signals — every field with its
+    provenance (FACT or INFERENCE, source, evidence, confidence, observation date). Fields with no
+    data are simply absent."""
+    from . import recruiting
+    if not PERSON_ID.fullmatch(person_id):
+        raise ToolError(f"Not a person id: {person_id}")
+    return recruiting.profile(person_id)
+
+
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False, idempotentHint=True, openWorldHint=True))
+def submit_recruiting_enrichment(
+    person_id: Annotated[str, Field(description="gh:... or odd:...")],
+    fields: Annotated[list[RecruitingFieldInput], Field(min_length=1, max_length=20)],
+    enriched_by: Annotated[str | None, Field(description="who judged it, e.g. 'claude via MCP client'", max_length=60)] = None,
+) -> dict[str, Any]:
+    """Submit recruiting/availability enrichment for a prospect: open-to-work, employment, seniority,
+    compensation, location/mobility, career signals. Every field carries its evidence: FACT for publicly
+    observed signals, INFERENCE (with confidence) for judgements. Values are appended with full
+    provenance — history is never overwritten. A salary estimate is stored as INFERENCE unless the
+    person stated it directly (source_type 'direct_statement')."""
+    from . import recruiting
+    if not PERSON_ID.fullmatch(person_id):
+        raise ToolError(f"Not a person id: {person_id}")
+    with db() as con:
+        if not con.execute("SELECT 1 FROM talent_seed WHERE person_id = ?", [person_id]).fetchone():
+            raise ToolError(f"Unknown person_id: {person_id}")
+    try:
+        return recruiting.submit(person_id, [f.model_dump() for f in fields], enriched_by)
+    except ValueError as e:
+        raise ToolError(str(e))
+
+
+@mcp.tool(annotations=READ)
+def score_offer_acceptability(
+    person_id: Annotated[str, Field(description="gh:... or odd:...")],
+    salary_min: Annotated[float | None, Field(description="offered salary minimum, in the offer currency")] = None,
+    salary_max: Annotated[float | None, Field(description="offered salary maximum, in the offer currency")] = None,
+    currency: Annotated[str | None, Field(description="offer currency, e.g. EUR, USD")] = None,
+    work_mode: Annotated[Literal["REMOTE", "HYBRID", "ONSITE"], Field(description="how the role is worked")] = "REMOTE",
+    country: Annotated[str | None, Field(description="job country, for hybrid/onsite roles")] = None,
+    city: Annotated[str | None, Field(description="job city, for hybrid/onsite roles")] = None,
+    seniority: Annotated[str | None, Field(description="seniority wanted, e.g. SENIOR")] = None,
+) -> dict[str, Any]:
+    """Job-specific offer-acceptability score (0-100) for one prospect, with the full breakdown visible:
+    availability /30, compensation fit /25, location /20, seniority fit /15, motivation /10. Computed
+    from the recruiting profile on demand — never stored as a permanent score. Missing data scores
+    neutral and says why in the basis."""
+    from . import recruiting
+    if not PERSON_ID.fullmatch(person_id):
+        raise ToolError(f"Not a person id: {person_id}")
+    offer = {"salary_min": salary_min, "salary_max": salary_max, "currency": currency,
+             "work_mode": work_mode, "country": country, "city": city, "seniority": seniority}
+    return recruiting.score_offer(person_id, offer)
+
+
 WWW = Path(os.environ.get("TALENT_SEED_WWW", "/var/lib/docker/volumes/n8n_caddy_data/_data/www"))
 SHORTLIST_BASE = os.environ.get("TALENT_SEED_SHORTLIST_BASE", "https://talent.jubayerjuhan.site/s/")
 SHORTLIST_TEMPLATE = Path(__file__).with_name("shortlist_template.html")
@@ -670,13 +742,15 @@ def set_ai_enriched(
 # of writing on this machine; the only writers are the two WRITE tools below.
 remote = MCPServer("talent-seed", instructions=mcp.instructions)
 for tool in (meta, overview, search_ecosystems, search_people, get_person, get_person_enrichment, get_github_profile,
-             list_concepts, list_jobs, get_job, match_job, match_by_concepts, get_enrichment_batch):
+             list_concepts, list_jobs, get_job, match_job, match_by_concepts, get_enrichment_batch,
+             get_recruiting_profile, score_offer_acceptability):
     remote.add_tool(tool, annotations=READ)
 # Writers: build_shortlist_page writes an HTML file to the web root, submit_enrichment writes client:-sourced evidence,
 # get_social_profiles stores the socials it extracts, submit_social_profiles stores client-found socials.
 # Not exposed: match_job_text (needs the OpenAI key and stores jobs) and set_ai_enriched.
 WRITE = ToolAnnotations(readOnlyHint=False, destructiveHint=False, idempotentHint=True, openWorldHint=False)
-for tool in (build_shortlist_page, submit_enrichment, get_social_profiles, submit_social_profiles):
+for tool in (build_shortlist_page, submit_enrichment, get_social_profiles, submit_social_profiles,
+             submit_recruiting_enrichment):
     remote.add_tool(tool, annotations=WRITE)
 
 
